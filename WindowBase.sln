@@ -11,6 +11,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "windowbase_shared", "window
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libwindowbase-md", "libwindowbase-md\libwindowbase-md.vcxproj", "{B112579D-513D-4611-9296-B497D2734304}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{78513138-2194-479F-9411-5A213FBC23E7}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
