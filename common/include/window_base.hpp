@@ -14,6 +14,7 @@
 #define OEMRESOURCE
 #define NOMINMAX
 #include <Windows.h>
+#include <windowsx.h>
 #include <shellapi.h>
 #include <Dbt.h>
 
