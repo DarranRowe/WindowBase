@@ -407,7 +407,7 @@ namespace application::details
 			{
 				debug::format_write_to_debugger(L"Initialising data for thread {} found existing data\r\n", tid);
 			}
-			_ASSERTE(emplace_result.second == false);
+			_ASSERTE(emplace_result.second == true);
 		}
 	}
 
