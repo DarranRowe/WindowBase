@@ -9,6 +9,8 @@
 #include <optional>
 #include <cstdint>
 #include <cinttypes>
+#include <string>
+#include <string_view>
 
 #define WIN32_LEAN_AND_MEAN
 #define OEMRESOURCE

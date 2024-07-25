@@ -10,6 +10,8 @@
 
 #include "application.hpp"
 
+#include <wil/result.h>
+
 namespace windowing
 {
 #ifdef _WIN64
