@@ -1381,21 +1381,26 @@ namespace windowing
 
 	inline static std::shared_ptr<message_callback> make_message_callback(message_callback_ptr_type fptr)
 	{
-		std::function<message_callback_type> f = std::bind(fptr, std::placeholders::_1);
+		std::function<message_callback_type> f{ [fptr](auto &&p)
+			{
+				return fptr(p);
+			} };
 		return std::make_shared<message_callback_impl>(f);
 	}
 
 	template <typename L>
 	inline static std::shared_ptr<message_callback> make_message_callback(L lambda)
 	{
-		std::function<message_callback_type> f(lambda);
+		std::function<message_callback_type> f{ lambda };
 		return std::make_shared<message_callback_impl>(f);
 	}
 
 	template <typename C>
 	inline static std::shared_ptr<message_callback> make_message_callback(message_callback_ptm_type<C> member, C *c)
 	{
-		std::function<message_callback_type> f = std::bind(member, c, std::placeholders::_1);
+		std::function<message_callback_type> f{ [member, c](auto &&p) {
+				return (c->*member)(p);
+			} };
 		return std::make_shared<message_callback_impl>(f);
 	}
 
