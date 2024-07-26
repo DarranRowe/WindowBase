@@ -11,6 +11,10 @@ namespace application
 	{
 	public:
 		~application_thread() noexcept;
+		application_thread(const application_thread &) noexcept;
+		application_thread(application_thread &&) noexcept;
+		application_thread &operator=(const application_thread &) noexcept;
+		application_thread &operator=(application_thread &&) noexcept;
 
 		void set_message_pump_to_ansi();
 		void set_message_pump_to_unicode();

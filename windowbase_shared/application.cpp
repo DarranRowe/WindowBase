@@ -42,22 +42,16 @@ namespace application
 
 	application::application(application &&) noexcept
 	{
-	}
-
-	application &application::operator=(const application &right) noexcept
-	{
-		if (&right == this)
-		{
-			return *this;
-		}
-
 #ifdef _DEBUG
 		auto impl = details::application_impl::get_current_instance();
 		_ASSERTE(impl != nullptr);
 #endif
 
 		details::application_impl::add_ref_impl();
+	}
 
+	application &application::operator=(const application &right) noexcept
+	{
 		return *this;
 	}
 

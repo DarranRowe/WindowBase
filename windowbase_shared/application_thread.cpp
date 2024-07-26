@@ -28,6 +28,38 @@ namespace application
 		details::application_impl::release_impl();
 	}
 
+	application_thread::application_thread(const application_thread &) noexcept
+	{
+#ifdef _DEBUG
+		auto impl = details::application_impl::get_current_instance();
+		_ASSERTE(impl != nullptr);
+#endif
+
+		details::application_impl::add_ref_impl();
+	}
+
+	application_thread::application_thread(application_thread &&) noexcept
+	{
+		//This is needed in the move constructor since we are working on our own data.
+		//This constructor is paired with a destructor, so we must increase our ref count.
+#ifdef _DEBUG
+		auto impl = details::application_impl::get_current_instance();
+		_ASSERTE(impl != nullptr);
+#endif
+
+		details::application_impl::add_ref_impl();
+	}
+
+	application_thread &application_thread::operator=(const application_thread &) noexcept
+	{
+		return *this;
+	}
+
+	application_thread &application_thread::operator=(application_thread &&) noexcept
+	{
+		return *this;
+	}
+
 	void application_thread::set_message_pump_to_ansi()
 	{
 		auto inst = details::application_impl::get_current_instance();

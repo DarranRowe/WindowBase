@@ -77,6 +77,10 @@ EXPORTS
 	?application_package_get_applist_count@application@@YAIXZ
 
 	??1application_thread@application@@QEAA@XZ
+	??0application_thread@application@@QEAA@AEBV01@@Z
+	??0application_thread@application@@QEAA@$$QEAV01@@Z
+	??4application_thread@application@@QEAAAEAV01@AEBV01@@Z
+	??4application_thread@application@@QEAAAEAV01@$$QEAV01@@Z
 	?set_message_pump_to_ansi@application_thread@application@@QEAAXXZ
 	?set_message_pump_to_unicode@application_thread@application@@QEAAXXZ
 	?is_message_pump_ansi@application_thread@application@@QEBA_NXZ
