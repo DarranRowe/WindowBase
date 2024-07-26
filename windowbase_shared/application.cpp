@@ -50,7 +50,7 @@ namespace application
 		details::application_impl::add_ref_impl();
 	}
 
-	application &application::operator=(const application &right) noexcept
+	application &application::operator=(const application &) noexcept
 	{
 		return *this;
 	}
