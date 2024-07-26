@@ -3527,7 +3527,7 @@ namespace windowing
 				}
 				else
 				{
-
+					break;
 				}
 			}
 			case WM_NCCREATE:
