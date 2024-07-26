@@ -47,6 +47,7 @@ namespace application::details
 	{
 		bool in_message_pump = false;
 		bool is_pump_ansi = false;
+		std::atomic_uint32_t thread_refs{ 1 };
 
 		std::shared_mutex callback_mutex{};
 		uint32_t callback_cookie{};

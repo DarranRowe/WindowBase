@@ -407,13 +407,22 @@ namespace application::details
 
 		{
 			std::unique_lock sl(tdm.lookup_mutex);
-			emplace_result = tdm.lookup_map.emplace(std::move(tid), std::make_unique<thread_pump_information>());
-
-			if (emplace_result.second != true)
+			auto find_result = tdm.lookup_map.find(tid);
+			if (find_result != tdm.lookup_map.end())
 			{
-				debug::format_write_to_debugger(L"Initialising data for thread {} found existing data\r\n", tid);
+				auto &mytpi = *(*find_result).second.get();
+				mytpi.thread_refs += 1;
 			}
-			_ASSERTE(emplace_result.second == true);
+			else
+			{
+				emplace_result = tdm.lookup_map.emplace(std::move(tid), std::make_unique<thread_pump_information>());
+
+				if (emplace_result.second != true)
+				{
+					debug::format_write_to_debugger(L"Initialising data for thread {} found existing data\r\n", tid);
+				}
+				_ASSERTE(emplace_result.second == true);
+			}
 		}
 	}
 
@@ -422,12 +431,19 @@ namespace application::details
 		auto &tdm = get_data_map();
 
 		std::unique_lock sl(tdm.lookup_mutex);
-		auto erase_result = tdm.lookup_map.erase(tid);
-		if (erase_result != 1)
+		auto find_result = tdm.lookup_map.find(tid);
+		auto &mytpi = *(*find_result).second.get();
+		auto refs = --mytpi.thread_refs;
+
+		if (refs == 0)
 		{
-			debug::format_write_to_debugger(L"Erasing thread data failed for thread {}.\r\n", tid);
+			auto erase_result = tdm.lookup_map.erase(tid);
+			if (erase_result != 1)
+			{
+				debug::format_write_to_debugger(L"Erasing thread data failed for thread {}.\r\n", tid);
+			}
+			_ASSERTE(erase_result == 1);
 		}
-		_ASSERTE(erase_result == 1);
 	}
 
 	thread_pump_information &application_impl::get_pump_info_for_thread(uint32_t tid)
