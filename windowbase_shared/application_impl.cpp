@@ -276,9 +276,12 @@ namespace application::details
 					else
 					{
 						//This is a window callback.
-						auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
-						auto wc_result = mc.invoke(msg);
-						dispatch_message = wc_result == true ? dispatch_message : wc_result;
+						if (windowing::window_base::has_window_message_callback(ci.window_handle, ci.callback_identifier))
+						{
+							auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
+							auto wc_result = mc.invoke(msg);
+							dispatch_message = wc_result == true ? dispatch_message : wc_result;
+						}
 					}
 				}
 			}
@@ -329,9 +332,12 @@ namespace application::details
 					else
 					{
 						//This is a window callback.
-						auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
-						auto wc_result = mc.invoke(msg);
-						dispatch_message = wc_result == true ? dispatch_message : wc_result;
+						if (windowing::window_base::has_window_message_callback(ci.window_handle, ci.callback_identifier))
+						{
+							auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
+							auto wc_result = mc.invoke(msg);
+							dispatch_message = wc_result == true ? dispatch_message : wc_result;
+						}
 					}
 				}
 			}

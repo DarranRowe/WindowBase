@@ -764,9 +764,7 @@ namespace windowing
 	bool window_base::has_window_message_callback(HWND wnd, uint32_t index)
 	{
 		auto message_container = IsWindowUnicode(wnd) != FALSE ? static_cast<message_callback_container *>(windowing::get_property_w(wnd, prop_type::message_callback)) : static_cast<message_callback_container *>(windowing::get_property_a(wnd, prop_type::message_callback));
-		_ASSERTE(message_container != nullptr);
-
-		return message_container->has_callback(index);
+		return message_container == nullptr ? false : message_container->has_callback(index);
 	}
 
 	window_base::window_base(HINSTANCE inst) : m_window_data(details::make_window_data(inst))
