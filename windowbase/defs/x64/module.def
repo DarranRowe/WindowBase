@@ -63,6 +63,30 @@ EXPORTS
 	?is_windows_10_build@helper@application@@YA_NI@Z
 	?is_build_win10_range@helper@application@@YA_NI@Z
 	?is_build_known_win11_range@helper@application@@YA_NI@Z
+	?allocate_console_for_ui_process@helper@application@@YAXXZ
+	?api_is_debugger_present@helper@application@@YA_NXZ
+	?is_file_translated@helper@application@@YA_NPEAU_iobuf@@@Z
+	?is_stdout_translated@helper@application@@YA_NXZ
+	?is_stderr_translated@helper@application@@YA_NXZ
+	?no_cache_is_file_translated@helper@application@@YA_NPEAU_iobuf@@@Z
+	?no_cache_is_stdout_translated@helper@application@@YA_NXZ
+	?no_cache_is_stderr_translated@helper@application@@YA_NXZ
+	?write_string_to_debugger@helper@application@@YAXAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+	?write_string_to_debugger@helper@application@@YAXAEBV?$basic_string_view@DU?$char_traits@D@std@@@std@@@Z
+	?write_string_to_debugger@helper@application@@YAXAEBV?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@std@@@Z
+	?write_string_to_debugger@helper@application@@YAXAEBV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@Z
+	?write_string_to_stream@helper@application@@YAHPEAU_iobuf@@AEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+	?write_string_to_stream@helper@application@@YAHPEAU_iobuf@@AEBV?$basic_string_view@DU?$char_traits@D@std@@@std@@@Z
+	?write_string_to_stream@helper@application@@YAHPEAU_iobuf@@AEBV?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@std@@@Z
+	?write_string_to_stream@helper@application@@YAHPEAU_iobuf@@AEBV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@Z
+	?write_string_to_stdout@helper@application@@YAHAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+	?write_string_to_stdout@helper@application@@YAHAEBV?$basic_string_view@DU?$char_traits@D@std@@@std@@@Z
+	?write_string_to_stdout@helper@application@@YAHAEBV?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@std@@@Z
+	?write_string_to_stdout@helper@application@@YAHAEBV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@Z
+	?write_string_to_stderr@helper@application@@YAHAEBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+	?write_string_to_stderr@helper@application@@YAHAEBV?$basic_string_view@DU?$char_traits@D@std@@@std@@@Z
+	?write_string_to_stderr@helper@application@@YAHAEBV?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@std@@@Z
+	?write_string_to_stderr@helper@application@@YAHAEBV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@Z
 
 	?is_application_packaged@application@@YA_NXZ
 	?application_has_external_location@application@@YA_NXZ

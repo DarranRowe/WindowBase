@@ -6,6 +6,9 @@
 #include <Windows.h>
 #include <memory>
 #include <appmodel.h>
+#include <io.h>
+#include <fcntl.h>
+#include <vector>
 
 namespace application::helper
 {
@@ -168,5 +171,228 @@ namespace application::helper
 			return true;
 		}
 		return false;
+	}
+
+	//Has the stdout and stderr files
+	//been set for unicode output.
+	//Assume false because this is how the files are initialised.
+	static bool s_stdout_unicode = false;
+	static bool s_stderr_unicode = false;
+	
+	enum class translated_state
+	{
+		unknown,
+		no,
+		yes
+	};
+
+	static std::vector<translated_state> s_mode{};
+
+	void allocate_console_for_ui_process()
+	{
+		auto d_in_handle = GetStdHandle(STD_INPUT_HANDLE);
+		auto d_out_handle = GetStdHandle(STD_OUTPUT_HANDLE);
+		auto d_err_handle = GetStdHandle(STD_ERROR_HANDLE);
+
+		if (!AllocConsole())
+		{
+			DWORD last_error = GetLastError();
+			write_debugger(L"AllocConsole failed. Last error: {}. Process is likely attached to a console.", last_error);
+			return;
+		}
+
+		//Only reopen the file handles if there is not an existing console.
+		//Also, only reopen the files if the standard handle wasn't null before
+		//we allocated the console. This indicates that the handles were redirected.
+		//Opening them will direct them back to the console.
+		FILE *dummy = nullptr;
+		if (d_in_handle == nullptr)
+		{
+			freopen_s(&dummy, "CONIN$", "r", stdin);
+		}
+		if (d_out_handle == nullptr)
+		{
+			freopen_s(&dummy, "CONOUT$", "w", stdout);
+		}
+		if (d_err_handle == nullptr)
+		{
+			freopen_s(&dummy, "CONOUT$", "w", stderr);
+		}
+	}
+
+	//This is to remove the need for Windows.h in our headers.
+	bool api_is_debugger_present()
+	{
+		return IsDebuggerPresent() != FALSE;
+	}
+
+	bool is_file_translated(FILE *stream)
+	{
+		auto fd = _fileno(stream);
+
+		if (fd == -1)
+		{
+			writeln_debugger(L"File given is invalid.");
+			_ASSERTE(false);
+			__fastfail(static_cast<unsigned int>(-1));
+		}
+
+		if (fd == -2)
+		{
+			_ASSERTE(stream == stdout || stream == stderr);
+			writeln_debugger(L"Standard out or standard error not associated with a console.");
+			_ASSERTE(false);
+			__fastfail(static_cast<unsigned int>(-2));
+		}
+
+		//This should shortcircuit.
+		//The only known cases where fd is negative have been dealt with.
+		if (s_mode.size() < static_cast<size_t>(fd) || s_mode[fd] == translated_state::unknown)
+		{
+			return no_cache_is_file_translated(stream);
+		}
+
+		return s_mode[fd] == translated_state::yes;
+	}
+
+	bool is_stdout_translated()
+	{
+		return is_file_translated(stdout);
+	}
+
+	bool is_stderr_translated()
+	{
+		return is_file_translated(stderr);
+	}
+
+	bool no_cache_is_file_translated(FILE *stream)
+	{
+		auto fd = _fileno(stream);
+
+		if (fd == -1)
+		{
+			writeln_debugger(L"File given is invalid.");
+			_ASSERTE(false);
+		}
+
+		if (fd == -2)
+		{
+			_ASSERTE(stream == stdout || stream == stderr);
+			writeln_debugger(L"Standard out or standard error not associated with a console.");
+			_ASSERTE(false);
+		}
+
+		if (s_mode.size() < static_cast<size_t>(fd))
+		{
+			//Add an extra 1 to the descriptor so that
+			//the vector operators are guaranteed to work.
+			s_mode.resize(fd + 1, translated_state::unknown);
+		}
+
+		auto old_mode = _setmode(fd, _O_TEXT);
+		auto ignore_old_mode = _setmode(fd, old_mode);
+		ignore_old_mode;
+
+		bool translated = old_mode & _O_TEXT;
+		if (translated)
+		{
+			s_mode[fd] = translated_state::yes;
+		}
+		else
+		{
+			s_mode[fd] = translated_state::no;
+		}
+
+		return translated;
+	}
+
+	bool no_cache_is_stdout_translated()
+	{
+		return no_cache_is_file_translated(stdout);
+	}
+
+	bool no_cache_is_stderr_translated()
+	{
+		return no_cache_is_file_translated(stderr);
+	}
+
+	void write_string_to_debugger(const std::string &fmt_string)
+	{
+		OutputDebugStringA(fmt_string.c_str());
+	}
+
+	void write_string_to_debugger(const std::string_view &fmt_string)
+	{
+		OutputDebugStringA(fmt_string.data());
+	}
+
+	void write_string_to_debugger(const std::wstring &fmt_string)
+	{
+		OutputDebugStringW(fmt_string.c_str());
+	}
+
+	void write_string_to_debugger(const std::wstring_view &fmt_string)
+	{
+		OutputDebugStringW(fmt_string.data());
+	}
+
+	int write_string_to_stream(FILE *stream, const std::string &fmt_string)
+	{
+		return fputs(fmt_string.c_str(), stream);
+	}
+
+	int write_string_to_stream(FILE *stream, const std::string_view &fmt_string)
+	{
+		return fputs(fmt_string.data(), stream);
+	}
+
+	int write_string_to_stream(FILE *stream, const std::wstring &fmt_string)
+	{
+		return fputws(fmt_string.c_str(), stream);
+	}
+
+	int write_string_to_stream(FILE *stream, const std::wstring_view &fmt_string)
+	{
+		return fputws(fmt_string.data(), stream);
+	}
+
+	int write_string_to_stdout(const std::string &fmt_string)
+	{
+		return write_string_to_stream(stdout, fmt_string);
+	}
+
+	int write_string_to_stdout(const std::string_view &fmt_string)
+	{
+		return write_string_to_stream(stdout, fmt_string);
+	}
+
+	int write_string_to_stdout(const std::wstring &fmt_string)
+	{
+		return write_string_to_stream(stdout, fmt_string);
+	}
+
+	int write_string_to_stdout(const std::wstring_view &fmt_string)
+	{
+		return write_string_to_stream(stdout, fmt_string);
+	}
+
+	int write_string_to_stderr(const std::string &fmt_string)
+	{
+		return write_string_to_stream(stderr, fmt_string);
+	}
+
+	int write_string_to_stderr(const std::string_view &fmt_string)
+	{
+		return write_string_to_stream(stderr, fmt_string);
+	}
+
+	int write_string_to_stderr(const std::wstring &fmt_string)
+	{
+		return write_string_to_stream(stderr, fmt_string);
+	}
+
+	int write_string_to_stderr(const std::wstring_view &fmt_string)
+	{
+		return write_string_to_stream(stderr, fmt_string);
 	}
 }
