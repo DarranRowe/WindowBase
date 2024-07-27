@@ -35,6 +35,7 @@ namespace application
 namespace application::details
 {
 	using message_process_callback_ptr = message_process_callback *;
+	using work_process_callback_ptr = work_process_callback *;
 
 	struct callback_information
 	{
@@ -52,6 +53,7 @@ namespace application::details
 		std::shared_mutex callback_mutex{};
 		uint32_t callback_cookie{};
 		std::map<uint32_t, std::unique_ptr<callback_information>> callback_info{};
+		std::unique_ptr<work_callback_wrapper> callback_work_information{};
 	};
 
 	struct thread_data_map
@@ -91,11 +93,15 @@ namespace application::details
 		uint32_t add_callback(pump_callback_wrapper, HWND, uint32_t, uint32_t);
 		void clear_callbacks(uint32_t);
 		void remove_callback(uint32_t, uint32_t);
+		void add_work_callback(work_callback_wrapper, uint32_t);
+		void remove_work_callback(uint32_t);
 
 		void set_message_pump_to_ansi(bool, uint32_t);
 		bool is_message_pump_ansi(uint32_t);
 		int run_ansi_message_pump(uint32_t);
 		int run_unicode_message_pump(uint32_t);
+		int run_ansi_game_message_pump(uint32_t);
+		int run_unicode_game_message_pump(uint32_t);
 		void clear_ansi_message_queue(uint32_t);
 		void clear_unicode_message_queue(uint32_t);
 

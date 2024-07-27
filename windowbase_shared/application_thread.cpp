@@ -95,6 +95,20 @@ namespace application
 		return inst->is_message_pump_ansi(m_tid) ? inst->run_ansi_message_pump(m_tid) : inst->run_unicode_message_pump(m_tid);
 	}
 
+	int application_thread::run_game_message_pump() const
+	{
+		auto inst = details::application_impl::get_current_instance();
+
+		return inst->is_message_pump_ansi(m_tid) ? inst->run_ansi_game_message_pump(m_tid) : inst->run_unicode_game_message_pump(m_tid);
+	}
+
+	void application_thread::exit_message_pump(int exit_code) const
+	{
+		auto inst = details::application_impl::get_current_instance();
+
+		inst->send_pump_exit_for_thread(m_tid, exit_code);
+	}
+
 	void application_thread::clear_message_queue() const
 	{
 		auto inst = details::application_impl::get_current_instance();
@@ -128,5 +142,19 @@ namespace application
 		auto inst = details::application_impl::get_current_instance();
 
 		inst->remove_callback(cookie, m_tid);
+	}
+
+	void application_thread::add_pump_work_callback(work_callback_wrapper callback)
+	{
+		auto inst = details::application_impl::get_current_instance();
+
+		inst->add_work_callback(callback, m_tid);
+	}
+
+	void application_thread::remove_pump_work_callback()
+	{
+		auto inst = details::application_impl::get_current_instance();
+
+		inst->remove_work_callback(m_tid);
 	}
 }

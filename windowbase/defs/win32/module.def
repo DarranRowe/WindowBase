@@ -110,11 +110,15 @@ EXPORTS
 	?is_message_pump_ansi@application_thread@application@@QBE_NXZ
 	?is_message_pump_unicode@application_thread@application@@QBE_NXZ
 	?run_message_pump@application_thread@application@@QBEHXZ
+	?run_game_message_pump@application_thread@application@@QBEHXZ
 	?clear_message_queue@application_thread@application@@QBEXXZ
+	?exit_message_pump@application_thread@application@@QBEXH@Z
 	?add_pump_simple_callback@application_thread@application@@QAEIVpump_callback_wrapper@2@@Z
 	?add_pump_window_callback@application_thread@application@@QAEIPAUHWND__@@I@Z
 	?clear_pump_callbacks@application_thread@application@@QAEXXZ
 	?remove_pump_callback@application_thread@application@@QAEXI@Z
+	?add_pump_work_callback@application_thread@application@@QAEXVwork_callback_wrapper@2@@Z
+	?remove_pump_work_callback@application_thread@application@@QAEXXZ
 
 	?set_property_a@windowing@@YA_NPAUHWND__@@W4prop_type@1@PAX@Z
 	?get_property_a@windowing@@YAPAXPAUHWND__@@W4prop_type@1@@Z

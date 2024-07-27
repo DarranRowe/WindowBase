@@ -227,6 +227,30 @@ namespace application::details
 		}
 	}
 
+	void application_impl::add_work_callback(work_callback_wrapper callback, uint32_t tid)
+	{
+		auto wi = std::make_unique<work_callback_wrapper>(std::move(callback));
+
+		auto &tpi = get_pump_info_for_thread(tid);
+
+		{
+			std::unique_lock sl(tpi.callback_mutex);
+
+			tpi.callback_work_information.reset(wi.release());
+		}
+	}
+
+	void application_impl::remove_work_callback(uint32_t tid)
+	{
+		auto &tpi = get_pump_info_for_thread(tid);
+
+		{
+			std::unique_lock sl(tpi.callback_mutex);
+
+			tpi.callback_work_information.reset();
+		}
+	}
+
 	void application_impl::set_message_pump_to_ansi(bool use_ansi, uint32_t tid)
 	{
 		auto &tpi = get_pump_info_for_thread(tid);
@@ -345,6 +369,159 @@ namespace application::details
 			if (dispatch_message)
 			{
 				DispatchMessageW(&msg);
+			}
+		}
+
+		int result = static_cast<int>(msg.wParam);
+
+		tpi.in_message_pump = false;
+
+		return result;
+	}
+
+	int application_impl::run_ansi_game_message_pump(uint32_t tid)
+	{
+		auto &tpi = get_pump_info_for_thread(tid);
+		bool continue_loop = true;
+
+		tpi.in_message_pump = true;
+		MSG msg{};
+
+		while (continue_loop)
+		{
+			if (PeekMessageA(&msg, nullptr, 0, 0, PM_REMOVE) != 0)
+			{
+				if (msg.message != WM_QUIT)
+				{
+					bool dispatch_message = true;
+
+					{
+						std::shared_lock sl{ tpi.callback_mutex };
+
+						for (auto &pci : tpi.callback_info)
+						{
+							callback_information &ci = *pci.second.get();
+							if (ci.window_handle == nullptr)
+							{
+								//This is a simple callback.
+								auto sc_result = ci.callback_wrapper(msg);
+								//We only want to change this flag when the result is false.
+								//Changing it when true runs the risk of running DispatchMessage
+								//if one callback returns false and then the following one returns true
+								//if multiple callbacks are registered.
+								//We also only set the flag to itself, so if it has changed, then we keep
+								//that change.
+								dispatch_message = sc_result == true ? dispatch_message : sc_result;
+							}
+							else
+							{
+								//This is a window callback.
+								if (windowing::window_base::has_window_message_callback(ci.window_handle, ci.callback_identifier))
+								{
+									auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
+									auto wc_result = mc.invoke(msg);
+									dispatch_message = wc_result == true ? dispatch_message : wc_result;
+								}
+							}
+						}
+					}
+
+					if (dispatch_message)
+					{
+						DispatchMessageA(&msg);
+					}
+				}
+				else
+				{
+					continue_loop = false;
+				}
+			}
+			else
+			{
+				std::shared_lock sl{ tpi.callback_mutex };
+				
+				_ASSERTE(tpi.callback_work_information);
+
+				work_callback_wrapper &ci = *tpi.callback_work_information.get();
+				
+				auto result = ci();
+				continue_loop = result;
+			}
+		}
+
+		int result = static_cast<int>(msg.wParam);
+
+		tpi.in_message_pump = false;
+
+		return result;
+	}
+
+	int application_impl::run_unicode_game_message_pump(uint32_t tid)
+	{
+		auto &tpi = get_pump_info_for_thread(tid);
+		bool continue_loop = true;
+
+		tpi.in_message_pump = true;
+		MSG msg{};
+
+		while (continue_loop)
+		{
+			if (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE) != 0)
+			{
+				if (msg.message != WM_QUIT)
+				{
+					bool dispatch_message = true;
+
+					{
+						std::shared_lock sl{ tpi.callback_mutex };
+
+						for (auto &pci : tpi.callback_info)
+						{
+							callback_information &ci = *pci.second.get();
+							if (ci.window_handle == nullptr)
+							{
+								//This is a simple callback.
+								auto sc_result = ci.callback_wrapper(msg);
+								//We only want to change this flag when the result is false.
+								//Changing it when true runs the risk of running DispatchMessage
+								//if one callback returns false and then the following one returns true
+								//if multiple callbacks are registered.
+								//We also only set the flag to itself, so if it has changed, then we keep
+								//that change.
+								dispatch_message = sc_result == true ? dispatch_message : sc_result;
+							}
+							else
+							{
+								//This is a window callback.
+								if (windowing::window_base::has_window_message_callback(ci.window_handle, ci.callback_identifier))
+								{
+									auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
+									auto wc_result = mc.invoke(msg);
+									dispatch_message = wc_result == true ? dispatch_message : wc_result;
+								}
+							}
+						}
+					}
+
+					if (dispatch_message)
+					{
+						DispatchMessageW(&msg);
+					}
+				}
+				else
+				{
+					continue_loop = false;
+				}
+			}
+			else
+			{
+				std::shared_lock sl{ tpi.callback_mutex };
+
+				_ASSERTE(tpi.callback_work_information);
+				work_callback_wrapper &ci = *tpi.callback_work_information.get();
+
+				auto result = ci();
+				continue_loop = result;
 			}
 		}
 
