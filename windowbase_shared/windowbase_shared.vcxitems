@@ -28,7 +28,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)apartment_impl.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_private.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)application_impl.hpp" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)debug_helper.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)interface_traits.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)window_base_private.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)wrl_helpers.h" />
@@ -42,7 +41,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)application_impl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)application_info.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)application_thread.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)debug_helper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)window_base.cpp" />
   </ItemGroup>
 </Project>

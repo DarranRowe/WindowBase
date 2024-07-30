@@ -1,7 +1,7 @@
 #include "application.hpp"
 #include "application_thread.hpp"
 #include "application_impl.hpp"
-#include "debug_helper.hpp"
+#include "application_helper.hpp"
 
 namespace application
 {
@@ -88,7 +88,7 @@ namespace application
 		_ASSERTE(aumid != std::nullopt);
 		if (!aumid.has_value())
 		{
-			debug::format_write_to_debugger(L"No explicit AUMID set for the current process.\r\n");
+			helper::writeln_debugger(L"No explicit AUMID set for the current process.");
 		}
 
 		return aumid.value_or(L"###Invalid AUMID###");

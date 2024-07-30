@@ -1,5 +1,5 @@
 #include "apartment_impl.hpp"
-#include "debug_helper.hpp"
+#include "application_helper.hpp"
 
 #pragma comment (lib, "WindowsApp.lib")
 
@@ -16,7 +16,7 @@ namespace application::details
 		}
 		else
 		{
-			debug::format_write_to_debugger(L"CoInitializeEx failed: {}\r\n", hr);
+			helper::writeln_debugger(L"CoInitializeEx failed: {}.", hr);
 			m_failure_code = hr;
 		}
 	}
@@ -31,7 +31,7 @@ namespace application::details
 		}
 		else
 		{
-			debug::format_write_to_debugger(L"RoInitialize failed: {}\r\n", hr);
+			helper::writeln_debugger(L"RoInitialize failed: {}.", hr);
 			m_failure_code = hr;
 		}
 	}
@@ -47,7 +47,7 @@ namespace application::details
 		}
 		else
 		{
-			debug::format_write_to_debugger(L"OleInitialize failed: {}\r\n", hr);
+			helper::writeln_debugger(L"OleInitialize failed: {}.", hr);
 			m_failure_code = hr;
 		}
 	}
@@ -90,7 +90,7 @@ namespace application::details
 		}
 		else
 		{
-			debug::format_write_to_debugger(L"CoIncrementMTAUsage failed: {}\r\n", hr);
+			helper::writeln_debugger(L"CoIncrementMTAUsage failed: {}.", hr);
 		}
 	}
 

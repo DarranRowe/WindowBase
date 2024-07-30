@@ -1,6 +1,6 @@
 #include "apartment_impl.hpp"
 #include "apartment.hpp"
-#include "debug_helper.hpp"
+#include "application_helper.hpp"
 
 namespace application
 {
@@ -19,7 +19,7 @@ namespace application
 
 		if (FAILED(hr))
 		{
-			debug::format_write_to_debugger(L"CoGetApartmentType failed: {}\r\n", hr);
+			helper::writeln_debugger(L"CoGetApartmentType failed: {}.", hr);
 		}
 		_ASSERTE(SUCCEEDED(hr));
 

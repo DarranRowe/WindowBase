@@ -1,5 +1,5 @@
 #include "application_impl.hpp"
-#include "debug_helper.hpp"
+#include "application_helper.hpp"
 #include <ShObjIdl.h>
 
 namespace application::details
@@ -11,7 +11,7 @@ namespace application::details
 	{
 		if (g_app_inst == nullptr)
 		{
-			debug::format_write_to_debugger(L"Instance found to be nullptr in add_ref_impl\r\n");
+			helper::writeln_debugger(L"Instance found to be nullptr in add_ref_impl.");
 		}
 		_ASSERTE(g_app_inst != nullptr);
 		std::scoped_lock lock{ g_app_inst_mutex };
@@ -22,7 +22,7 @@ namespace application::details
 	{
 		if (g_app_inst == nullptr)
 		{
-			debug::format_write_to_debugger(L"Instance found to be nullptr in release_impl\r\n");
+			helper::writeln_debugger(L"Instance found to be nullptr in release_impl.");
 		}
 		_ASSERTE(g_app_inst != nullptr);
 		std::scoped_lock lock{ g_app_inst_mutex };
@@ -40,7 +40,7 @@ namespace application::details
 		std::scoped_lock lock{ g_app_inst_mutex };
 		if (g_app_inst != nullptr)
 		{
-			debug::format_write_to_debugger(L"Instance not null in make_new_instance.\r\n");
+			helper::writeln_debugger(L"Instance not null in make_new_instance.");
 			return g_app_inst;
 		}
 
@@ -51,11 +51,11 @@ namespace application::details
 		}
 		catch (std::bad_alloc &)
 		{
-			debug::format_write_to_debugger(L"std::bad_alloc thrown in make_new_instance.\r\n");
+			helper::writeln_debugger(L"std::bad_alloc thrown in make_new_instance.");
 		}
 		catch (...)
 		{
-			debug::format_write_to_debugger(L"Unknown exception thrown in make_new_instance.\r\n");
+			helper::writeln_debugger(L"Unknown exception thrown in make_new_instance.");
 		}
 
 		if (impl)
@@ -170,7 +170,9 @@ namespace application::details
 		auto result = GetCurrentProcessExplicitAppUserModelID(aumid.addressof());
 		if (FAILED(result))
 		{
-			debug::format_write_to_debugger(L"GetCurrentProcessExplicitAppUserModelID failed.\r\nThis potentially means the AUMID wasn't set for the process.\r\n");
+			helper::write_debugger(LR"(GetCurrentProcessExplicitAppUserModelID failed.
+This potentially means the AUMID wasn't set for the process.
+)");
 			return std::nullopt;
 		}
 
@@ -596,7 +598,7 @@ namespace application::details
 
 				if (emplace_result.second != true)
 				{
-					debug::format_write_to_debugger(L"Initialising data for thread {} found existing data\r\n", tid);
+					helper::writeln_debugger(L"Initialising data for thread {} found existing data.", tid);
 				}
 				_ASSERTE(emplace_result.second == true);
 			}
@@ -617,7 +619,7 @@ namespace application::details
 			auto erase_result = tdm.lookup_map.erase(tid);
 			if (erase_result != 1)
 			{
-				debug::format_write_to_debugger(L"Erasing thread data failed for thread {}.\r\n", tid);
+				helper::writeln_debugger(L"Erasing thread data failed for thread {}.", tid);
 			}
 			_ASSERTE(erase_result == 1);
 		}
@@ -634,8 +636,8 @@ namespace application::details
 			_ASSERTE(it != tdm.lookup_map.end());
 			if (it == tdm.lookup_map.end())
 			{
-				debug::format_write_to_debugger(L"Attempted to obtain non existant thread data for thread {}.\r\n", tid);
-				__fastfail(UINT_MAX);
+				helper::writeln_debugger(L"Attempted to obtain non existant thread data for thread {}.", tid);
+				__fastfail(FAST_FAIL_FATAL_APP_EXIT);
 			}
 
 			return *(*it).second;
