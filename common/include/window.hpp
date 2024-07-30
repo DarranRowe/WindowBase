@@ -10,6 +10,8 @@
 
 #include "application.hpp"
 
+#include "application_helper.hpp"
+
 #include <wil/result.h>
 
 namespace windowing
@@ -7259,7 +7261,7 @@ namespace windowing
 			return handled == true ? result : message_handler(msg, wparam, lparam);
 		}
 
-		static LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
+		static LRESULT window_proc_seh(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			if (msg != WM_NCCREATE)
 			{
@@ -7299,6 +7301,25 @@ namespace windowing
 
 				return that->message_handler(msg, wparam, lparam);
 			}
+		}
+
+		static LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
+		{
+			_EXCEPTION_POINTERS *ei = nullptr;
+			__try
+			{
+				return window_proc_seh(wnd, msg, wparam, lparam);
+			}
+			__except ([&ei](auto &&p) {ei = p; return EXCEPTION_EXECUTE_HANDLER; }(GetExceptionInformation()))
+			{
+				application::helper::writeln_debugger("Uncaught exception reached the window procedure.");
+				RaiseFailFastException(ei->ExceptionRecord, ei->ContextRecord, FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
+			}
+
+			__fastfail(FAST_FAIL_FATAL_APP_EXIT);
+			//The compiler complains that not all control paths return a value even though
+			//it has to go through RaiseFailFastException and __fastfail.
+			return traits::WndDefWindowProc(wnd, msg, wparam, lparam);
 		}
 
 		static my_tptr inst_from_handle(HWND wnd)
