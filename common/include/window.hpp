@@ -1503,7 +1503,7 @@ namespace windowing
 			//The version that is called depends on if the simple paint policy is defined.
 			//If it is, the paint handler will call BeginPaint and EndPaint automatically.
 			template <typename T>
-			using simple_on_paint_t = decltype(std::declval<T>().on_paint(std::declval<HDC>(), std::declval<const PAINTSTRUCT &>()));
+			using simple_on_paint_t = decltype(std::declval<T>().on_paint(std::declval<const PAINTSTRUCT &>()));
 			template <typename T>
 			using default_on_paint_t = decltype(std::declval<T>().on_paint());
 			//0010
@@ -2542,9 +2542,9 @@ namespace windowing
 						if constexpr (same_ret)
 						{
 							PAINTSTRUCT ps{};
-							HDC dc = BeginPaint(get_handle(), &ps);
+							BeginPaint(get_handle(), &ps);
 
-							this_cast<DerivedType>(this)->on_paint(dc, ps);
+							this_cast<DerivedType>(this)->on_paint(ps);
 
 							EndPaint(get_handle(), &ps);
 							handled = true;
