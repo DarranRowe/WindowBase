@@ -2,9 +2,9 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
+    <CommonIncludeDir>$(ProjectDir)..\common\</CommonIncludeDir>
     <AbiIncludeDir>$(CommonIncludeDir)abi\</AbiIncludeDir>
     <WinAppSDKAbiDir>$(AbiIncludeDir)winappsdk\</WinAppSDKAbiDir>
-    <CommonIncludeDir>$(ProjectDir)..\common\</CommonIncludeDir>
     <PublicIncludeDir>$(CommonIncludeDir)include\</PublicIncludeDir>
   </PropertyGroup>
   <PropertyGroup>
@@ -16,16 +16,16 @@
     <ClCompile />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <BuildMacro Include="CommonIncludeDir">
+      <Value>$(CommonIncludeDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
     <BuildMacro Include="AbiIncludeDir">
       <Value>$(AbiIncludeDir)</Value>
       <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
     <BuildMacro Include="WinAppSDKAbiDir">
       <Value>$(WinAppSDKAbiDir)</Value>
-    </BuildMacro>
-    <BuildMacro Include="CommonIncludeDir">
-      <Value>$(CommonIncludeDir)</Value>
-      <EnvironmentVariable>true</EnvironmentVariable>
     </BuildMacro>
     <BuildMacro Include="PublicIncludeDir">
       <Value>$(PublicIncludeDir)</Value>

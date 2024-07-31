@@ -3,6 +3,7 @@
 
 #include <mutex>
 #include "application.hpp"
+#include "application_helper.hpp"
 #include <DispatcherQueue.h>
 
 #include "wrl_helpers.h"
@@ -385,8 +386,19 @@ namespace application
 
 	application_winappsdk_dispatcher_queue::application_winappsdk_dispatcher_queue()
 	{
+		if constexpr (winappsdk_available == false)
+		{
+			helper::writeln_debugger(L"Library was built without Windows App SDK support.");
+			helper::writeln_debugger(L"Make sure that the Windows App SDK ABI headers have been placed in the correct location.");
+		}
 		_ASSERTE(winappsdk_available == true);
-		_ASSERTE(details::runtime_loadable());
+		bool loadable_runtime = details::runtime_loadable();
+		if (!loadable_runtime)
+		{
+			helper::writeln_debugger(L"Windows App SDK was not loadable.");
+			helper::writeln_debugger(L"Please bootstrap the Windows App Runtime, reference with the Dynamic Dependencies API or build the application as self contained.");
+		}
+		_ASSERTE(loadable_runtime == true);
 	}
 	application_winappsdk_dispatcher_queue::~application_winappsdk_dispatcher_queue()
 	{
@@ -500,7 +512,7 @@ namespace application
 	{
 		int32_t disp_queue_id = -1;
 
-#if defined WINAPPSDK_AVIALABLE
+#if defined WINAPPSDK_AVAILABLE
 		using namespace ABI::Microsoft::UI::Dispatching;
 		using namespace Microsoft::WRL;
 
