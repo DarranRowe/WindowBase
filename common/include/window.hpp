@@ -940,6 +940,9 @@ namespace windowing
 	struct window_ncmouse_track_t {};
 	struct window_no_mouse_track_t {};
 
+	struct window_simple_paint_t {};
+	struct window_default_paint_t {};
+
 	namespace details
 	{
 		template <typename T, typename enabled = void>
@@ -983,6 +986,27 @@ namespace windowing
 
 		template <typename T>
 		using ncmouse_track_type_t = typename ncmouse_track_type<T>::policy;
+
+		template <typename T, typename enabled = void>
+		struct paint_policy_or_default
+		{
+			using policy = window_default_paint_t;
+		};
+
+		template <typename T>
+		struct paint_policy_or_default<T, typename std::void_t<typename T::paint_policy>>
+		{
+			using policy = typename T::paint_policy;
+		};
+
+		template <typename T>
+		struct paint_policy_type
+		{
+			using policy = typename paint_policy_or_default<T>::policy;
+		};
+
+		template <typename T>
+		using paint_policy_type_t = typename paint_policy_type<T>::policy;
 	}
 
 	template<typename DerivedType, typename enabled = void>
@@ -1021,6 +1045,12 @@ namespace windowing
 	template<typename DerivedType>
 	struct window_characterset_policy_defined_t<DerivedType, typename std::void_t<typename DerivedType::charset_policy>> : std::true_type {};
 
+	template <typename DerivedType, typename enabled = void>
+	struct window_paint_policy_defined_t : std::false_type {};
+
+	template <typename DerivedType>
+	struct window_paint_policy_defined_t<DerivedType, typename std::void_t<typename DerivedType::paint_policy>> : std::true_type {};
+
 	template<typename DerivedType>
 	struct window_post_quit_policy
 	{
@@ -1058,6 +1088,15 @@ namespace windowing
 			}
 		}
 	};
+
+	template <typename DerivedType>
+	struct window_simple_paint_policy
+	{
+		static constexpr bool value = window_paint_policy_defined_t<DerivedType>::value;
+	};
+
+	template<typename DerivedType>
+	inline static constexpr bool window_simple_paint_policy_v = window_simple_paint_policy<DerivedType>::value;
 
 	template<typename DerivedType, bool UnicodeBase>
 	class window_t;
@@ -1461,8 +1500,12 @@ namespace windowing
 			template <typename T>
 			using on_gettextlength_t = decltype(std::declval<T>().on_gettextlength()); //uintptr_t return
 			//000f
+			//The version that is called depends on if the simple paint policy is defined.
+			//If it is, the paint handler will call BeginPaint and EndPaint automatically.
 			template <typename T>
-			using on_paint_t = decltype(std::declval<T>().on_paint());
+			using simple_on_paint_t = decltype(std::declval<T>().on_paint(std::declval<HDC>(), std::declval<const PAINTSTRUCT &>()));
+			template <typename T>
+			using default_on_paint_t = decltype(std::declval<T>().on_paint());
 			//0010
 			template <typename T>
 			using on_close_t = decltype(std::declval<T>().on_close());
@@ -2491,23 +2534,52 @@ namespace windowing
 			}
 			case WM_PAINT:
 			{
-				if constexpr (dv<wmt::on_paint_t>)
+				if constexpr (window_simple_paint_policy_v<DerivedType>)
 				{
-					constexpr bool same_ret = sv<wmt::on_paint_t, void>;
-					if constexpr (same_ret)
+					if constexpr (dv<wmt::simple_on_paint_t>)
 					{
-						this_cast<DerivedType>(this)->on_paint();
-						handled = true;
-						break;
+						constexpr bool same_ret = sv<wmt::simple_on_paint_t, void>;
+						if constexpr (same_ret)
+						{
+							PAINTSTRUCT ps{};
+							HDC dc = BeginPaint(get_handle(), &ps);
+
+							this_cast<DerivedType>(this)->on_paint(dc, ps);
+
+							EndPaint(get_handle(), &ps);
+							handled = true;
+							break;
+						}
+						else
+						{
+							static_assert(same_ret, "The return type of on_paint must be void");
+						}
 					}
 					else
 					{
-						static_assert(same_ret, "The return type of on_paint must be void");
+						break;
 					}
 				}
 				else
 				{
-					break;
+					if constexpr (dv<wmt::default_on_paint_t>)
+					{
+						constexpr bool same_ret = sv<wmt::default_on_paint_t, void>;
+						if constexpr (same_ret)
+						{
+							this_cast<DerivedType>(this)->on_paint();
+							handled = true;
+							break;
+						}
+						else
+						{
+							static_assert(same_ret, "The return type of on_paint must be void");
+						}
+					}
+					else
+					{
+						break;
+					}
 				}
 			}
 			case WM_CLOSE:
