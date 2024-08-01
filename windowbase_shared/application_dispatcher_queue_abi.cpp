@@ -3,6 +3,25 @@
 
 #include <wil/result_originate.h>
 
+#if !defined WINAPPSDK_AVAILABLE
+namespace ABI
+{
+	namespace Microsoft
+	{
+		namespace UI
+		{
+			namespace Dispatching
+			{
+				//The structure needs to be defined for ComPtr.
+				struct IDispatcherQueue : public IInspectable
+				{
+				};
+			}
+		}
+	}
+}
+#endif
+
 namespace application::abi
 {
 	Microsoft::WRL::ComPtr<ABI::Windows::System::IDispatcherQueue> application_system_dispatcher_queue_access::get_thread_dispatcher_queue()
@@ -60,9 +79,6 @@ namespace application::abi
 		return result;
 	}
 
-	//This currently doesn't have the proper checks for the library being built without the ABI
-	//headers. This will come next.
-#ifdef WINAPPSDK_ENABLE_ABI
 	Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> application_winappsdk_dispatcher_queue_access::get_thread_dispatcher_queue()
 	{
 		using namespace ABI::Microsoft::UI::Dispatching;
@@ -72,6 +88,7 @@ namespace application::abi
 		auto thread_id = GetCurrentThreadId();
 		ComPtr<IDispatcherQueue> result;
 
+#ifdef WINAPPSDK_AVAILABLE
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&]()
 			{
 				ComPtr<IDispatcherQueueController> dqc;
@@ -87,6 +104,7 @@ namespace application::abi
 					}
 				}
 			});
+#endif
 
 		return result;
 	}
@@ -99,6 +117,7 @@ namespace application::abi
 
 		Microsoft::WRL::ComPtr<IDispatcherQueue> result;
 
+#ifdef WINAPPSDK_AVAILABLE
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&]()
 			{
 				ComPtr<IDispatcherQueueController> dqc;
@@ -114,8 +133,8 @@ namespace application::abi
 					}
 				}
 			});
+#endif
 
 		return result;
 	}
-#endif
 }

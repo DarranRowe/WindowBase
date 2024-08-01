@@ -19,6 +19,22 @@
 #include <microsoft.ui.dispatching.h>
 #endif
 
+#if !defined WINAPPSDK_ENABLE_ABI
+namespace ABI
+{
+	namespace Microsoft
+	{
+		namespace UI
+		{
+			namespace Dispatching
+			{
+				struct IDispatcherQueue;
+			}
+		}
+	}
+}
+#endif
+
 namespace application::abi
 {
 	struct application_system_dispatcher_queue_access
@@ -27,11 +43,9 @@ namespace application::abi
 		static Microsoft::WRL::ComPtr<ABI::Windows::System::IDispatcherQueue> get_background_dispatcher_queue(int32_t);
 	};
 
-#ifdef WINAPPSDK_ENABLE_ABI
 	struct application_winappsdk_dispatcher_queue_access
 	{
 		static Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> get_thread_dispatcher_queue();
 		static Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> get_background_dispatcher_queue(int32_t);
 	};
-#endif
 }
