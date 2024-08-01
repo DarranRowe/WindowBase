@@ -18,6 +18,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\application.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\application_defs.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\application_dispatcher_queue.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\application_dispatcher_queue_abi.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\application_error.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\application_helper.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\application_info.hpp" />
@@ -37,6 +38,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)apartment_impl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)application.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_abi.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)application_helper.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)application_impl.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)application_info.cpp" />
