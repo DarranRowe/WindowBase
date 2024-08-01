@@ -7,7 +7,6 @@
 #include "application_dispatcher_queue.hpp"
 #include "application_dispatcher_queue_private.hpp"
 
-#include <mutex>
 #include "application.hpp"
 #include "application_helper.hpp"
 #include <DispatcherQueue.h>
@@ -42,6 +41,26 @@ namespace application
 		static std::mutex dispatcher_queue_info_mutex_thread_lock;
 		static std::mutex dispatcher_queue_info_mutex_b_lock;
 		static dispatcher_queue_info s_dispatcher_queue_info{};
+
+		std::mutex &obtain_dqinfo_mutex()
+		{
+			return dispatcher_queue_info_mutex_thread_lock;
+		}
+
+		std::mutex &obtain_dqinfo_background_mutex()
+		{
+			return dispatcher_queue_info_mutex_b_lock;
+		}
+
+		dispatcher_queue_info &obtain_dqinfo()
+		{
+			return s_dispatcher_queue_info;
+		}
+
+		background_dispatcher_queue_information &obtain_background_dqinfo()
+		{
+			return obtain_dqinfo().background_information;
+		}
 
 		void shutdown_all_sys_queues()
 		{
@@ -171,10 +190,11 @@ namespace application
 		auto thread_id = GetCurrentThreadId();
 
 		{
-			std::scoped_lock sl = std::scoped_lock(details::dispatcher_queue_info_mutex_thread_lock);
-			auto tit = details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.find(thread_id);
+			std::scoped_lock sl = std::scoped_lock(details::obtain_dqinfo_mutex());
+			auto &info = details::obtain_dqinfo();
+			auto tit = info.thread_sys_dispatcher_queue.find(thread_id);
 
-			if (tit != details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.end())
+			if (tit != info.thread_sys_dispatcher_queue.end())
 			{
 				return true;
 			}
@@ -236,8 +256,10 @@ namespace application
 				THROW_IF_FAILED(CreateDispatcherQueueController(DispatcherQueueOptions{ sizeof(DispatcherQueueOptions), DQTYPE_THREAD_CURRENT, DQTAT_COM_NONE }, disp_queue_ctrl.ReleaseAndGetAddressOf()));
 
 				{
-					scoped_lock sl{ details::dispatcher_queue_info_mutex_thread_lock };
-					details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.emplace(make_pair(thread_id, move(disp_queue_ctrl)));
+					scoped_lock sl{ details::obtain_dqinfo_mutex() };
+					auto &info = details::obtain_dqinfo();
+
+					info.thread_sys_dispatcher_queue.emplace(make_pair(thread_id, move(disp_queue_ctrl)));
 				}
 
 				return_result = true;
@@ -261,8 +283,8 @@ namespace application
 				THROW_IF_FAILED(CreateDispatcherQueueController(DispatcherQueueOptions{ sizeof(DispatcherQueueOptions), DQTYPE_THREAD_DEDICATED, DQTAT_COM_STA }, dqc.ReleaseAndGetAddressOf()));
 
 				{
-					scoped_lock sl{ details::dispatcher_queue_info_mutex_b_lock };
-					auto &bi = details::s_dispatcher_queue_info.background_information;
+					scoped_lock sl{ details::obtain_dqinfo_background_mutex() };
+					auto &bi = details::obtain_background_dqinfo();
 
 					_ASSERTE(bi.background_id >= -1);
 					auto id_cache = bi.background_id++;
@@ -290,12 +312,13 @@ namespace application
 			{
 				ComPtr<IDispatcherQueueController> dqc;
 				{
-					std::scoped_lock sl{ details::dispatcher_queue_info_mutex_thread_lock };
-					auto it = details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.find(id);
-					if (it != details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.end())
+					std::scoped_lock sl{ details::obtain_dqinfo_mutex()};
+					auto &info = details::obtain_dqinfo();
+					auto it = info.thread_sys_dispatcher_queue.find(id);
+					if (it != info.thread_sys_dispatcher_queue.end())
 					{
 						dqc = (*it).second;
-						details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.erase(id);
+						info.thread_sys_dispatcher_queue.erase(id);
 					}
 				}
 
@@ -329,13 +352,14 @@ namespace application
 			{
 				ComPtr<IDispatcherQueueController> dqc;
 				{
-					std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
+					std::scoped_lock sl(details::obtain_dqinfo_background_mutex());
 
-					auto it = details::s_dispatcher_queue_info.background_information.background_sys_thread.find(id);
-					if (it != details::s_dispatcher_queue_info.background_information.background_sys_thread.end())
+					auto &bi = details::obtain_background_dqinfo();
+					auto it = bi.background_sys_thread.find(id);
+					if (it != bi.background_sys_thread.end())
 					{
 						dqc = (*it).second;
-						details::s_dispatcher_queue_info.background_information.background_sys_thread.erase(id);
+						bi.background_sys_thread.erase(id);
 					}
 				}
 
@@ -423,10 +447,11 @@ namespace application
 		auto thread_id = GetCurrentThreadId();
 
 		{
-			std::scoped_lock sl = std::scoped_lock(details::dispatcher_queue_info_mutex_thread_lock);
-			auto tit = details::s_dispatcher_queue_info.thread_app_dispatcher_queue.find(thread_id);
+			std::scoped_lock sl = std::scoped_lock(details::obtain_dqinfo_mutex());
+			auto &info = details::obtain_dqinfo();
+			auto tit = info.thread_app_dispatcher_queue.find(thread_id);
 
-			if (tit != details::s_dispatcher_queue_info.thread_app_dispatcher_queue.end())
+			if (tit != info.thread_app_dispatcher_queue.end())
 			{
 				return true;
 			}
@@ -496,8 +521,9 @@ namespace application
 				THROW_IF_FAILED(dqcs->CreateOnCurrentThread(disp_queue_ctrl.ReleaseAndGetAddressOf()));
 
 				{
-					scoped_lock sl{ details::dispatcher_queue_info_mutex_thread_lock };
-					details::s_dispatcher_queue_info.thread_app_dispatcher_queue.emplace(make_pair(thread_id, move(disp_queue_ctrl)));
+					scoped_lock sl{ details::obtain_dqinfo_mutex() };
+					auto &info = details::obtain_dqinfo();
+					info.thread_app_dispatcher_queue.emplace(make_pair(thread_id, move(disp_queue_ctrl)));
 				}
 
 				return_result = true;
@@ -525,8 +551,8 @@ namespace application
 				THROW_IF_FAILED(dqcs->CreateOnCurrentThread(dqc.ReleaseAndGetAddressOf()));
 
 				{
-					scoped_lock sl{ details::dispatcher_queue_info_mutex_b_lock };
-					auto &bi = details::s_dispatcher_queue_info.background_information;
+					scoped_lock sl{ details::obtain_dqinfo_background_mutex() };
+					auto &bi = details::obtain_background_dqinfo();
 
 					_ASSERTE(bi.background_id >= -1);
 					auto id_cache = bi.background_id++;
@@ -556,12 +582,13 @@ namespace application
 			{
 				ComPtr<IDispatcherQueueController> dqc;
 				{
-					std::scoped_lock sl{ details::dispatcher_queue_info_mutex_thread_lock };
-					auto it = details::s_dispatcher_queue_info.thread_app_dispatcher_queue.find(id);
-					if (it != details::s_dispatcher_queue_info.thread_app_dispatcher_queue.end())
+					std::scoped_lock sl{ details::obtain_dqinfo_mutex() };
+					auto &info = details::obtain_dqinfo();
+					auto it = info.thread_app_dispatcher_queue.find(id);
+					if (it != info.thread_app_dispatcher_queue.end())
 					{
 						dqc = (*it).second;
-						details::s_dispatcher_queue_info.thread_app_dispatcher_queue.erase(id);
+						info.thread_app_dispatcher_queue.erase(id);
 					}
 				}
 
@@ -597,13 +624,13 @@ namespace application
 			{
 				ComPtr<IDispatcherQueueController> dqc;
 				{
-					std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
-
-					auto it = details::s_dispatcher_queue_info.background_information.background_app_thread.find(id);
-					if (it != details::s_dispatcher_queue_info.background_information.background_app_thread.end())
+					std::scoped_lock sl{ details::obtain_dqinfo_background_mutex() };
+					auto &bi = details::obtain_background_dqinfo();
+					auto it = bi.background_app_thread.find(id);
+					if (it != bi.background_app_thread.end())
 					{
 						dqc = (*it).second;
-						details::s_dispatcher_queue_info.background_information.background_app_thread.erase(id);
+						bi.background_app_thread.erase(id);
 					}
 				}
 

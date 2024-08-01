@@ -17,6 +17,7 @@ constexpr bool winappsdk_available = true;
 constexpr bool winappsdk_available = false;
 #endif
 
+#include <mutex>
 #include <atomic>
 
 namespace application::details
@@ -49,4 +50,9 @@ namespace application::details
 
 	bool runtime_loadable();
 	bool wappsdk_dq_activatable();
+
+	std::mutex &obtain_dqinfo_mutex();
+	std::mutex &obtain_dqinfo_background_mutex();
+	dispatcher_queue_info &obtain_dqinfo();
+	background_dispatcher_queue_information &obtain_background_dqinfo();
 }
