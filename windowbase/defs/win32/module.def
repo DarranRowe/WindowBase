@@ -59,6 +59,10 @@ EXPORTS
 	?get_background_dispatcher_queue@application_system_dispatcher_queue_access@abi@application@@SA?AV?$ComPtr@UIDispatcherQueue@System@Windows@ABI@@@WRL@Microsoft@@H@Z
 	?get_thread_dispatcher_queue@application_winappsdk_dispatcher_queue_access@abi@application@@SA?AV?$ComPtr@UIDispatcherQueue@Dispatching@UI@Microsoft@ABI@@@WRL@Microsoft@@XZ
 	?get_background_dispatcher_queue@application_winappsdk_dispatcher_queue_access@abi@application@@SA?AV?$ComPtr@UIDispatcherQueue@Dispatching@UI@Microsoft@ABI@@@WRL@Microsoft@@H@Z
+	?get_thread_dispatcher_queue_abi@application_system_dispatcher_queue_access@projection@application@@CAPAXXZ
+	?get_background_dispatcher_queue_abi@application_system_dispatcher_queue_access@projection@application@@CAPAXH@Z
+	?get_thread_dispatcher_queue_abi@application_winappsdk_dispatcher_queue_access@projection@application@@CAPAXXZ
+	?get_background_dispatcher_queue_abi@application_winappsdk_dispatcher_queue_access@projection@application@@CAPAXH@Z
 
 	?is_windows_10_or_greater@helper@application@@YA_NXZ
 	?is_windows_11_or_greater@helper@application@@YA_NXZ
