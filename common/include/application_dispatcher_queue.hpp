@@ -20,13 +20,13 @@ namespace application
 		application_system_dispatcher_queue &operator=(const application_system_dispatcher_queue &) = delete;
 		application_system_dispatcher_queue &operator=(application_system_dispatcher_queue &&) = delete;
 
-		bool thread_has_dispatcher_queue() const;
-		bool thread_has_uncontrolled_dispatcher_queue() const;
+		bool thread_has_dispatcher_queue() const noexcept;
+		bool thread_has_uncontrolled_dispatcher_queue() const noexcept;
 
-		bool create_dispatcher_queue_on_thread();
-		int32_t create_background_dispatcher_queue();
-		void destroy_thread_dispatcher_queue();
-		void destroy_background_dispatcher_queue(int32_t);
+		bool create_dispatcher_queue_on_thread() noexcept;
+		int32_t create_background_dispatcher_queue() noexcept;
+		void destroy_thread_dispatcher_queue() noexcept;
+		void destroy_background_dispatcher_queue(int32_t) noexcept;
 	};
 }
 
@@ -43,14 +43,14 @@ namespace application
 		application_winappsdk_dispatcher_queue &operator=(const application_winappsdk_dispatcher_queue &) = delete;
 		application_winappsdk_dispatcher_queue &operator=(application_winappsdk_dispatcher_queue &&) = delete;
 
-		static bool dispatcher_queue_available();
+		static bool dispatcher_queue_available() noexcept;
 
-		bool thread_has_dispatcher_queue() const;
-		bool thread_has_uncontrolled_dispatcher_queue() const;
+		bool thread_has_dispatcher_queue() const noexcept;
+		bool thread_has_uncontrolled_dispatcher_queue() const noexcept;
 
-		bool create_dispatcher_queue_on_thread();
-		int32_t create_background_dispatcher_queue();
-		void destroy_thread_dispatcher_queue();
-		void destroy_background_dispatcher_queue(int32_t);
+		bool create_dispatcher_queue_on_thread() noexcept;
+		int32_t create_background_dispatcher_queue() noexcept;
+		void destroy_thread_dispatcher_queue() noexcept;
+		void destroy_background_dispatcher_queue(int32_t) noexcept;
 	};
 }

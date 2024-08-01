@@ -166,7 +166,7 @@ namespace application
 		}
 	}
 
-	bool application_system_dispatcher_queue::thread_has_dispatcher_queue() const
+	bool application_system_dispatcher_queue::thread_has_dispatcher_queue() const noexcept
 	{
 		auto thread_id = GetCurrentThreadId();
 
@@ -183,36 +183,35 @@ namespace application
 		return false;
 	}
 
-	bool application_system_dispatcher_queue::thread_has_uncontrolled_dispatcher_queue() const
+	bool application_system_dispatcher_queue::thread_has_uncontrolled_dispatcher_queue() const noexcept
 	{
 		using namespace ABI::Windows::System;
 		using namespace Microsoft::WRL;
-		try
-		{
-			HRESULT hr = S_OK;
+		bool return_result = false;
 
-			auto dq_statics = wrl_helpers::get_activation_factory<IDispatcherQueueStatics>();
-			ComPtr<IDispatcherQueue> tdq;
-			hr = dq_statics->GetForCurrentThread(tdq.ReleaseAndGetAddressOf());
-
-			if (tdq != nullptr)
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				return true;
-			}
-		}
-		catch (wil::ResultException &)
-		{
-		}
+				auto dq_statics = wrl_helpers::get_activation_factory<IDispatcherQueueStatics>();
+				ComPtr<IDispatcherQueue> tdq;
+				THROW_IF_FAILED(dq_statics->GetForCurrentThread(tdq.ReleaseAndGetAddressOf()));
 
-		return false;
+				if (tdq != nullptr)
+				{
+					return_result = true;
+				}
+			});
+
+		return return_result;
 	}
 
-	bool application_system_dispatcher_queue::create_dispatcher_queue_on_thread()
+	bool application_system_dispatcher_queue::create_dispatcher_queue_on_thread() noexcept
 	{
 		using namespace ABI::Windows::System;
 		using namespace Microsoft::WRL;
 
 		using namespace std;
+
+		bool return_result = false;
 
 		auto thread_id = GetCurrentThreadId();
 
@@ -231,61 +230,51 @@ namespace application
 			return true;
 		}
 
-		try
-		{
-			HRESULT hr = S_OK;
-			ComPtr<IDispatcherQueueController> disp_queue_ctrl;
-
-			hr = CreateDispatcherQueueController(DispatcherQueueOptions{ sizeof(DispatcherQueueOptions), DQTYPE_THREAD_CURRENT, DQTAT_COM_NONE }, disp_queue_ctrl.ReleaseAndGetAddressOf());
-			THROW_IF_FAILED(hr);
-
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				scoped_lock sl(details::dispatcher_queue_info_mutex_thread_lock);
-				details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.emplace(make_pair(thread_id, move(disp_queue_ctrl)));
-			}
+				ComPtr<IDispatcherQueueController> disp_queue_ctrl;
+				THROW_IF_FAILED(CreateDispatcherQueueController(DispatcherQueueOptions{ sizeof(DispatcherQueueOptions), DQTYPE_THREAD_CURRENT, DQTAT_COM_NONE }, disp_queue_ctrl.ReleaseAndGetAddressOf()));
 
-			return true;
-		}
-		catch (wil::ResultException &)
-		{
-		}
+				{
+					scoped_lock sl{ details::dispatcher_queue_info_mutex_thread_lock };
+					details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.emplace(make_pair(thread_id, move(disp_queue_ctrl)));
+				}
 
-		return false;
+				return_result = true;
+			});
+
+		return return_result;
 	}
 
-	int32_t application_system_dispatcher_queue::create_background_dispatcher_queue()
+	int32_t application_system_dispatcher_queue::create_background_dispatcher_queue() noexcept
 	{
 		using namespace ABI::Windows::System;
 		using namespace Microsoft::WRL;
 
+		using namespace std;
 		int32_t disp_queue_id = -1;
-		try
-		{
-			ComPtr<IDispatcherQueueController> dqc;
 
-			//Desktop applications don't work with ASTA, so we just use STA.
-			DispatcherQueueOptions dqo{ sizeof(DispatcherQueueOptions), DQTYPE_THREAD_DEDICATED, DQTAT_COM_STA};
-			HRESULT hr = CreateDispatcherQueueController(dqo, dqc.ReleaseAndGetAddressOf());
-
-			if (SUCCEEDED(hr))
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
-				auto &bi = details::s_dispatcher_queue_info.background_information;
+				ComPtr<IDispatcherQueueController> dqc;
+				DispatcherQueueOptions dqo{sizeof(DispatcherQueueOptions), DQTYPE_THREAD_DEDICATED, DQTAT_COM_STA};
+				THROW_IF_FAILED(CreateDispatcherQueueController(DispatcherQueueOptions{ sizeof(DispatcherQueueOptions), DQTYPE_THREAD_DEDICATED, DQTAT_COM_STA }, dqc.ReleaseAndGetAddressOf()));
 
-				_ASSERTE(bi.background_id >= -1);
-				auto id_cache = bi.background_id++;
-				bi.background_sys_thread.emplace(id_cache, std::move(dqc));
-				disp_queue_id = id_cache;
-			}
-		}
-		catch (wil::ResultException &)
-		{
-		}
+				{
+					scoped_lock sl{ details::dispatcher_queue_info_mutex_b_lock };
+					auto &bi = details::s_dispatcher_queue_info.background_information;
+
+					_ASSERTE(bi.background_id >= -1);
+					auto id_cache = bi.background_id++;
+					bi.background_sys_thread.emplace(id_cache, move(dqc));
+					disp_queue_id = id_cache;
+				}
+			});
 
 		return disp_queue_id;
 	}
 
-	void application_system_dispatcher_queue::destroy_thread_dispatcher_queue()
+	void application_system_dispatcher_queue::destroy_thread_dispatcher_queue() noexcept
 	{
 		using namespace ABI::Windows::Foundation;
 		using namespace ABI::Windows::System;
@@ -297,90 +286,77 @@ namespace application
 			return;
 		}
 
-		ComPtr<IDispatcherQueueController> dqc;
-		{
-			std::scoped_lock sl(details::dispatcher_queue_info_mutex_thread_lock);
-
-			auto it = details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.find(id);
-			if (it != details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.end())
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				dqc = (*it).second;
-				details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.erase(id);
-			}
-		}
+				ComPtr<IDispatcherQueueController> dqc;
+				{
+					std::scoped_lock sl{ details::dispatcher_queue_info_mutex_thread_lock };
+					auto it = details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.find(id);
+					if (it != details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.end())
+					{
+						dqc = (*it).second;
+						details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.erase(id);
+					}
+				}
 
-		try
-		{
-			HRESULT hr = S_OK;
-			ComPtr<IAsyncAction> async_return;
-			hr = dqc->ShutdownQueueAsync(async_return.ReleaseAndGetAddressOf());
-			THROW_IF_FAILED(hr);
+				if (dqc)
+				{
+					ComPtr<IAsyncAction> async_return;
+					THROW_IF_FAILED(dqc->ShutdownQueueAsync(async_return.ReleaseAndGetAddressOf()));
 
-			ComPtr<IAsyncInfo> async_return_info;
-			hr = async_return.As(&async_return_info);
-			THROW_IF_FAILED(hr);
+					ComPtr<IAsyncInfo> async_return_info;
+					THROW_IF_FAILED(async_return.As(&async_return_info));
 
-			AsyncStatus as{};
-			hr = async_return_info->get_Status(&as);
-			THROW_IF_FAILED(hr);
+					AsyncStatus as{};
+					THROW_IF_FAILED(async_return_info->get_Status(&as));
 
-			while (as == AsyncStatus::Started)
-			{
-				clear_message_queue();
-				hr = async_return_info->get_Status(&as);
-				THROW_IF_FAILED(hr);
-			}
-		}
-		catch (wil::ResultException &)
-		{
-
-		}
+					while (as == AsyncStatus::Started)
+					{
+						clear_message_queue();
+						THROW_IF_FAILED(async_return_info->get_Status(&as));
+					}
+				}
+			});
 	}
 
-	void application_system_dispatcher_queue::destroy_background_dispatcher_queue(int32_t id)
+	void application_system_dispatcher_queue::destroy_background_dispatcher_queue(int32_t id) noexcept
 	{
 		using namespace ABI::Windows::Foundation;
 		using namespace ABI::Windows::System;
 		using namespace Microsoft::WRL;
 
-		ComPtr<IDispatcherQueueController> dqc;
-		{
-			std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
-
-			auto it = details::s_dispatcher_queue_info.background_information.background_sys_thread.find(id);
-			if (it != details::s_dispatcher_queue_info.background_information.background_sys_thread.end())
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				dqc = (*it).second;
-				details::s_dispatcher_queue_info.background_information.background_sys_thread.erase(id);
-			}
-		}
+				ComPtr<IDispatcherQueueController> dqc;
+				{
+					std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
 
-		try
-		{
-			HRESULT hr = S_OK;
-			ComPtr<IAsyncAction> async_return;
-			hr = dqc->ShutdownQueueAsync(async_return.ReleaseAndGetAddressOf());
-			THROW_IF_FAILED(hr);
+					auto it = details::s_dispatcher_queue_info.background_information.background_sys_thread.find(id);
+					if (it != details::s_dispatcher_queue_info.background_information.background_sys_thread.end())
+					{
+						dqc = (*it).second;
+						details::s_dispatcher_queue_info.background_information.background_sys_thread.erase(id);
+					}
+				}
 
-			ComPtr<IAsyncInfo> async_return_info;
-			hr = async_return.As(&async_return_info);
-			THROW_IF_FAILED(hr);
+				if (dqc)
+				{
+					ComPtr<IAsyncAction> async_return;
+					THROW_IF_FAILED(dqc->ShutdownQueueAsync(async_return.ReleaseAndGetAddressOf()));
 
-			AsyncStatus as{};
-			hr = async_return_info->get_Status(&as);
-			THROW_IF_FAILED(hr);
+					ComPtr<IAsyncInfo> async_return_info;
+					THROW_IF_FAILED(async_return.As(&async_return_info));
 
-			while (as == AsyncStatus::Started)
-			{
-				clear_message_queue();
-				hr = async_return_info->get_Status(&as);
-				THROW_IF_FAILED(hr);
-			}
-		}
-		catch (wil::ResultException &)
-		{
+					AsyncStatus as{};
+					THROW_IF_FAILED(async_return_info->get_Status(&as));
 
-		}
+					while (as == AsyncStatus::Started)
+					{
+						clear_message_queue();
+						THROW_IF_FAILED(async_return_info->get_Status(&as));
+					}
+				}
+			});
 	}
 
 	void check_runtime_capability()
@@ -431,7 +407,7 @@ namespace application
 		}
 	}
 
-	bool application_winappsdk_dispatcher_queue::dispatcher_queue_available()
+	bool application_winappsdk_dispatcher_queue::dispatcher_queue_available() noexcept
 	{
 		if (details::runtime_loadable() && details::wappsdk_dq_activatable())
 		{
@@ -441,7 +417,7 @@ namespace application
 		return false;
 	}
 
-	bool application_winappsdk_dispatcher_queue::thread_has_dispatcher_queue() const
+	bool application_winappsdk_dispatcher_queue::thread_has_dispatcher_queue() const noexcept
 	{
 #if defined WINAPPSDK_AVAILABLE
 		auto thread_id = GetCurrentThreadId();
@@ -460,36 +436,40 @@ namespace application
 		return false;
 	}
 
-	bool application_winappsdk_dispatcher_queue::thread_has_uncontrolled_dispatcher_queue() const
+	bool application_winappsdk_dispatcher_queue::thread_has_uncontrolled_dispatcher_queue() const noexcept
 	{
-#if defined WINAPPSDK_AVAILABLE
-		try
-		{
-			HRESULT hr = S_OK;
+		bool return_result = false;
 
-			auto dq_statics = wrl_helpers::get_activation_factory<ABI::Microsoft::UI::Dispatching::IDispatcherQueueStatics>();
-			Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> tdq;
-			hr = dq_statics->GetForCurrentThread(tdq.ReleaseAndGetAddressOf());
-
-			if (tdq != nullptr)
-			{
-				return true;
-			}
-		}
-		catch (wil::ResultException &)
-		{
-		}
-#endif
-		_ASSERTE(winappsdk_available == true);
-
-		return false;
-	}
-
-	bool application_winappsdk_dispatcher_queue::create_dispatcher_queue_on_thread()
-	{
 #if defined WINAPPSDK_AVAILABLE
 		using namespace ABI::Microsoft::UI::Dispatching;
 		using namespace Microsoft::WRL;
+		
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
+			{
+				auto dq_statics = wrl_helpers::get_activation_factory<IDispatcherQueueStatics>();
+				ComPtr<IDispatcherQueue> tdq;
+				THROW_IF_FAILED(dq_statics->GetForCurrentThread(tdq.ReleaseAndGetAddressOf()));
+
+				if (tdq != nullptr)
+				{
+					return_result = true;
+				}
+			});
+#endif
+		_ASSERTE(winappsdk_available == true);
+
+		return return_result;
+	}
+
+	bool application_winappsdk_dispatcher_queue::create_dispatcher_queue_on_thread() noexcept
+	{
+		bool return_result = false;
+
+#if defined WINAPPSDK_AVAILABLE
+		using namespace ABI::Microsoft::UI::Dispatching;
+		using namespace Microsoft::WRL;
+
+		using namespace std;
 
 		auto thread_id = GetCurrentThreadId();
 
@@ -508,30 +488,26 @@ namespace application
 			return true;
 		}
 
-		try
-		{
-			HRESULT hr = S_OK;
-			ComPtr<IDispatcherQueueController> disp_queue_ctrl;
-			auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics>();
-
-			hr = dqcs->CreateOnCurrentThread(disp_queue_ctrl.ReleaseAndGetAddressOf());
-
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				std::scoped_lock sl(details::dispatcher_queue_info_mutex_thread_lock);
-				details::s_dispatcher_queue_info.thread_app_dispatcher_queue.emplace(std::make_pair(thread_id, std::move(disp_queue_ctrl)));
-			}
+				ComPtr<IDispatcherQueueController> disp_queue_ctrl;
+				auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics>();
 
-			return true;
-		}
-		catch (wil::ResultException &)
-		{
-		}
+				THROW_IF_FAILED(dqcs->CreateOnCurrentThread(disp_queue_ctrl.ReleaseAndGetAddressOf()));
+
+				{
+					scoped_lock sl{ details::dispatcher_queue_info_mutex_thread_lock };
+					details::s_dispatcher_queue_info.thread_app_dispatcher_queue.emplace(make_pair(thread_id, move(disp_queue_ctrl)));
+				}
+
+				return_result = true;
+			});
 #endif
 
-		return false;
+		return return_result;
 	}
 
-	int32_t application_winappsdk_dispatcher_queue::create_background_dispatcher_queue()
+	int32_t application_winappsdk_dispatcher_queue::create_background_dispatcher_queue() noexcept
 	{
 		int32_t disp_queue_id = -1;
 
@@ -539,34 +515,31 @@ namespace application
 		using namespace ABI::Microsoft::UI::Dispatching;
 		using namespace Microsoft::WRL;
 
-		try
-		{
-			HRESULT hr = S_OK;
-			ComPtr<IDispatcherQueueController> dqc;
-			auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics>();
+		using namespace std;
 
-			hr = dqcs->CreateOnDedicatedThread(dqc.ReleaseAndGetAddressOf());
-
-			if (SUCCEEDED(hr))
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
-				auto &bi = details::s_dispatcher_queue_info.background_information;
+				ComPtr<IDispatcherQueueController> dqc;
+				auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics>();
 
-				_ASSERTE(bi.background_id >= -1);
-				auto id_cache = bi.background_id++;
-				bi.background_app_thread.emplace(id_cache, std::move(dqc));
-				disp_queue_id = id_cache;
-			}
-		}
-		catch (wil::ResultException &)
-		{
-		}
+				THROW_IF_FAILED(dqcs->CreateOnCurrentThread(dqc.ReleaseAndGetAddressOf()));
+
+				{
+					scoped_lock sl{ details::dispatcher_queue_info_mutex_b_lock };
+					auto &bi = details::s_dispatcher_queue_info.background_information;
+
+					_ASSERTE(bi.background_id >= -1);
+					auto id_cache = bi.background_id++;
+					bi.background_app_thread.emplace(id_cache, move(dqc));
+					disp_queue_id = id_cache;
+				}
+			});
 #endif
 
 		return disp_queue_id;
 	}
 
-	void application_winappsdk_dispatcher_queue::destroy_thread_dispatcher_queue()
+	void application_winappsdk_dispatcher_queue::destroy_thread_dispatcher_queue() noexcept
 	{
 #if defined WINAPPSDK_AVAILABLE
 		using namespace ABI::Windows::Foundation;
@@ -579,92 +552,79 @@ namespace application
 			return;
 		}
 
-		ComPtr<IDispatcherQueueController> dqc;
-		{
-			std::scoped_lock sl(details::dispatcher_queue_info_mutex_thread_lock);
-
-			auto it = details::s_dispatcher_queue_info.thread_app_dispatcher_queue.find(id);
-			if (it != details::s_dispatcher_queue_info.thread_app_dispatcher_queue.end())
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				dqc = (*it).second;
-				details::s_dispatcher_queue_info.thread_app_dispatcher_queue.erase(id);
-			}
-		}
+				ComPtr<IDispatcherQueueController> dqc;
+				{
+					std::scoped_lock sl{ details::dispatcher_queue_info_mutex_thread_lock };
+					auto it = details::s_dispatcher_queue_info.thread_app_dispatcher_queue.find(id);
+					if (it != details::s_dispatcher_queue_info.thread_app_dispatcher_queue.end())
+					{
+						dqc = (*it).second;
+						details::s_dispatcher_queue_info.thread_app_dispatcher_queue.erase(id);
+					}
+				}
 
-		try
-		{
-			HRESULT hr = S_OK;
-			ComPtr<IAsyncAction> async_return;
-			hr = dqc->ShutdownQueueAsync(async_return.ReleaseAndGetAddressOf());
-			THROW_IF_FAILED(hr);
+				if (dqc)
+				{
+					ComPtr<IAsyncAction> async_return;
+					THROW_IF_FAILED(dqc->ShutdownQueueAsync(async_return.ReleaseAndGetAddressOf()));
 
-			ComPtr<IAsyncInfo> async_return_info;
-			hr = async_return.As(&async_return_info);
-			THROW_IF_FAILED(hr);
+					ComPtr<IAsyncInfo> async_return_info;
+					THROW_IF_FAILED(async_return.As(&async_return_info));
 
-			AsyncStatus as{};
-			hr = async_return_info->get_Status(&as);
-			THROW_IF_FAILED(hr);
+					AsyncStatus as{};
+					THROW_IF_FAILED(async_return_info->get_Status(&as));
 
-			while (as == AsyncStatus::Started)
-			{
-				clear_message_queue();
-				hr = async_return_info->get_Status(&as);
-				THROW_IF_FAILED(hr);
-			}
-		}
-		catch (wil::ResultException &)
-		{
-
-		}
+					while (as == AsyncStatus::Started)
+					{
+						clear_message_queue();
+						THROW_IF_FAILED(async_return_info->get_Status(&as));
+					}
+				}
+			});
 #endif
 	}
 
-	void application_winappsdk_dispatcher_queue::destroy_background_dispatcher_queue([[maybe_unused]] int32_t id)
+	void application_winappsdk_dispatcher_queue::destroy_background_dispatcher_queue([[maybe_unused]] int32_t id) noexcept
 	{
 #if defined WINAPPSDK_AVAILABLE
 		using namespace ABI::Windows::Foundation;
 		using namespace ABI::Microsoft::UI::Dispatching;
 		using namespace Microsoft::WRL;
 
-		ComPtr<IDispatcherQueueController> dqc;
-		{
-			std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
-
-			auto it = details::s_dispatcher_queue_info.background_information.background_app_thread.find(id);
-			if (it != details::s_dispatcher_queue_info.background_information.background_app_thread.end())
+		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				dqc = (*it).second;
-				details::s_dispatcher_queue_info.background_information.background_app_thread.erase(id);
-			}
-		}
+				ComPtr<IDispatcherQueueController> dqc;
+				{
+					std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
 
-		try
-		{
-			HRESULT hr = S_OK;
-			ComPtr<IAsyncAction> async_return;
-			hr = dqc->ShutdownQueueAsync(async_return.ReleaseAndGetAddressOf());
-			THROW_IF_FAILED(hr);
+					auto it = details::s_dispatcher_queue_info.background_information.background_app_thread.find(id);
+					if (it != details::s_dispatcher_queue_info.background_information.background_app_thread.end())
+					{
+						dqc = (*it).second;
+						details::s_dispatcher_queue_info.background_information.background_app_thread.erase(id);
+					}
+				}
 
-			ComPtr<IAsyncInfo> async_return_info;
-			hr = async_return.As(&async_return_info);
-			THROW_IF_FAILED(hr);
+				if (dqc)
+				{
+					ComPtr<IAsyncAction> async_return;
+					THROW_IF_FAILED(dqc->ShutdownQueueAsync(async_return.ReleaseAndGetAddressOf()));
 
-			AsyncStatus as{};
-			hr = async_return_info->get_Status(&as);
-			THROW_IF_FAILED(hr);
+					ComPtr<IAsyncInfo> async_return_info;
+					THROW_IF_FAILED(async_return.As(&async_return_info));
 
-			while (as == AsyncStatus::Started)
-			{
-				clear_message_queue();
-				hr = async_return_info->get_Status(&as);
-				THROW_IF_FAILED(hr);
-			}
-		}
-		catch (wil::ResultException &)
-		{
+					AsyncStatus as{};
+					THROW_IF_FAILED(async_return_info->get_Status(&as));
 
-		}
+					while (as == AsyncStatus::Started)
+					{
+						clear_message_queue();
+						THROW_IF_FAILED(async_return_info->get_Status(&as));
+					}
+				}
+			});
 #endif
 	}
 }
