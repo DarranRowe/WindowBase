@@ -1,3 +1,9 @@
+#define WIN32_LEAN_AND_MEAN
+#define OEMRESOURCE
+#define NOMINMAX
+#include <Windows.h>
+#include <wrl.h>
+
 #include "application_dispatcher_queue.hpp"
 #include "application_dispatcher_queue_private.hpp"
 
@@ -31,8 +37,10 @@ namespace application
 {
 	namespace details
 	{
-		std::mutex dispatcher_queue_info_mutex_thread_lock;
-		std::mutex dispatcher_queue_info_mutex_b_lock;
+		static std::atomic_uint32_t system_queue_refs{ 0 };
+		static std::atomic_uint32_t was_queue_refs{ 0 };
+		static std::mutex dispatcher_queue_info_mutex_thread_lock;
+		static std::mutex dispatcher_queue_info_mutex_b_lock;
 		static dispatcher_queue_info s_dispatcher_queue_info{};
 
 		void shutdown_all_sys_queues()
@@ -95,6 +103,28 @@ namespace application
 			return false;
 #endif
 		}
+
+		void incref_sys_queue()
+		{
+			++system_queue_refs;
+		}
+
+		bool decref_sys_queue()
+		{
+			auto refs = --system_queue_refs;
+			return refs == 0 ? false : true;
+		}
+
+		void incref_was_queue()
+		{
+			++was_queue_refs;
+		}
+
+		bool decref_was_queue()
+		{
+			auto refs = --was_queue_refs;
+			return refs == 0 ? false : true;
+		}
 	}
 
 	bool is_current_thread_ui()
@@ -111,13 +141,29 @@ namespace application
 		}
 	}
 
-	application_system_dispatcher_queue::application_system_dispatcher_queue()
+	application_system_dispatcher_queue::application_system_dispatcher_queue() noexcept
 	{
+		details::incref_sys_queue();
 	}
-	application_system_dispatcher_queue::~application_system_dispatcher_queue()
+
+	application_system_dispatcher_queue::application_system_dispatcher_queue(const application_system_dispatcher_queue &) noexcept
 	{
-		details::shutdown_all_sys_queues();
-		clear_message_queue();
+		details::incref_sys_queue();
+	}
+
+	application_system_dispatcher_queue::application_system_dispatcher_queue(application_system_dispatcher_queue &&) noexcept
+	{
+		details::incref_sys_queue();
+	}
+
+	application_system_dispatcher_queue::~application_system_dispatcher_queue() noexcept
+	{
+		auto still_alive = details::decref_sys_queue();
+		if(!still_alive)
+		{
+			details::shutdown_all_sys_queues();
+			clear_message_queue();
+		}
 	}
 
 	bool application_system_dispatcher_queue::thread_has_dispatcher_queue() const
@@ -337,54 +383,7 @@ namespace application
 		}
 	}
 
-	Microsoft::WRL::ComPtr<ABI::Windows::System::IDispatcherQueue> application_system_dispatcher_queue::get_thread_dispatcher_queue() const
-	{
-		auto thread_id = GetCurrentThreadId();
-		Microsoft::WRL::ComPtr<ABI::Windows::System::IDispatcherQueue> result;
-		HRESULT hr = S_OK;
-
-		{
-			std::scoped_lock sl(details::dispatcher_queue_info_mutex_thread_lock);
-			auto dq_it = details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.find(thread_id);
-			if (dq_it == details::s_dispatcher_queue_info.thread_sys_dispatcher_queue.end())
-			{
-				return {};
-			}
-
-			hr = (*dq_it).second->get_DispatcherQueue(result.ReleaseAndGetAddressOf());
-		}
-
-		if (FAILED(hr))
-		{
-			return {};
-		}
-		return result;
-	}
-
-	Microsoft::WRL::ComPtr<ABI::Windows::System::IDispatcherQueue> application_system_dispatcher_queue::get_background_dispatcher_queue(int32_t id) const
-	{
-		Microsoft::WRL::ComPtr<ABI::Windows::System::IDispatcherQueue> result;
-		HRESULT hr = S_OK;
-
-		{
-			std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
-			auto &bi = details::s_dispatcher_queue_info.background_information;
-			auto it = bi.background_sys_thread.find(id);
-			if (it != bi.background_sys_thread.end())
-			{
-				hr = (*it).second->get_DispatcherQueue(result.ReleaseAndGetAddressOf());
-			}
-		}
-
-		if (FAILED(hr))
-		{
-			result.Reset();
-		}
-
-		return result;
-	}
-
-	application_winappsdk_dispatcher_queue::application_winappsdk_dispatcher_queue()
+	void check_runtime_capability()
 	{
 		if constexpr (winappsdk_available == false)
 		{
@@ -400,12 +399,36 @@ namespace application
 		}
 		_ASSERTE(loadable_runtime == true);
 	}
-	application_winappsdk_dispatcher_queue::~application_winappsdk_dispatcher_queue()
+
+	application_winappsdk_dispatcher_queue::application_winappsdk_dispatcher_queue() noexcept
 	{
-#if defined WINAPPSDK_AVAILABLE
-		details::shutdown_all_app_queues();
-		clear_message_queue();
-#endif
+		check_runtime_capability();
+		details::incref_was_queue();
+	}
+	application_winappsdk_dispatcher_queue::application_winappsdk_dispatcher_queue(const application_winappsdk_dispatcher_queue &) noexcept
+	{
+		//There is no check for the runtime capabilities here.
+		//This copies from an existing instance, that is where the capabilities are checked.
+		details::incref_was_queue();
+	}
+	application_winappsdk_dispatcher_queue::application_winappsdk_dispatcher_queue(application_winappsdk_dispatcher_queue &&) noexcept
+	{
+		//There is no check for the runtime capabilities here.
+		//This copies from an existing instance, that is where the capabilities are checked.
+		details::incref_was_queue();
+	}
+	application_winappsdk_dispatcher_queue::~application_winappsdk_dispatcher_queue() noexcept
+	{
+		auto still_alive = details::decref_was_queue();
+
+		if constexpr (winappsdk_available)
+		{
+			if (!still_alive)
+			{
+				details::shutdown_all_app_queues();
+				clear_message_queue();
+			}
+		}
 	}
 
 	bool application_winappsdk_dispatcher_queue::dispatcher_queue_available()
@@ -597,7 +620,7 @@ namespace application
 #endif
 	}
 
-	void application_winappsdk_dispatcher_queue::destroy_background_dispatcher_queue(int32_t id)
+	void application_winappsdk_dispatcher_queue::destroy_background_dispatcher_queue([[maybe_unused]] int32_t id)
 	{
 #if defined WINAPPSDK_AVAILABLE
 		using namespace ABI::Windows::Foundation;
@@ -642,62 +665,6 @@ namespace application
 		{
 
 		}
-#else
-		id;
 #endif
-	}
-
-	Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> application_winappsdk_dispatcher_queue::get_thread_dispatcher_queue() const
-	{
-		Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> result{};
-
-#if defined WINAPPSDK_AVAILABLE
-		auto thread_id = GetCurrentThreadId();
-		HRESULT hr = S_OK;
-
-		{
-			std::scoped_lock sl(details::dispatcher_queue_info_mutex_thread_lock);
-			auto dq_it = details::s_dispatcher_queue_info.thread_app_dispatcher_queue.find(thread_id);
-			if (dq_it == details::s_dispatcher_queue_info.thread_app_dispatcher_queue.end())
-			{
-				return {};
-			}
-
-			hr = (*dq_it).second->get_DispatcherQueue(result.ReleaseAndGetAddressOf());
-		}
-
-		if (FAILED(hr))
-		{
-			return {};
-		}
-#endif
-		return result;
-	}
-
-	Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> application_winappsdk_dispatcher_queue::get_background_dispatcher_queue(int32_t id) const
-	{
-		Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> result{};
-
-#if defined WINAPPSDK_AVAILABLE
-		HRESULT hr = S_OK;
-
-		{
-			std::scoped_lock sl(details::dispatcher_queue_info_mutex_b_lock);
-			auto &bi = details::s_dispatcher_queue_info.background_information;
-			auto it = bi.background_app_thread.find(id);
-			if (it != bi.background_app_thread.end())
-			{
-				hr = (*it).second->get_DispatcherQueue(result.ReleaseAndGetAddressOf());
-			}
-		}
-
-		if (FAILED(hr))
-		{
-			result.Reset();
-		}
-#else
-		id;
-#endif
-		return result;
 	}
 }

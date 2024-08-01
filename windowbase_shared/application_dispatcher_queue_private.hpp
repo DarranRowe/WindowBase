@@ -4,16 +4,12 @@
 #error C++ Compiler Required
 #endif
 
-#define WIN32_LEAN_AND_MEAN
-#define OEMRESOURCE
-#define NOMINMAX
-#include <Windows.h>
 #include <vector>
 #include <map>
 
 #include <wrl.h>
 #include <windows.system.h>
-#if (__has_include(<Microsoft.UI.Dispatching.h>))
+#if (__has_include(<Microsoft.UI.Dispatching.h>)) && (!defined WINAPPSDK_DISABLE_DISPATCHERQUEUE)
 #define WINAPPSDK_AVAILABLE 1
 constexpr bool winappsdk_available = true;
 #include <Microsoft.UI.Dispatching.h>
@@ -42,6 +38,11 @@ namespace application::details
 #endif
 		background_dispatcher_queue_information background_information;
 	};
+
+	void incref_sys_queue();
+	bool decref_sys_queue();
+	void incref_was_queue();
+	bool decref_was_queue();
 
 	void shutdown_all_sys_queues();
 	void shutdown_all_app_queues();

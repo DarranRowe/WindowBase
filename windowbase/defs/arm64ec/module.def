@@ -35,6 +35,8 @@ EXPORTS
 	?get_failure_information@application@1@QEBA?AUinit_failure_information@1@XZ
 
 	??0application_system_dispatcher_queue@application@@QEAA@XZ
+	??0application_system_dispatcher_queue@application@@QEAA@AEBV01@@Z
+	??0application_system_dispatcher_queue@application@@QEAA@$$QEAV01@@Z
 	??1application_system_dispatcher_queue@application@@QEAA@XZ
 	?thread_has_dispatcher_queue@application_system_dispatcher_queue@application@@QEBA_NXZ
 	?thread_has_uncontrolled_dispatcher_queue@application_system_dispatcher_queue@application@@QEBA_NXZ
@@ -42,9 +44,9 @@ EXPORTS
 	?create_background_dispatcher_queue@application_system_dispatcher_queue@application@@QEAAHXZ
 	?destroy_thread_dispatcher_queue@application_system_dispatcher_queue@application@@QEAAXXZ
 	?destroy_background_dispatcher_queue@application_system_dispatcher_queue@application@@QEAAXH@Z
-	?get_thread_dispatcher_queue@application_system_dispatcher_queue@application@@QEBA?AV?$ComPtr@UIDispatcherQueue@System@Windows@ABI@@@WRL@Microsoft@@XZ
-	?get_background_dispatcher_queue@application_system_dispatcher_queue@application@@QEBA?AV?$ComPtr@UIDispatcherQueue@System@Windows@ABI@@@WRL@Microsoft@@H@Z
 	??0application_winappsdk_dispatcher_queue@application@@QEAA@XZ
+	??0application_winappsdk_dispatcher_queue@application@@QEAA@AEBV01@@Z
+	??0application_winappsdk_dispatcher_queue@application@@QEAA@$$QEAV01@@Z
 	??1application_winappsdk_dispatcher_queue@application@@QEAA@XZ
 	?dispatcher_queue_available@application_winappsdk_dispatcher_queue@application@@SA_NXZ
 	?thread_has_dispatcher_queue@application_winappsdk_dispatcher_queue@application@@QEBA_NXZ
@@ -53,8 +55,6 @@ EXPORTS
 	?create_background_dispatcher_queue@application_winappsdk_dispatcher_queue@application@@QEAAHXZ
 	?destroy_thread_dispatcher_queue@application_winappsdk_dispatcher_queue@application@@QEAAXXZ
 	?destroy_background_dispatcher_queue@application_winappsdk_dispatcher_queue@application@@QEAAXH@Z
-	?get_thread_dispatcher_queue@application_winappsdk_dispatcher_queue@application@@QEBA?AV?$ComPtr@UIDispatcherQueue@Dispatching@UI@Microsoft@ABI@@@WRL@Microsoft@@XZ
-	?get_background_dispatcher_queue@application_winappsdk_dispatcher_queue@application@@QEBA?AV?$ComPtr@UIDispatcherQueue@Dispatching@UI@Microsoft@ABI@@@WRL@Microsoft@@H@Z
 
 	?is_windows_10_or_greater@helper@application@@YA_NXZ
 	?is_windows_11_or_greater@helper@application@@YA_NXZ
