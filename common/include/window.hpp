@@ -7335,43 +7335,73 @@ namespace windowing
 
 		static LRESULT window_proc_seh(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
-			if (msg != WM_NCCREATE)
+			auto that = my_type::inst_from_handle(wnd);
+			LRESULT result{};
+			if (that != nullptr)
 			{
-				auto that = my_type::inst_from_handle(wnd);
-				if (that != nullptr)
-				{
-					if (msg != WM_NCDESTROY)
-					{
-						return that->message_handler(msg, wparam, lparam);
-					}
-					else
-					{
-						auto result = that->message_handler(msg, wparam, lparam);
+				result = that->message_handler(msg, wparam, lparam);
 
-						my_type::handle_ncdestroy(wnd);
-						//MUST NOT ACCESS ANY CLASS MEMBERS AFTER THIS POINT
-						return result;
-					}
-				}
-				else
+				if (msg == WM_NCDESTROY)
 				{
-					return traits::WndDefWindowProc(wnd, msg, wparam, lparam);
+					if constexpr (dv<window_msg_types::on_ncdestroy_t>)
+					{
+						//WM_NCDESTROY is documented to free internally allocated
+						//memory. This would hint that we really want to pass this
+						//message on to DefWindowProc too.
+						//However, if the derived class doesn't handle WM_NCDESTROY
+						//then we don't have to handle it.
+						traits::WndDefWindowProc(wnd, msg, wparam, lparam);
+					}
+
+					my_type::handle_ncdestroy(wnd);
+					//MUST NOT ACCESS ANY CLASS MEMBERS AFTER THIS POINT.
 				}
 			}
 			else
 			{
-				if (!my_type::handle_nccreate(wnd, *reinterpret_cast<traits::create_struct_t *>(lparam)))
-				{
-					return FALSE;
-				}
-				if (!window_default_nccreate_policy<DerivedType, UnicodeBase>::call_defwindowproc_nccreate(wnd, wparam, lparam))
-				{
-					return FALSE;
-				}
+				//The current implementation doesn't state that WM_NCDESTROY is guaranteed
+				//to be the last message received.We guard against this and pass any
+				//message through to DefWindowProc to be safe.
+				result = traits::WndDefWindowProc(wnd, msg, wparam, lparam);
+			}
 
-				auto that = my_type::inst_from_handle(wnd);
+			return result;
+		}
 
+		static LRESULT window_proc_init_seh(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
+		{
+			static bool first_message = true;
+			//A hook is used to get in front of the first call to this proc. This means that
+			//the class instance is placed into the window before this proc is called for the
+			//first time.
+			auto that = my_type::inst_from_handle(wnd);
+			_ASSERTE(that != nullptr);
+			if (first_message)
+			{
+				my_type::handle_first_message(wnd);
+				first_message = false;
+			}
+
+			if (msg != WM_NCCREATE)
+			{
 				return that->message_handler(msg, wparam, lparam);
+			}
+			else
+			{
+				LRESULT result = that->message_handler(msg, wparam, lparam);
+
+				if constexpr (dv<window_msg_types::on_nccreate_t>)
+				{
+					//Even if the policy is set to call DefWindowProc on WM_NCCREATE, if
+					//the message handler calls DefWindowProc, we don't want to follow this
+					//policy.
+					auto dwp_result = window_default_nccreate_policy<DerivedType, UnicodeBase>::call_defwindowproc_nccreate(wnd, wparam, lparam);
+					result = result == FALSE ? FALSE : dwp_result;
+				}
+
+				m_proc = window_proc_seh;
+
+				return result;
 			}
 		}
 
@@ -7380,7 +7410,7 @@ namespace windowing
 			_EXCEPTION_POINTERS *ei = nullptr;
 			__try
 			{
-				return window_proc_seh(wnd, msg, wparam, lparam);
+				return m_proc(wnd, msg, wparam, lparam);
 			}
 			__except ([&ei](auto &&p) {ei = p; return EXCEPTION_EXECUTE_HANDLER; }(GetExceptionInformation()))
 			{
@@ -7401,14 +7431,12 @@ namespace windowing
 			return ptr;
 		}
 
-		static bool handle_nccreate(HWND wnd, traits::create_struct_t &)
+		static void handle_first_message(HWND wnd)
 		{
 			auto that = inst_from_handle(wnd);
 			auto dpi = GetDpiForWindow(wnd);
 			that->set_dpi(dpi);
 			that->track_mouse(wnd);
-
-			return true;
 		}
 
 		static void handle_ncdestroy(HWND wnd)
@@ -7430,6 +7458,8 @@ namespace windowing
 		window_t(window_t &&) = delete;
 		window_t &operator=(const window_t &) = delete;
 		window_t &operator=(window_t &&) = delete;
+
+		static inline std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)> m_proc{ window_proc_init_seh };
 
 		static inline thread_local HHOOK s_create_hook = nullptr;
 	};
