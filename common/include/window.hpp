@@ -30,6 +30,23 @@ namespace windowing
 	constexpr inline bool window_default_unicode = false;
 #endif
 
+	//These static asserts are for when you return a type that isn't convertable to
+	//the expected return type or void.
+#ifdef ENABLE_WINDOW_TYPE_STATIC_ASSERTS
+	inline static constexpr const bool return_type_assert = true;
+#else
+	inline static constexpr const bool return_type_assert = false;
+#endif
+
+	//On handlers that can work with a default, these asserts are for when the
+	//handler really should return a type but the return is void.
+#ifdef ENABLE_WINDOW_TYPE_ADDITIONAL_STATIC_ASSERTS
+	//Only enable this if we have the asserts enabled.
+	inline static constexpr const bool additional_return_type_assert = true && return_type_assert;
+#else
+	inline static constexpr const bool additional_return_type_assert = false;
+#endif
+
 	namespace details
 	{
 		template <typename T, template <typename> typename, typename = std::void_t<>>
@@ -1752,7 +1769,9 @@ namespace windowing
 			template <typename T>
 			using on_sysdeadchar_t = decltype(std::declval<T>().on_sysdeadchar(std::declval<typename traits::char_t>(), std::declval<const keystroke_data &>()));
 			//0108 - none
-			//0109 - WM_UNICHAR (this class only works on unicode windows, so this is not used)
+			//0109
+			template <typename T>
+			using on_unichar_t = decltype(std::declval<T>().on_unichar(std::declval<uint32_t>(), std::declval<const keystroke_data &>()));
 			//010a - 010c - none
 			//010d - WM_IME_STARTCOMPOSITION
 			//010e - WM_IME_ENDCOMPOSITION - (Don't impletent IME messages for now)
@@ -4387,18 +4406,27 @@ namespace windowing
 						handled = true;
 						break;
 					}
-					else
+			case 0x0108:
 					{
-						static_assert(same_ret, "The return of on_sysdeadchar must be void");
+				break;
 					}
-				}
-				else
+			case WM_UNICHAR:
+			{
+				//Even though it has fallen out of favour, provide a handler for this message.
+				//Unicode windows should just let this get handled by DefWindowProc.
+				if constexpr (dv<wmt::on_unichar_t>)
 				{
+					constexpr const bool return_void = sv<wmt::on_unichar_t, void>;
+					static_assert(return_void && return_type_assert, "on_unichar with a return that is not void found. Ignoring return.");
+					auto &kd = ref_param_cast<keystroke_data>(lparam);
+					this_cast<DerivedType>(this)->on_unichar(value_cast<uint32_t>(wparam), kd);
+					//The documentation indicates that you should return true to indicate that the message was handled.
+					//Assume here that by providing a handler, the message should be handled.
+					proc_result = TRUE;
+					handled = true;
+				}
 					break;
 				}
-			}
-			case 0x0108:
-			case WM_UNICHAR:
 			case 0x010a:
 			case 0x010b:
 			case 0x010c:
