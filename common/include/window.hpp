@@ -47,6 +47,12 @@ namespace windowing
 		template <typename T, template <typename> typename Op, typename Cmp>
 		inline constexpr bool same_return_v = std::is_same_v<return_type_t<T, Op>, Cmp>;
 
+		template <typename T, template <typename> typename Op, typename Cmp>
+		inline constexpr bool convertable_return_v = std::is_convertible_v<return_type_t<T, Op>, Cmp>;
+
+		template <typename T, template <typename> typename Op>
+		inline constexpr bool integral_return_v = std::is_integral_v<return_type_t<T, Op>>;
+
 		//Wrap the CRTP static cast into a function.
 		//While this is a safe operation, the static assert helps double
 		//check this, and putting the static cast into a function where
@@ -63,6 +69,15 @@ namespace windowing
 		{
 			static_assert(std::is_base_of_v<BaseType, DerivedType>);
 			return static_cast<BaseType *>(that);
+		}
+
+		//A general static cast from one value type to another.
+		//We use this to indicate that this is a cast that we
+		//want to do.
+		template <typename R, typename Param>
+		auto value_cast(Param p) -> R
+		{
+			return static_cast<R>(p);
 		}
 
 		//This will be used to cast the this pointer stored in the window
@@ -866,6 +881,8 @@ namespace windowing
 		using create_struct_t = CREATESTRUCTA;
 		using cbt_createwnd_t = CBT_CREATEWNDA;
 
+		inline static constexpr const bool window_unicode = false;
+
 		static LRESULT WndDefWindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			return DefWindowProcA(wnd, msg, wparam, lparam);
@@ -893,6 +910,8 @@ namespace windowing
 		using char_t = wchar_t;
 		using create_struct_t = CREATESTRUCTW;
 		using cbt_createwnd_t = CBT_CREATEWNDW;
+
+		inline static constexpr const bool window_unicode = true;
 
 		static LRESULT WndDefWindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
@@ -940,9 +959,6 @@ namespace windowing
 	struct window_ncmouse_track_t {};
 	struct window_no_mouse_track_t {};
 
-	struct window_simple_paint_t {};
-	struct window_default_paint_t {};
-
 	namespace details
 	{
 		template <typename T, typename enabled = void>
@@ -986,27 +1002,6 @@ namespace windowing
 
 		template <typename T>
 		using ncmouse_track_type_t = typename ncmouse_track_type<T>::policy;
-
-		template <typename T, typename enabled = void>
-		struct paint_policy_or_default
-		{
-			using policy = window_default_paint_t;
-		};
-
-		template <typename T>
-		struct paint_policy_or_default<T, typename std::void_t<typename T::paint_policy>>
-		{
-			using policy = typename T::paint_policy;
-		};
-
-		template <typename T>
-		struct paint_policy_type
-		{
-			using policy = typename paint_policy_or_default<T>::policy;
-		};
-
-		template <typename T>
-		using paint_policy_type_t = typename paint_policy_type<T>::policy;
 	}
 
 	template<typename DerivedType, typename enabled = void>
@@ -1088,15 +1083,6 @@ namespace windowing
 			}
 		}
 	};
-
-	template <typename DerivedType>
-	struct window_simple_paint_policy
-	{
-		static constexpr bool value = window_paint_policy_defined_t<DerivedType>::value;
-	};
-
-	template<typename DerivedType>
-	inline static constexpr bool window_simple_paint_policy_v = window_simple_paint_policy<DerivedType>::value;
 
 	template<typename DerivedType, bool UnicodeBase>
 	class window_t;
@@ -2225,9 +2211,14 @@ namespace windowing
 		inline static constexpr bool dv = details::detect_v<DerivedType, Op>;
 		template <template <typename> typename Op, typename Cmp>
 		inline static constexpr bool sv = details::same_return_v<DerivedType, Op, Cmp>;
+		template <template <typename> typename Op, typename Cmp>
+		inline static constexpr bool cv = details::convertable_return_v<DerivedType, Op, Cmp>;
+		template <template <typename> typename Op>
+		inline static constexpr bool iv = details::integral_return_v<DerivedType, Op>;
 
 		std::pair<LRESULT, bool> default_message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
 		{
+			using details::value_cast;
 			using details::this_cast;
 			using details::ref_param_cast;
 			using details::ptr_param_cast;
@@ -2534,13 +2525,17 @@ namespace windowing
 			}
 			case WM_PAINT:
 			{
-				if constexpr (window_simple_paint_policy_v<DerivedType>)
+				constexpr const bool simple_paint = dv<wmt::simple_on_paint_t>;
+				constexpr const bool default_paint = dv<wmt::default_on_paint_t>;
+
+				//Detect both overloads.
+				static_assert(!(simple_paint && default_paint), "Both paint functions detected, only using on_paint().");
+				//If both exist, only use the default version.
+				if constexpr (simple_paint && !default_paint)
 				{
-					if constexpr (dv<wmt::simple_on_paint_t>)
-					{
-						constexpr bool same_ret = sv<wmt::simple_on_paint_t, void>;
-						if constexpr (same_ret)
-						{
+					constexpr const bool return_void = sv<wmt::simple_on_paint_t, void>;
+					static_assert(return_void && return_type_assert, "on_paint with a return that is not void found. Ignoring return.");
+
 							PAINTSTRUCT ps{};
 							BeginPaint(get_handle(), &ps);
 
@@ -2548,40 +2543,17 @@ namespace windowing
 
 							EndPaint(get_handle(), &ps);
 							handled = true;
-							break;
 						}
-						else
+
+				if constexpr (default_paint)
 						{
-							static_assert(same_ret, "The return type of on_paint must be void");
-						}
-					}
-					else
-					{
-						break;
-					}
-				}
-				else
-				{
-					if constexpr (dv<wmt::default_on_paint_t>)
-					{
-						constexpr bool same_ret = sv<wmt::default_on_paint_t, void>;
-						if constexpr (same_ret)
-						{
+					constexpr const bool return_void = sv<wmt::default_on_paint_t, void>;
+					static_assert(return_void && return_type_assert, "on_paint with a return that is not void found. Ignoring return.");
 							this_cast<DerivedType>(this)->on_paint();
 							handled = true;
-							break;
 						}
-						else
-						{
-							static_assert(same_ret, "The return type of on_paint must be void");
-						}
-					}
-					else
-					{
 						break;
 					}
-				}
-			}
 			case WM_CLOSE:
 			{
 				if constexpr (dv<wmt::on_close_t>)
