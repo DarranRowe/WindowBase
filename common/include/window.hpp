@@ -3981,26 +3981,26 @@ namespace windowing
 			}
 			case WM_SYSCOMMAND:
 			{
-				if constexpr (dv<wmt::on_syscommand_t>)
+				if constexpr (dv<wmt::on_syscommand_t> || dv<wmt::get_commandhandler_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_syscommand_t, bool>;
-					if constexpr (return_type_assert) static_assert(convertable_bool, "on_syscommand with a return that is not convertable to bool found.");
 					syscommand_info info{};
 					info.request = value_cast<syscommand_request>(wparam & 0xFFF0);
 					info.is_secure = value_cast<bool>(wparam & SCF_ISSECURE);
-					handled = this_cast<DerivedType>(this)->on_syscommand(info, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
-				}
-				else
-				{
-					if constexpr (dv<wmt::get_commandhandler_t>)
+					if constexpr (dv<wmt::on_syscommand_t>)
 					{
-						constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
-						constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
-						static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list.");
-						syscommand_info info{};
-						info.request = value_cast<syscommand_request>(wparam & 0xFFF0);
-						info.is_secure = value_cast<bool>(wparam & SCF_ISSECURE);
-						handled = on_syscommand_default(info, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+						constexpr const bool convertable_bool = cv<wmt::on_syscommand_t, bool>;
+						if constexpr (return_type_assert) static_assert(convertable_bool, "on_syscommand with a return that is not convertable to bool found.");
+						handled = this_cast<DerivedType>(this)->on_syscommand(info, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+					}
+					else
+					{
+						if constexpr (dv<wmt::get_commandhandler_t>)
+						{
+							constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
+							constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+							static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list.");
+							handled = on_syscommand_default(info, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+						}
 					}
 				}
 				break;
@@ -5732,14 +5732,12 @@ namespace windowing
 			}
 			case WM_APPCOMMAND:
 			{
-				if constexpr (dv<wmt::on_appcommand_t>)
+				if constexpr (dv<wmt::on_appcommand_t> || dv<wmt::get_commandhandler_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_appcommand_t, void>;
-					if constexpr (return_type_assert) static_assert(return_void, "on_appcommand with a return that is not void found. Ignoring return.");
 					appcommand_info info{ handle_cast<HWND>(wparam),
-						value_cast<appcommand_command>(GET_APPCOMMAND_LPARAM(lparam)),
-						value_cast<appcommand_device>(GET_DEVICE_LPARAM(lparam)),
-						value_cast<appcommand_keys>(GET_KEYSTATE_LPARAM(lparam))
+							value_cast<appcommand_command>(GET_APPCOMMAND_LPARAM(lparam)),
+							value_cast<appcommand_device>(GET_DEVICE_LPARAM(lparam)),
+							value_cast<appcommand_keys>(GET_KEYSTATE_LPARAM(lparam))
 					};
 					int32_t mouse_xpos{};
 					int32_t mouse_ypos{};
@@ -5749,13 +5747,30 @@ namespace windowing
 						mouse_xpos = GET_X_LPARAM(pos);
 						mouse_ypos = GET_Y_LPARAM(pos);
 					}
-
-					this_cast<DerivedType>(this)->on_appcommand(info, mouse_xpos, mouse_ypos);
-					//The documention states that this returns true. However, this seems to be an unconditional
-					//true to stop anything else from taking the message.
-					//This means that we will just return true while the handler returns void.
-					proc_result = return_cast(TRUE);
-					handled = true;
+					if constexpr (dv<wmt::on_appcommand_t>)
+					{
+						constexpr const bool convertable_bool = cv<wmt::on_appcommand_t, bool>;
+						if constexpr (return_type_assert) static_assert(convertable_bool, "on_appcommand with a return that is not convertable to bool found.");
+						handled = this_cast<DerivedType>(this)->on_appcommand(info, mouse_xpos, mouse_ypos);
+						//The documentation states that this should return true for legacy reasons.
+						//It is the same reasons as the xbuttons.
+						//We only return true if the message is handled.
+						proc_result = handled == false ? FALSE : TRUE;
+					}
+					else
+					{
+						if constexpr (dv<wmt::get_commandhandler_t>)
+						{
+							constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
+							constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+							static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list.");
+							handled = on_appcommand_default(info, mouse_xpos, mouse_ypos);
+							//The documentation states that this should return true for legacy reasons.
+							//It is the same reasons as the xbuttons.
+							//We only return true if the message is handled.
+							proc_result = handled == false ? FALSE : TRUE;
+						}
+					}
 				}
 				break;
 			}
