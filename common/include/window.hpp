@@ -55,6 +55,7 @@ namespace windowing
 		accelerator
 	};
 	using command_handler_fun = void(HWND);
+	using notify_handler_fun = LRESULT(const NMHDR &);
 
 	struct command_handler_entry
 	{
@@ -63,10 +64,17 @@ namespace windowing
 		uint16_t notification;
 		std::function<command_handler_fun> command_handler;
 	};
+	struct notify_handler_entry
+	{
+		uintptr_t identifier;
+		uint32_t notification;
+		std::function<notify_handler_fun> notify_handler;
+	};
 
 	struct command_handler_list
 	{
 		std::vector<command_handler_entry> command_handlers;
+		std::vector<notify_handler_entry> notify_handlers;
 	};
 
 	namespace details
@@ -2388,6 +2396,33 @@ namespace windowing
 			return handled;
 		}
 
+		std::pair<LRESULT, bool> on_notify_default(const NMHDR &notify_info)
+		{
+			bool handled = false;
+			LRESULT proc_result{};
+			using wmt = window_msg_types;
+			using details::this_cast;
+			using details::ref_param_cast;
+			if constexpr (dv<wmt::get_commandhandler_t>)
+			{
+				constexpr const bool return_handler = sv<wmt::get_commandhandler_t, command_handler_list &>;
+				constexpr const bool return_chandler = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+				static_assert(return_handler || return_chandler, "get_commandhandler must return a reference to command_handler_list");
+				auto &command_handler = this_cast<DerivedType>(this)->get_commandhandler();
+
+				for (auto &&entry : command_handler.notify_handlers)
+				{
+					if (entry.identifier == notify_info.idFrom && entry.notification == notify_info.code)
+					{
+						proc_result = entry.notify_handler(notify_info);
+						handled = true;
+					}
+				}
+			}
+
+			return { proc_result, handled };
+		}
+
 		std::pair<LRESULT, bool> default_message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			using details::value_cast;
@@ -2544,8 +2579,8 @@ namespace windowing
 					//This static_assert is deliberately unconditional.
 					//The behaviour of WM_SETTEXT is compromised if you are unable to return a value.
 					static_assert(convertable_ret, "on_settext must have a return that is convertable to bool.");
-						auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_settext(ptr_param_cast<wmt::msg_char_type>(lparam))) == false ? FALSE : TRUE;
-						proc_result = result;
+					auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_settext(ptr_param_cast<wmt::msg_char_type>(lparam))) == false ? FALSE : TRUE;
+					proc_result = result;
 					handled = true;
 				}
 				break;
@@ -2559,13 +2594,13 @@ namespace windowing
 					//This static_assert is deliberately unconditional.
 					//The behaviour of WM_GETTEXT is compromised if we cannot return a value.
 					static_assert(convertable_ret, "on_gettext must have a return that is convertable to uintptr_t.");
-						//One of the difficulties of WM_GETTEXT is that the buffer size is passed in through WPARAM, and the characters copied
-						//is passed out through LRESULT. This means that the types have a sign mismatch.
-						//What's more, there is no indicator as to the maximum size of the string beyond the rich edit control value.
-						//This results in the parameters both being assumed to be unsigned and the size of the sizes will change based on whether
-						//this is compiled for 32 or 64 bit. The intptr_t and uintptr_t types have been defined to help with this.
-						auto result = value_cast<uintptr_t>(this_cast<DerivedType>(this)->on_gettext(param_cast<uintptr_t>(wparam), ptr_param_cast<wmt::msg_char_type>(lparam)));
-						proc_result = result;
+					//One of the difficulties of WM_GETTEXT is that the buffer size is passed in through WPARAM, and the characters copied
+					//is passed out through LRESULT. This means that the types have a sign mismatch.
+					//What's more, there is no indicator as to the maximum size of the string beyond the rich edit control value.
+					//This results in the parameters both being assumed to be unsigned and the size of the sizes will change based on whether
+					//this is compiled for 32 or 64 bit. The intptr_t and uintptr_t types have been defined to help with this.
+					auto result = value_cast<uintptr_t>(this_cast<DerivedType>(this)->on_gettext(param_cast<uintptr_t>(wparam), ptr_param_cast<wmt::msg_char_type>(lparam)));
+					proc_result = result;
 					handled = true;
 				}
 				break;
@@ -2578,8 +2613,8 @@ namespace windowing
 					//This static_assert is deliberately unconditional.
 					//The behaviour of WM_GETTEXT is compromised if we cannot return a value.
 					static_assert(convertable_ret, "on_gettextlength must have a return that is convertable to uintptr_t.");
-						auto result = value_cast<uintptr_t>(this_cast<DerivedType>(this)->on_gettextlength());
-						proc_result = result;
+					auto result = value_cast<uintptr_t>(this_cast<DerivedType>(this)->on_gettextlength());
+					proc_result = result;
 					handled = true;
 				}
 				break;
@@ -3104,11 +3139,23 @@ namespace windowing
 			{
 				if constexpr (dv<wmt::on_notify_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_notify_t, LRESULT>;
-					static_assert(convertable_to_return, "on_notify with a return that is not convertable to LRESULT found.");
-					auto result = this_cast<DerivedType>(this)->on_notify(param_cast<uint32_t>(wparam), ref_param_cast<NMHDR>(lparam));
-					proc_result = return_cast(result);
-					handled = true;
+					constexpr const bool return_complex = cv<wmt::on_notify_t, std::pair<LRESULT, bool>>;
+					static_assert(return_complex, "on_notify with a return that is not std::pair<LRESULT, bool> found.");
+					auto &&[notify_result, notify_handled] = this_cast<DerivedType>(this)->on_notify(param_cast<uint32_t>(wparam), ref_param_cast<NMHDR>(lparam));
+					proc_result = notify_result;
+					handled = notify_handled;
+				}
+				else
+				{
+					if constexpr (dv<wmt::get_commandhandler_t>)
+					{
+						constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
+						constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+						static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list");
+						auto &&[notify_result, notify_handled] = on_notify_default(ref_param_cast<NMHDR>(lparam));
+						proc_result = notify_result;
+						handled = notify_handled;
+					}
 				}
 				break;
 			}
