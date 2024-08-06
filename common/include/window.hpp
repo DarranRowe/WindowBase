@@ -5741,7 +5741,7 @@ namespace windowing
 					};
 					int32_t mouse_xpos{};
 					int32_t mouse_ypos{};
-					if (info.device & appcommand_device::mouse)
+					if ((info.device & appcommand_device::mouse) == appcommand_device::mouse)
 					{
 						auto pos = GetMessagePos();
 						mouse_xpos = GET_X_LPARAM(pos);
