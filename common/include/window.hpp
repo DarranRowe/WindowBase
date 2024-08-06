@@ -47,6 +47,28 @@ namespace windowing
 	inline static constexpr const bool additional_return_type_assert = false;
 #endif
 
+	enum class handler_type
+	{
+		unknown,
+		control,
+		menu,
+		accelerator
+	};
+	using command_handler_fun = void(HWND);
+
+	struct command_handler_entry
+	{
+		handler_type type;
+		uint16_t identifier;
+		uint16_t notification;
+		std::function<command_handler_fun> command_handler;
+	};
+
+	struct command_handler_list
+	{
+		std::vector<command_handler_entry> command_handlers;
+	};
+
 	namespace details
 	{
 		template <typename T, template <typename> typename, typename = std::void_t<>>
@@ -2232,6 +2254,9 @@ namespace windowing
 			//033f
 			template <typename T>
 			using on_gettitlebarinfoex_t = decltype(std::declval<T>().on_gettitlebarinfoex(std::declval<TITLEBARINFOEX &>()));
+			//Not a message, but this is a convenient place to place a message related structure.
+			template <typename T>
+			using get_commandhandler_t = decltype(std::declval<T>().get_commandhandler()); //must return a reference to command_handler_list
 		};
 
 		~window_t() = default;
@@ -2320,6 +2345,48 @@ namespace windowing
 		inline static constexpr bool cv = details::convertable_return_v<DerivedType, Op, Cmp>;
 		template <template <typename> typename Op>
 		inline static constexpr bool iv = details::integral_return_v<DerivedType, Op>;
+
+		//This is used when there is a command table but no
+		//on_command. This calls get_commandhandler to get
+		//the table of command handlers and then calls the
+		//appropriate entry.
+		bool on_command_default(uint16_t identifier, uint16_t notification_code, HWND control_handle)
+		{
+			bool handled = false;
+			using wmt = window_msg_types;
+			using details::this_cast;
+			if constexpr (dv<wmt::get_commandhandler_t>)
+			{
+				constexpr const bool return_handler = sv<wmt::get_commandhandler_t, command_handler_list &>;
+				constexpr const bool return_chandler = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+				static_assert(return_handler || return_chandler, "get_commandhandler must return a reference to command_handler_list");
+				auto &command_handler = this_cast<DerivedType>(this)->get_commandhandler();
+
+				for (auto &&entry : command_handler.command_handlers)
+				{
+					if (entry.type == handler_type::menu)
+					{
+						_ASSERTE(notification_code == 0);
+						_ASSERTE(control_handle == nullptr);
+					}
+					if (entry.type == handler_type::menu)
+					{
+						_ASSERTE(notification_code == 1);
+						_ASSERTE(control_handle == nullptr);
+					}
+					if (entry.identifier == identifier && entry.notification == notification_code)
+					{
+						//Only pass in the control handle here.
+						//The function is written specifically for the identifier/notification pair.
+						entry.command_handler(control_handle);
+						//If the function is called then we see it as handled.
+						handled = true;
+					}
+				}
+			}
+
+			return handled;
+		}
 
 		std::pair<LRESULT, bool> default_message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
 		{
@@ -3773,10 +3840,19 @@ namespace windowing
 			{
 				if constexpr (dv<wmt::on_command_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_command_t, void>;
-					static_assert(return_void && return_type_assert, "on_command with a return that is not void found. Ignoring return.");
-					this_cast<DerivedType>(this)->on_command(LOWORD(wparam), HIWORD(wparam), handle_cast<HWND>(lparam));
-					handled = true;
+					constexpr const bool convertable_bool = cv<wmt::on_command_t, bool>;
+					static_assert(convertable_bool, "on_command with a return that is not convertable to bool found.");
+					handled = this_cast<DerivedType>(this)->on_command(LOWORD(wparam), HIWORD(wparam), handle_cast<HWND>(lparam));
+				}
+				else
+				{
+					if constexpr (dv<wmt::get_commandhandler_t>)
+					{
+						constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
+						constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+						static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list");
+						handled = on_command_default(LOWORD(wparam), HIWORD(wparam), handle_cast<HWND>(lparam));
+					}
 				}
 				break;
 			}
