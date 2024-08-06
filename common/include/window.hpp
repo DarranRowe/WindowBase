@@ -47,36 +47,6 @@ namespace windowing
 	inline static constexpr const bool additional_return_type_assert = false;
 #endif
 
-	enum class handler_type
-	{
-		unknown,
-		control,
-		menu,
-		accelerator
-	};
-	using command_handler_fun = void(HWND);
-	using notify_handler_fun = LRESULT(const NMHDR &);
-
-	struct command_handler_entry
-	{
-		handler_type type;
-		uint16_t identifier;
-		uint16_t notification;
-		std::function<command_handler_fun> command_handler;
-	};
-	struct notify_handler_entry
-	{
-		uintptr_t identifier;
-		uint32_t notification;
-		std::function<notify_handler_fun> notify_handler;
-	};
-
-	struct command_handler_list
-	{
-		std::vector<command_handler_entry> command_handlers;
-		std::vector<notify_handler_entry> notify_handlers;
-	};
-
 	namespace details
 	{
 		template <typename T, template <typename> typename, typename = std::void_t<>>
@@ -637,10 +607,9 @@ namespace windowing
 
 	DEFINE_ENUM_FLAG_OPERATORS(ime_composition_flags);
 
-	enum class syscommand_request
+	enum class syscommand_request : uint16_t
 	{
 		unknown,
-		is_secure = 0x0001,
 		size = 0xf000,
 		move = 0xf010,
 		minimize = 0xf020,
@@ -660,6 +629,11 @@ namespace windowing
 		default_cmd = 0xf160,
 		monitor_power = 0xf170,
 		context_help = 0xf180
+	};
+	struct syscommand_info
+	{
+		syscommand_request request;
+		bool is_secure;
 	};
 	enum class hscrollbar_request
 	{
@@ -870,7 +844,7 @@ namespace windowing
 		userdefined = 0xffff
 	};
 
-	enum class appcommand
+	enum class appcommand_command : uint8_t
 	{
 		unknown,
 		browser_backward,
@@ -998,6 +972,14 @@ namespace windowing
 		uint32_t flag_hwheel : 1;
 		uint32_t flag_capturechange : 1;
 		uint32_t flag_hastransform : 1;
+	};
+
+	struct appcommand_info
+	{
+		HWND command_window;
+		appcommand_command appcommand;
+		appcommand_device device;
+		appcommand_keys keys;
 	};
 
 	struct window_traits_a
@@ -1128,6 +1110,50 @@ namespace windowing
 		template <typename T>
 		using ncmouse_track_type_t = typename ncmouse_track_type<T>::policy;
 	}
+
+	enum class handler_type
+	{
+		unknown,
+		control,
+		menu,
+		accelerator
+	};
+	using command_handler_fun = void(HWND);
+	using syscommand_handler_fun = void(syscommand_info, int32_t, int32_t);
+	using notify_handler_fun = LRESULT(const NMHDR &);
+	using appcommand_handler_fun = void(appcommand_info, int32_t, int32_t);
+
+	struct command_handler_entry
+	{
+		handler_type type;
+		uint16_t identifier;
+		uint16_t notification;
+		std::function<command_handler_fun> command_handler;
+	};
+	struct syscommand_handler_entry
+	{
+		syscommand_request request;
+		std::function<syscommand_handler_fun> syscommand_handler;
+	};
+	struct notify_handler_entry
+	{
+		uintptr_t identifier;
+		uint32_t notification;
+		std::function<notify_handler_fun> notify_handler;
+	};
+	struct appcommand_handler_entry
+	{
+		appcommand_command command;
+		std::function<appcommand_handler_fun> appcommand_handler;
+	};
+
+	struct command_handler_list
+	{
+		std::vector<command_handler_entry> command_handlers;
+		std::vector<syscommand_handler_entry> syscommand_handlers;
+		std::vector<notify_handler_entry> notify_handlers;
+		std::vector<appcommand_handler_entry> appcommand_handlers;
+	};
 
 	template<typename DerivedType, typename enabled = void>
 	struct quit_process_policy_defined_t : std::false_type {};
@@ -1892,7 +1918,7 @@ namespace windowing
 			using on_command_t = decltype(std::declval<T>().on_command(std::declval<uint16_t>(), std::declval<uint16_t>(), std::declval<HWND>()));
 			//0112
 			template <typename T>
-			using on_syscommand_t = decltype(std::declval<T>().on_syscommand(std::declval<syscommand_request>(), std::declval<int32_t>(), std::declval<int32_t>()));
+			using on_syscommand_t = decltype(std::declval<T>().on_syscommand(std::declval<syscommand_info>(), std::declval<int32_t>(), std::declval<int32_t>()));
 			//0113
 			template <typename T>
 			using on_timer_t = decltype(std::declval<T>().on_timer(std::declval<uintptr_t>(), std::declval<TIMERPROC>()));
@@ -2232,7 +2258,7 @@ namespace windowing
 			using on_printclient_t = decltype(std::declval<T>().on_printclient(std::declval<HDC>(), std::declval<print_flags>()));
 			//0319 - WM_APPCOMMAND
 			template <typename T>
-			using on_appcommand_t = decltype(std::declval<T>().on_appcommand(std::declval<HWND>(), std::declval<appcommand>(), std::declval<appcommand_device>(), std::declval<appcommand_keys>()));
+			using on_appcommand_t = decltype(std::declval<T>().on_appcommand(std::declval<appcommand_info>(), std::declval<int32_t>(), std::declval<int32_t>()));
 			//031a
 			template <typename T>
 			using on_themechanged_t = decltype(std::declval<T>().on_themechanged());
@@ -2396,6 +2422,31 @@ namespace windowing
 			return handled;
 		}
 
+		bool on_syscommand_default(syscommand_info info, int32_t xpos, int32_t ypos)
+		{
+			bool handled = false;
+			using wmt = window_msg_types;
+			using details::this_cast;
+			if constexpr (dv<wmt::get_commandhandler_t>)
+			{
+				constexpr const bool return_handler = sv<wmt::get_commandhandler_t, command_handler_list &>;
+				constexpr const bool return_chandler = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+				static_assert(return_handler || return_chandler, "get_commandhandler must return a reference to command_handler_list");
+				auto &command_handler = this_cast<DerivedType>(this)->get_commandhandler();
+
+				for (auto &&entry : command_handler.syscommand_handlers)
+				{
+					if (entry.request == info.request)
+					{
+						entry.syscommand_handler(info, xpos, ypos);
+						handled = true;
+					}
+				}
+			}
+
+			return handled;
+		}
+
 		std::pair<LRESULT, bool> on_notify_default(const NMHDR &notify_info)
 		{
 			bool handled = false;
@@ -2421,6 +2472,31 @@ namespace windowing
 			}
 
 			return { proc_result, handled };
+		}
+
+		bool on_appcommand_default(appcommand_info info, int32_t xpos, int32_t ypos)
+		{
+			bool handled = false;
+			using wmt = window_msg_types;
+			using details::this_cast;
+			if constexpr (dv<wmt::get_commandhandler_t>)
+			{
+				constexpr const bool return_handler = sv<wmt::get_commandhandler_t, command_handler_list &>;
+				constexpr const bool return_chandler = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+				static_assert(return_handler || return_chandler, "get_commandhandler must return a reference to command_handler_list");
+				auto &command_handler = this_cast<DerivedType>(this)->get_commandhandler();
+
+				for (auto &&entry : command_handler.appcommand_handlers)
+				{
+					if (entry.command == info.appcommand)
+					{
+						entry.appcommand_handler(info, xpos, ypos);
+						handled = true;
+					}
+				}
+			}
+
+			return handled;
 		}
 
 		std::pair<LRESULT, bool> default_message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
@@ -3897,7 +3973,7 @@ namespace windowing
 					{
 						constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
 						constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
-						static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list");
+						static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list.");
 						handled = on_command_default(LOWORD(wparam), HIWORD(wparam), handle_cast<HWND>(lparam));
 					}
 				}
@@ -3907,10 +3983,25 @@ namespace windowing
 			{
 				if constexpr (dv<wmt::on_syscommand_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_syscommand_t, void>;
-					if constexpr (return_type_assert) static_assert(return_void, "on_syscommand with a return that is not void found. Ignoring return.");
-					this_cast<DerivedType>(this)->on_syscommand(param_cast<syscommand_request>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
-					handled = true;
+					constexpr const bool convertable_bool = cv<wmt::on_syscommand_t, bool>;
+					if constexpr (return_type_assert) static_assert(convertable_bool, "on_syscommand with a return that is not convertable to bool found.");
+					syscommand_info info{};
+					info.request = value_cast<syscommand_request>(wparam & 0xFFF0);
+					info.is_secure = value_cast<bool>(wparam & SCF_ISSECURE);
+					handled = this_cast<DerivedType>(this)->on_syscommand(info, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+				}
+				else
+				{
+					if constexpr (dv<wmt::get_commandhandler_t>)
+					{
+						constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
+						constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+						static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list.");
+						syscommand_info info{};
+						info.request = value_cast<syscommand_request>(wparam & 0xFFF0);
+						info.is_secure = value_cast<bool>(wparam & SCF_ISSECURE);
+						handled = on_syscommand_default(info, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
+					}
 				}
 				break;
 			}
@@ -5645,7 +5736,21 @@ namespace windowing
 				{
 					constexpr const bool return_void = sv<wmt::on_appcommand_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_appcommand with a return that is not void found. Ignoring return.");
-					this_cast<DerivedType>(this)->on_appcommand(handle_cast<HWND>(wparam), value_cast<appcommand>(GET_APPCOMMAND_LPARAM(lparam)), value_cast<appcommand_device>(GET_DEVICE_LPARAM(lparam)), value_cast<appcommand_keys>(GET_KEYSTATE_LPARAM(lparam)));
+					appcommand_info info{ handle_cast<HWND>(wparam),
+						value_cast<appcommand_command>(GET_APPCOMMAND_LPARAM(lparam)),
+						value_cast<appcommand_device>(GET_DEVICE_LPARAM(lparam)),
+						value_cast<appcommand_keys>(GET_KEYSTATE_LPARAM(lparam))
+					};
+					int32_t mouse_xpos{};
+					int32_t mouse_ypos{};
+					if (info.device & appcommand_device::mouse)
+					{
+						auto pos = GetMessagePos();
+						mouse_xpos = GET_X_LPARAM(pos);
+						mouse_ypos = GET_Y_LPARAM(pos);
+					}
+
+					this_cast<DerivedType>(this)->on_appcommand(info, mouse_xpos, mouse_ypos);
 					//The documention states that this returns true. However, this seems to be an unconditional
 					//true to stop anything else from taking the message.
 					//This means that we will just return true while the handler returns void.
