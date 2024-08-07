@@ -316,7 +316,7 @@ namespace application
 
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage> current_package;
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage8> current_package8;
-		auto s = wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics>();
+		auto s = wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics, ABI::Windows::ApplicationModel::Package>();
 		FAIL_FAST_IF_FAILED(s->get_Current(current_package.ReleaseAndGetAddressOf()));
 
 		auto ip8result = wrl_helpers::try_as<ABI::Windows::ApplicationModel::IPackage8>(current_package);
@@ -360,7 +360,7 @@ namespace application
 
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage> current_package;
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage8> current_package8;
-		auto s = wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics>();
+		auto s = wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics, ABI::Windows::ApplicationModel::Package>();
 		FAIL_FAST_IF_FAILED(s->get_Current(current_package.ReleaseAndGetAddressOf()));
 
 		auto ip8result = wrl_helpers::try_as<ABI::Windows::ApplicationModel::IPackage8>(current_package);
@@ -404,7 +404,7 @@ namespace application
 
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage> current_package;
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage8> current_package8;
-		auto s = wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics>();
+		auto s = wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics, ABI::Windows::ApplicationModel::Package>();
 		FAIL_FAST_IF_FAILED(s->get_Current(current_package.ReleaseAndGetAddressOf()));
 
 		auto ip8result = wrl_helpers::try_as<ABI::Windows::ApplicationModel::IPackage8>(current_package);

@@ -110,7 +110,7 @@ namespace application
 			bool result = true;
 			try
 			{
-				auto rf = wrl_helpers::get_activation_factory<ABI::Microsoft::UI::Dispatching::IDispatcherQueueControllerStatics>();
+				auto rf = wrl_helpers::get_activation_factory<ABI::Microsoft::UI::Dispatching::IDispatcherQueueControllerStatics, ABI::Microsoft::UI::Dispatching::DispatcherQueueController>();
 			}
 			catch (wil::ResultException &)
 			{
@@ -211,7 +211,7 @@ namespace application
 
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				auto dq_statics = wrl_helpers::get_activation_factory<IDispatcherQueueStatics>();
+				auto dq_statics = wrl_helpers::get_activation_factory<IDispatcherQueueStatics, DispatcherQueue>();
 				ComPtr<IDispatcherQueue> tdq;
 				THROW_IF_FAILED(dq_statics->GetForCurrentThread(tdq.ReleaseAndGetAddressOf()));
 
@@ -471,7 +471,7 @@ namespace application
 		
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				auto dq_statics = wrl_helpers::get_activation_factory<IDispatcherQueueStatics>();
+				auto dq_statics = wrl_helpers::get_activation_factory<IDispatcherQueueStatics, DispatcherQueue>();
 				ComPtr<IDispatcherQueue> tdq;
 				THROW_IF_FAILED(dq_statics->GetForCurrentThread(tdq.ReleaseAndGetAddressOf()));
 
@@ -516,7 +516,7 @@ namespace application
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
 				ComPtr<IDispatcherQueueController> disp_queue_ctrl;
-				auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics>();
+				auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics, DispatcherQueueController>();
 
 				THROW_IF_FAILED(dqcs->CreateOnCurrentThread(disp_queue_ctrl.ReleaseAndGetAddressOf()));
 
@@ -546,7 +546,7 @@ namespace application
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
 				ComPtr<IDispatcherQueueController> dqc;
-				auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics>();
+				auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics, DispatcherQueueController>();
 
 				THROW_IF_FAILED(dqcs->CreateOnCurrentThread(dqc.ReleaseAndGetAddressOf()));
 

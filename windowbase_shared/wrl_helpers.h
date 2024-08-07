@@ -20,17 +20,17 @@ namespace wrl_helpers
 		return hs;
 	}
 
-	template <typename Interface>
+	template <typename Interface, typename RuntimeClass>
 	inline auto activate_instance()
 	{
-		static_assert(interface_traits<Interface>::activatable);
+		static_assert(interface_traits<Interface, RuntimeClass>::activatable);
 		HRESULT hr = S_OK;
-		auto runtime_class = initialise_hstring(interface_traits<Interface>::class_name);
+		auto runtime_class = initialise_hstring(interface_traits<Interface, RuntimeClass>::class_name);
 		Microsoft::WRL::ComPtr<Interface> ret;
 		hr = Windows::Foundation::ActivateInstance(runtime_class, ret.ReleaseAndGetAddressOf());
 		if (FAILED(hr))
 		{
-			auto l_fmtstr = std::format(L"Failed to activate instance. Interface name {}, RuntimeClass name {}", interface_traits<Interface>::interface_name, interface_traits<Interface>::class_name);
+			auto l_fmtstr = std::format(L"Failed to activate instance. Interface name {}, RuntimeClass name {}", interface_traits<Interface, RuntimeClass>::interface_name, interface_traits<Interface, RuntimeClass>::class_name);
 			RoOriginateErrorW(hr, l_fmtstr.length(), l_fmtstr.c_str());
 			THROW_IF_FAILED(hr);
 		}
@@ -38,16 +38,16 @@ namespace wrl_helpers
 		return ret;
 	}
 
-	template <typename Interface>
+	template <typename Interface, typename RuntimeClass>
 	inline auto get_activation_factory()
 	{
 		HRESULT hr = S_OK;
 		Microsoft::WRL::ComPtr<Interface> ret;
-		auto runtime_class = initialise_hstring(factory_interface_traits<Interface>::class_name);
+		auto runtime_class = initialise_hstring(factory_interface_traits<Interface, RuntimeClass>::class_name);
 		hr = Windows::Foundation::GetActivationFactory(runtime_class, ret.ReleaseAndGetAddressOf());
 		if (FAILED(hr))
 		{
-			auto l_fmtstr = std::format(L"Failed to get activation factory. Interface name: {}, RuntimeClass name: {}", factory_interface_traits<Interface>::interface_name, factory_interface_traits<Interface>::class_name);
+			auto l_fmtstr = std::format(L"Failed to get activation factory. Interface name: {}, RuntimeClass name: {}", factory_interface_traits<Interface, RuntimeClass>::interface_name, factory_interface_traits<Interface, RuntimeClass>::class_name);
 			RoOriginateErrorW(hr, static_cast<UINT>(l_fmtstr.length()), l_fmtstr.c_str());
 			THROW_IF_FAILED(hr);
 		}
