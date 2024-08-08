@@ -37,6 +37,43 @@ namespace windowing
 			_ASSERTE(ccc != nullptr);
 			return ccc;
 		}
+
+		bool can_use_win11_features()
+		{
+			static bool use_cache = false;
+			static bool feature_checked = false;
+
+			if (!feature_checked)
+			{
+				HMODULE kb = GetModuleHandleW(L"kernelbase.dll");
+				_ASSERTE(kb != nullptr);
+				FARPROC fp = GetProcAddress(kb, "GetMachineTypeAttributes");
+				if (fp != nullptr)
+				{
+					use_cache = true;
+				}
+				feature_checked = true;
+			}
+			return use_cache;
+		}
+		bool can_use_win11_22h2_features()
+		{
+			static bool use_cache = false;
+			static bool feature_checked = false;
+
+			if (!feature_checked)
+			{
+				HMODULE kb = GetModuleHandleW(L"kernelbase.dll");
+				_ASSERTE(kb != nullptr);
+				FARPROC fp = GetProcAddress(kb, "GetPackageGraphRevisionId");
+				if (fp != nullptr)
+				{
+					use_cache = true;
+				}
+				feature_checked = true;
+			}
+			return use_cache;
+		}
 	}
 
 	namespace window_implementation

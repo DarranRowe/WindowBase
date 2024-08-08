@@ -138,6 +138,7 @@ namespace windowing
 			std::map<uint32_t, std::shared_ptr<message_callback>> m_map;
 		};
 
-		
+		bool can_use_win11_features();
+		bool can_use_win11_22h2_features();
 	}
 }
