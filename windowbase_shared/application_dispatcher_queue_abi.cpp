@@ -85,10 +85,11 @@ namespace application::abi
 		using namespace Microsoft::WRL;
 		using namespace std;
 
-		auto thread_id = GetCurrentThreadId();
 		ComPtr<IDispatcherQueue> result;
 
 #ifdef WINAPPSDK_AVAILABLE
+		auto thread_id = GetCurrentThreadId();
+
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&]()
 			{
 				ComPtr<IDispatcherQueueController> dqc;
@@ -109,7 +110,7 @@ namespace application::abi
 		return result;
 	}
 
-	Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> application_winappsdk_dispatcher_queue_access::get_background_dispatcher_queue(int32_t id)
+	Microsoft::WRL::ComPtr<ABI::Microsoft::UI::Dispatching::IDispatcherQueue> application_winappsdk_dispatcher_queue_access::get_background_dispatcher_queue([[maybe_unused]] int32_t id)
 	{
 		using namespace ABI::Microsoft::UI::Dispatching;
 		using namespace Microsoft::WRL;

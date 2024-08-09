@@ -72,14 +72,16 @@ namespace application::projection
 
 	void *application_winappsdk_dispatcher_queue_access::get_thread_dispatcher_queue_abi()
 	{
+#ifdef WINAPPSDK_AVAILABLE
 		using namespace ABI::Microsoft::UI::Dispatching;
+#endif
 		using namespace Microsoft::WRL;
 		using namespace std;
 
 		void *result = nullptr;
-		auto thread_id = GetCurrentThreadId();
 
 #ifdef WINAPPSDK_AVAILABLE
+		auto thread_id = GetCurrentThreadId();
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&]()
 			{
 				ComPtr<IDispatcherQueueController> dqc;
@@ -105,14 +107,17 @@ namespace application::projection
 		return result;
 
 	}
-	void *application_winappsdk_dispatcher_queue_access::get_background_dispatcher_queue_abi(int32_t id)
+	void *application_winappsdk_dispatcher_queue_access::get_background_dispatcher_queue_abi([[maybe_unused]] int32_t id)
 	{
+#ifdef WINAPPSDK_AVAILABLE
 		using namespace ABI::Microsoft::UI::Dispatching;
+#endif
 		using namespace Microsoft::WRL;
 		using namespace std;
 
 		void *result = nullptr;
 
+#ifdef WINAPPSDK_AVAILABLE
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&]()
 			{
 				ComPtr<IDispatcherQueueController> dqc;
@@ -134,6 +139,7 @@ namespace application::projection
 				}
 			});
 
+#endif
 		_ASSERTE(winappsdk_available == true);
 		return result;
 	}
