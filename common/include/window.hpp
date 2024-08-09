@@ -1060,55 +1060,259 @@ namespace windowing
 	struct window_default_t{};
 
 	struct window_default_nccreate_t{};
-	struct window_no_default_nccreate_t{};
 
 	struct window_mouse_track_t {};
 	struct window_ncmouse_track_t {};
 	struct window_no_mouse_track_t {};
 
+	struct window_unicode_t {};
+	struct window_ansi_t {};
+
 	namespace details
 	{
-		template <typename T, typename enabled = void>
+		enum class mouse_policy_value {
+			no_mouse_track,
+			mouse_track,
+			ncmouse_track
+		};
+
+		template <typename PolicyType>
+		constexpr mouse_policy_value get_mouse_policy_type()
+		{
+			if constexpr (std::is_same_v<PolicyType, window_no_mouse_track_t>)
+			{
+				return mouse_policy_value::no_mouse_track;
+			}
+			else
+			{
+				if constexpr (std::is_same_v<PolicyType, window_mouse_track_t>)
+				{
+					return mouse_policy_value::mouse_track;
+				}
+				else
+				{
+					return mouse_policy_value::ncmouse_track;
+				}
+			}
+		}
+
+		template <typename ClassType, typename = std::void_t<>>
+		struct detect_mouse_policy : std::false_type {};
+
+		template <typename ClassType>
+		struct detect_mouse_policy<ClassType, std::void_t<typename ClassType::mouse_track_policy>> : std::true_type {};
+
+		template <typename ClassType>
+		inline constexpr const bool detect_mouse_policy_v = detect_mouse_policy<ClassType>::value;
+
+		template <typename ClassType, bool = detect_mouse_policy_v<ClassType>>
 		struct mouse_policy_or_default
 		{
 			using policy = window_no_mouse_track_t;
+			inline static constexpr const mouse_policy_value value = mouse_policy_value::no_mouse_track;
 		};
 
-		template <typename T>
-		struct mouse_policy_or_default<T, typename std::void_t<typename T::mouse_track_policy>>
+		template <typename ClassType>
+		struct mouse_policy_or_default<ClassType, true>
 		{
-			using policy = typename T::mouse_track_policy;
+			using policy = typename ClassType::mouse_track_policy;
+			inline static constexpr const mouse_policy_value value = get_mouse_policy_type<typename ClassType::mouse_track_policy>();
 		};
 
-		template <typename T>
-		struct mouse_track_type
-		{
-			using policy = typename mouse_policy_or_default<T>::policy;
-		};
+		template <typename ClassType>
+		using mouse_policy_t = typename mouse_policy_or_default<ClassType>::policy;
 
-		template <typename T>
-		using mouse_track_type_t = typename mouse_track_type<T>::policy;
+		template <typename ClassType>
+		inline constexpr const mouse_policy_value mouse_policy_v = mouse_policy_or_default<ClassType>::value;
 
-		template <typename T, typename enabled = void>
+		template <typename ClassType, typename = std::void_t<>>
+		struct detect_ncmouse_policy : std::false_type {};
+
+		template <typename ClassType>
+		struct detect_ncmouse_policy<ClassType, std::void_t<typename ClassType::ncmouse_track_policy>> : std::true_type {};
+
+		template <typename ClassType>
+		inline constexpr const bool detect_ncmouse_policy_v = detect_mouse_policy<ClassType>::value;
+
+		template <typename ClassType, bool = detect_ncmouse_policy_v<ClassType>>
 		struct ncmouse_policy_or_default
 		{
 			using policy = window_no_mouse_track_t;
+			inline static constexpr const mouse_policy_value value = mouse_policy_value::no_mouse_track;
 		};
 
-		template <typename T>
-		struct ncmouse_policy_or_default<T, typename std::void_t<typename T::ncmouse_track_policy>>
+		template <typename ClassType>
+		struct ncmouse_policy_or_default<ClassType, true>
 		{
-			using policy = typename T::ncmouse_track_policy;
+			using policy = typename ClassType::ncmouse_track_policy;
+			inline static constexpr const mouse_policy_value value = get_mouse_policy_type<typename ClassType::mouse_track_policy>();
 		};
 
-		template <typename T>
-		struct ncmouse_track_type
+		template <typename ClassType>
+		using ncmouse_policy_t = typename ncmouse_policy_or_default<ClassType>::policy;
+
+		template <typename ClassType>
+		inline constexpr const mouse_policy_value ncmouse_policy_v = ncmouse_policy_or_default<ClassType>::value;
+
+		template <typename ClassType, typename = std::void_t<>>
+		struct detect_process_quit_policy : std::false_type {};
+
+		template <typename ClassType>
+		struct detect_process_quit_policy<ClassType, std::void_t<typename ClassType::quit_process_policy>> : std::true_type {};
+		
+		template <typename ClassType>
+		inline constexpr const bool detect_process_quit_policy_v = detect_process_quit_policy<ClassType>::value;
+
+		template <typename PolicyType>
+		constexpr bool get_quit_policy_type()
 		{
-			using policy = typename ncmouse_policy_or_default<T>::policy;
+			static_assert(std::is_same_v<PolicyType, window_default_t> || std::is_same_v<PolicyType, window_quit_process_t>);
+			if constexpr (std::is_same_v<PolicyType, window_quit_process_t>)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		template <typename ClassType, bool = detect_process_quit_policy_v<ClassType>>
+		struct process_quit_policy_or_default
+		{
+			using policy = window_default_t;
+			inline static constexpr bool value = false;
 		};
 
-		template <typename T>
-		using ncmouse_track_type_t = typename ncmouse_track_type<T>::policy;
+		template <typename ClassType>
+		struct process_quit_policy_or_default<ClassType, true>
+		{
+			using policy = typename ClassType::quit_process_policy;
+			inline static constexpr const bool value = get_quit_policy_type<typename ClassType::quit_process_policy>();
+		};
+
+		template <typename ClassType>
+		using process_quit_policy_t = typename process_quit_policy_or_default<ClassType>::policy;
+
+		template <typename ClassType>
+		inline constexpr const bool process_quit_policy_v = process_quit_policy_or_default<ClassType>::value;
+
+		template <typename ClassType, typename = std::void_t<>>
+		struct detect_default_nccreate_policy : std::false_type {};
+
+		template <typename ClassType>
+		struct detect_default_nccreate_policy<ClassType, std::void_t<typename ClassType::default_nccreate_policy>> : std::true_type {};
+
+		template <typename ClassType>
+		inline constexpr const bool detect_default_nccreate_policy_v = detect_default_nccreate_policy<ClassType>::value;
+
+		template <typename PolicyType>
+		constexpr bool get_nccreate_policy_type()
+		{
+			static_assert(std::is_same_v<PolicyType, window_default_t> || std::is_same_v<PolicyType, window_default_nccreate_t>);
+			if constexpr (std::is_same_v<PolicyType, window_default_nccreate_t>)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		template <typename ClassType, bool = detect_default_nccreate_policy_v<ClassType>>
+		struct default_nccreate_policy_or_default
+		{
+			using policy = window_default_t;
+			inline static constexpr const bool value = false;
+		};
+
+		template <typename ClassType>
+		struct default_nccreate_policy_or_default<ClassType, true>
+		{
+			using policy = typename ClassType::default_nccreate_policy;
+			inline static constexpr const bool value = get_nccreate_policy_type<typename ClassType::default_nccreate_policy>();
+		};
+
+		template <typename ClassType>
+		using default_nccreate_policy_t = typename default_nccreate_policy_or_default<ClassType>::policy;
+
+		template <typename ClassType>
+		inline constexpr const bool default_nccreate_policy_v = default_nccreate_policy_or_default<ClassType>::value;
+
+		enum class window_charset_value
+		{
+			unicode,
+			ansi
+		};
+
+		template <bool PolicyDefault>
+		inline constexpr window_charset_value get_charset_policy_type_from_default()
+		{
+			if constexpr (PolicyDefault)
+			{
+				return window_charset_value::unicode;
+			}
+			else
+			{
+				return window_charset_value::ansi;
+			}
+		}
+		template <typename PolicyType>
+		inline constexpr window_charset_value get_charset_policy_type_from_policy()
+		{
+			static_assert(std::is_same_v<PolicyType, window_unicode_t> || std::is_same_v<PolicyType, window_ansi_t>);
+			if constexpr (std::is_same_v<PolicyType, window_unicode_t>)
+			{
+				return window_charset_value::unicode;
+			}
+			else
+			{
+				return window_charset_value::ansi;
+			}
+		}
+		template <window_charset_value CharsetValue>
+		inline constexpr bool get_charset_policy_bool_from_value()
+		{
+			if constexpr (CharsetValue == window_charset_value::unicode)
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		template <typename ClassType, typename = std::void_t<>>
+		struct detect_window_charset_policy : std::false_type {};
+
+		template <typename ClassType>
+		struct detect_window_charset_policy<ClassType, std::void_t<typename ClassType::window_charset_policy>> : std::true_type {};
+
+		template <typename ClassType>
+		inline constexpr const bool detect_window_charset_policy_v = detect_window_charset_policy<ClassType>::value;
+
+		template <typename ClassType, bool = detect_window_charset_policy_v<ClassType>>
+		struct window_charset_policy_or_default
+		{
+			//If window_charset_policy is not detected in the class, then we use the default based upon the UNICODE definition.
+			using policy = std::conditional_t<window_default_unicode, window_unicode_t, window_ansi_t>;
+			inline static constexpr const window_charset_value value = get_charset_policy_type_from_default<window_default_unicode>();
+		};
+
+		template <typename ClassType>
+		struct window_charset_policy_or_default<ClassType, true>
+		{
+			using policy = typename ClassType::window_charset_policy;
+			inline static constexpr const window_charset_value value = get_charset_policy_type_from_policy<typename ClassType::window_charset_policy>();
+		};
+
+		template <typename ClassType>
+		using window_charset_policy_t = typename window_charset_policy_or_default<ClassType>::policy;
+
+		template <typename ClassType>
+		inline constexpr const window_charset_value window_charset_policy_v = window_charset_policy_or_default<ClassType>::value;
 	}
 
 	enum class handler_type
@@ -1155,59 +1359,14 @@ namespace windowing
 		std::vector<appcommand_handler_entry> appcommand_handlers;
 	};
 
-	template<typename DerivedType, typename enabled = void>
-	struct quit_process_policy_defined_t : std::false_type {};
-
-	template<typename DerivedType>
-	struct quit_process_policy_defined_t<DerivedType, typename std::void_t<typename DerivedType::quit_process_policy>> : std::true_type {};
-
-	template<typename DerivedType, typename enabled = void>
-	struct default_nccreate_policy_defined_t : std::false_type {};
-
-	template<typename DerivedType>
-	struct default_nccreate_policy_defined_t<DerivedType, typename std::void_t<typename DerivedType::default_nccreate_policy>> : std::true_type {};
-
-	template<typename DerivedType, typename enabled = void>
-	struct track_mouse_policy_defined_t : std::false_type {};
-
-	template<typename DerivedType>
-	struct track_mouse_policy_defined_t<DerivedType, typename std::void_t<typename DerivedType::track_mouse_policy>> : std::true_type {};
-
-	template<typename DerivedType, typename enabled = void>
-	struct track_ncmouse_policy_defined_t : std::false_type {};
-
-	template<typename DerivedType>
-	struct track_ncmouse_policy_defined_t<DerivedType, typename std::void_t<typename DerivedType::track_ncmouse_policy>> : std::true_type {};
-
-	template<typename DerivedType>
-	inline constexpr bool track_mouse_policy_defined_v = track_mouse_policy_defined_t<DerivedType>::value;
-
-	template<typename DerivedType>
-	inline constexpr bool track_ncmouse_policy_defined_v = track_ncmouse_policy_defined_t<DerivedType>::value;
-
-	template <typename DerivedType, typename enabled = void>
-	struct window_characterset_policy_defined_t : std::false_type {};
-	
-	template<typename DerivedType>
-	struct window_characterset_policy_defined_t<DerivedType, typename std::void_t<typename DerivedType::charset_policy>> : std::true_type {};
-
-	template <typename DerivedType, typename enabled = void>
-	struct window_paint_policy_defined_t : std::false_type {};
-
-	template <typename DerivedType>
-	struct window_paint_policy_defined_t<DerivedType, typename std::void_t<typename DerivedType::paint_policy>> : std::true_type {};
-
 	template<typename DerivedType>
 	struct window_post_quit_policy
 	{
 		static void post_quit_message(int exit_code)
 		{
-			if constexpr (quit_process_policy_defined_t<DerivedType>::value)
+			if constexpr (details::process_quit_policy_v<DerivedType>)
 			{
-				if constexpr (std::is_same_v<DerivedType::quit_process_policy, window_quit_process_t>)
-				{
-					PostQuitMessage(exit_code);
-				}
+				PostQuitMessage(exit_code);
 			}
 		}
 	};
@@ -1217,16 +1376,9 @@ namespace windowing
 	{
 		static LRESULT call_defwindowproc_nccreate(HWND wnd, WPARAM wparam, LPARAM lparam)
 		{
-			if constexpr (default_nccreate_policy_defined_t<DerivedType>::value)
+			if constexpr (details::default_nccreate_policy_v<DerivedType>)
 			{
-				if constexpr (std::is_same_v<typename DerivedType::default_nccreate_policy, window_default_nccreate_t>)
-				{
-					return choose_window_traits_t<UnicodeBase>::WndDefWindowProc(wnd, WM_NCCREATE, wparam, lparam);
-				}
-				else
-				{
-					return TRUE;
-				}
+				return choose_window_traits_t<UnicodeBase>::WndDefWindowProc(wnd, WM_NCCREATE, wparam, lparam);
 			}
 			else
 			{
@@ -1244,7 +1396,8 @@ namespace windowing
 	public:
 		bool is_mouse_in_window() const
 		{
-			if constexpr (track_mouse_policy_defined_t<DerivedType>::value || track_ncmouse_policy_defined_t<DerivedType>::value)
+			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
+				details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
 			{
 				return m_mouse_in_window;
 			}
@@ -1263,7 +1416,8 @@ namespace windowing
 		}
 		bool is_first_mouse_message() const
 		{
-			if constexpr (track_mouse_policy_defined_t<DerivedType>::value || track_ncmouse_policy_defined_t<DerivedType>::value)
+			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
+				details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
 			{
 				return m_first_mouse_message;
 			}
@@ -1276,71 +1430,59 @@ namespace windowing
 		void track_mouse(HWND)
 		{
 			using details::this_cast;
-			if constexpr (track_mouse_policy_defined_v<DerivedType> || track_ncmouse_policy_defined_v<DerivedType>)
+			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
+				details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
 			{
-				if constexpr (std::is_same_v<details::mouse_track_type_t<DerivedType>, window_no_mouse_track_t> && std::is_same_v<details::ncmouse_track_type_t<DerivedType>, window_no_mouse_track_t>)
+				//GetCurrentThreadId is used because this will be called during the WM_NCCREATE message handler.
+				//This is one of the messages that Windows will send during the CreateWindowEx call, so this
+				//handler will only ever run on the thread that created the window.
+				HHOOK hook_mh = choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_MOUSE, my_type::mh_hook, nullptr, GetCurrentThreadId());
+				HHOOK hook_gm = choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_GETMESSAGE, my_type::gm_hook, nullptr, GetCurrentThreadId());
+
+				std::unique_ptr<bool> tracking_ptr = std::make_unique<bool>();
+				struct hook_data
 				{
-					return;
-				}
-				if constexpr (std::is_same_v<details::mouse_track_type_t<DerivedType>, window_mouse_track_t> || std::is_same_v<details::ncmouse_track_type_t<DerivedType>, window_ncmouse_track_t>)
-				{
-					//GetCurrentThreadId is used because this will be called during the WM_NCCREATE message handler.
-					//This is one of the messages that Windows will send during the CreateWindowEx call, so this
-					//handler will only ever run on the thread that created the window.
-					HHOOK hook_mh = choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_MOUSE, my_type::mh_hook, nullptr, GetCurrentThreadId());
-					HHOOK hook_gm = choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_GETMESSAGE, my_type::gm_hook, nullptr, GetCurrentThreadId());
+					HHOOK mh = nullptr;
+					HHOOK gm = nullptr;
+				};
 
-					std::unique_ptr<bool> tracking_ptr = std::make_unique<bool>();
-					struct hook_data
-					{
-						HHOOK mh = nullptr;
-						HHOOK gm = nullptr;
-					};
+				std::unique_ptr<hook_data> hd = std::make_unique<hook_data>();
+				hd->gm = hook_gm;
+				hd->mh = hook_mh;
+				*tracking_ptr = true;
 
-					std::unique_ptr<hook_data> hd = std::make_unique<hook_data>();
-					hd->gm = hook_gm;
-					hd->mh = hook_mh;
-					*tracking_ptr = true;
-
-					my_t *that = this_cast<my_t>(this);
-					//Hand the pointers over to the window property;
-					that->set_property(prop_type::mouse_track, tracking_ptr.get());
-					tracking_ptr.release();
-					that->set_property(prop_type::mouse_track_hook, hd.get());
-					hd.release();
-				}
+				my_t *that = this_cast<my_t>(this);
+				//Hand the pointers over to the window property;
+				that->set_property(prop_type::mouse_track, tracking_ptr.get());
+				tracking_ptr.release();
+				that->set_property(prop_type::mouse_track_hook, hd.get());
+				hd.release();
 			}
 		}
 		void untrack_mouse(HWND)
 		{
 			using details::this_cast;
 			using details::prop_cast;
-			if constexpr (track_mouse_policy_defined_v<DerivedType> || track_ncmouse_policy_defined_v<DerivedType>)
+			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
+				details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
 			{
-				if constexpr (std::is_same_v<details::mouse_track_type_t<DerivedType>, window_no_mouse_track_t> && std::is_same_v<details::ncmouse_track_type_t<DerivedType>, window_no_mouse_track_t>)
+				struct hook_data
 				{
-					return;
-				}
-				if constexpr (std::is_same_v<details::mouse_track_type_t<DerivedType>, window_mouse_track_t> || std::is_same_v<details::ncmouse_track_type_t<DerivedType>, window_ncmouse_track_t>)
-				{
-					struct hook_data
-					{
-						HHOOK mh = nullptr;
-						HHOOK gm = nullptr;
-					};
+					HHOOK mh = nullptr;
+					HHOOK gm = nullptr;
+				};
 
-					my_t *that = this_cast<my_t>(this);
+				my_t *that = this_cast<my_t>(this);
 
-					//Bring the pointers under the control of unique_ptr again.
-					std::unique_ptr<hook_data> hd;
-					std::unique_ptr<bool> tracking_ptr;
-					hd.reset(prop_cast<hook_data>(that->get_property(prop_type::mouse_track_hook)));
-					that->remove_property(prop_type::mouse_track_hook);
-					tracking_ptr.reset(prop_cast<bool>(that->get_property(prop_type::mouse_track)));
-					that->remove_property(prop_type::mouse_track);
-					UnhookWindowsHookEx(hd->mh);
-					UnhookWindowsHookEx(hd->gm);
-				}
+				//Bring the pointers under the control of unique_ptr again.
+				std::unique_ptr<hook_data> hd;
+				std::unique_ptr<bool> tracking_ptr;
+				hd.reset(prop_cast<hook_data>(that->get_property(prop_type::mouse_track_hook)));
+				that->remove_property(prop_type::mouse_track_hook);
+				tracking_ptr.reset(prop_cast<bool>(that->get_property(prop_type::mouse_track)));
+				that->remove_property(prop_type::mouse_track);
+				UnhookWindowsHookEx(hd->mh);
+				UnhookWindowsHookEx(hd->gm);
 			}
 		}
 	private:
@@ -1360,7 +1502,7 @@ namespace windowing
 			{
 				m_first_mouse_message = false;
 			}
-			if constexpr (std::is_same_v<details::mouse_track_type_t<DerivedType>, window_mouse_track_t>)
+			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track)
 			{
 				if ((msg >= WM_MOUSEFIRST) && (msg <= WM_MOUSELAST) && (m_mouse_in_window == false))
 				{
@@ -1373,7 +1515,7 @@ namespace windowing
 				}
 			}
 
-			if constexpr (std::is_same_v<details::ncmouse_track_type_t<DerivedType>, window_ncmouse_track_t>)
+			if constexpr (details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
 			{
 				if ((msg >= WM_NCMOUSEMOVE) && (msg <= WM_NCXBUTTONDBLCLK) && (m_mouse_in_window == false))
 				{
@@ -1582,7 +1724,7 @@ namespace windowing
 		return std::make_shared<message_callback_impl>(f);
 	}
 
-	template<typename DerivedType, bool UnicodeBase = window_default_unicode>
+	template<typename DerivedType, bool UnicodeBase = details::get_charset_policy_bool_from_value<details::window_charset_policy_v<DerivedType>>()>
 	class window_t : public window_base, public track_mouse_policy<DerivedType, UnicodeBase>
 	{
 	public:
@@ -2371,15 +2513,6 @@ namespace windowing
 			return traits::WndDefWindowProc(base_t::get_handle(), msg, wparam, lparam);
 		}
 
-		template <template <typename> typename Op>
-		inline static constexpr bool dv = details::detect_v<DerivedType, Op>;
-		template <template <typename> typename Op, typename Cmp>
-		inline static constexpr bool sv = details::same_return_v<DerivedType, Op, Cmp>;
-		template <template <typename> typename Op, typename Cmp>
-		inline static constexpr bool cv = details::convertable_return_v<DerivedType, Op, Cmp>;
-		template <template <typename> typename Op>
-		inline static constexpr bool iv = details::integral_return_v<DerivedType, Op>;
-
 		//This is used when there is a command table but no
 		//on_command. This calls get_commandhandler to get
 		//the table of command handlers and then calls the
@@ -2389,10 +2522,10 @@ namespace windowing
 			bool handled = false;
 			using wmt = window_msg_types;
 			using details::this_cast;
-			if constexpr (dv<wmt::get_commandhandler_t>)
+			if constexpr (details::detect_v<DerivedType, wmt::get_commandhandler_t>)
 			{
-				constexpr const bool return_handler = sv<wmt::get_commandhandler_t, command_handler_list &>;
-				constexpr const bool return_chandler = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+				constexpr const bool return_handler = details::same_return_v<DerivedType, wmt::get_commandhandler_t, command_handler_list &>;
+				constexpr const bool return_chandler = details::same_return_v<DerivedType, wmt::get_commandhandler_t, const command_handler_list &>;
 				static_assert(return_handler || return_chandler, "get_commandhandler must return a reference to command_handler_list");
 				auto &command_handler = this_cast<DerivedType>(this)->get_commandhandler();
 
@@ -2427,10 +2560,10 @@ namespace windowing
 			bool handled = false;
 			using wmt = window_msg_types;
 			using details::this_cast;
-			if constexpr (dv<wmt::get_commandhandler_t>)
+			if constexpr (details::detect_v<DerivedType, wmt::get_commandhandler_t>)
 			{
-				constexpr const bool return_handler = sv<wmt::get_commandhandler_t, command_handler_list &>;
-				constexpr const bool return_chandler = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+				constexpr const bool return_handler = details::same_return_v<DerivedType, wmt::get_commandhandler_t, command_handler_list &>;
+				constexpr const bool return_chandler = details::same_return_v<DerivedType, wmt::get_commandhandler_t, const command_handler_list &>;
 				static_assert(return_handler || return_chandler, "get_commandhandler must return a reference to command_handler_list");
 				auto &command_handler = this_cast<DerivedType>(this)->get_commandhandler();
 
@@ -2454,10 +2587,10 @@ namespace windowing
 			using wmt = window_msg_types;
 			using details::this_cast;
 			using details::ref_param_cast;
-			if constexpr (dv<wmt::get_commandhandler_t>)
+			if constexpr (details::detect_v<DerivedType, wmt::get_commandhandler_t>)
 			{
-				constexpr const bool return_handler = sv<wmt::get_commandhandler_t, command_handler_list &>;
-				constexpr const bool return_chandler = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+				constexpr const bool return_handler = details::same_return_v<DerivedType, wmt::get_commandhandler_t, command_handler_list &>;
+				constexpr const bool return_chandler = details::same_return_v<DerivedType, wmt::get_commandhandler_t, const command_handler_list &>;
 				static_assert(return_handler || return_chandler, "get_commandhandler must return a reference to command_handler_list");
 				auto &command_handler = this_cast<DerivedType>(this)->get_commandhandler();
 
@@ -2479,10 +2612,10 @@ namespace windowing
 			bool handled = false;
 			using wmt = window_msg_types;
 			using details::this_cast;
-			if constexpr (dv<wmt::get_commandhandler_t>)
+			if constexpr (details::detect_v<DerivedType, wmt::get_commandhandler_t>)
 			{
-				constexpr const bool return_handler = sv<wmt::get_commandhandler_t, command_handler_list &>;
-				constexpr const bool return_chandler = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+				constexpr const bool return_handler = details::same_return_v<DerivedType, wmt::get_commandhandler_t, command_handler_list &>;
+				constexpr const bool return_chandler = details::same_return_v<DerivedType, wmt::get_commandhandler_t, const command_handler_list &>;
 				static_assert(return_handler || return_chandler, "get_commandhandler must return a reference to command_handler_list");
 				auto &command_handler = this_cast<DerivedType>(this)->get_commandhandler();
 
@@ -2511,8 +2644,9 @@ namespace windowing
 			using details::handle_cast;
 			using details::return_type_t;
 			using details::detect_v;
-			using std::is_same_v;
 			using details::same_return_v;
+			using details::convertable_return_v;
+			using details::integral_return_v;
 			using std::make_pair;
 			using wmt = window_msg_types;
 
@@ -2527,11 +2661,11 @@ namespace windowing
 			}
 			case WM_CREATE:
 			{
-				if constexpr (dv<wmt::on_create_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_create_t>)
 				{
-					constexpr const bool return_bool = sv<wmt::on_create_t, bool>;
-					constexpr const bool return_cbool = cv<wmt::on_create_t, bool>;
-					constexpr const bool return_void = sv<wmt::on_create_t, void>;
+					constexpr const bool return_bool = same_return_v<DerivedType, wmt::on_create_t, bool>;
+					constexpr const bool return_cbool = convertable_return_v<DerivedType, wmt::on_create_t, bool>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_create_t, void>;
 
 					if constexpr (return_bool || return_cbool)
 					{
@@ -2552,9 +2686,9 @@ namespace windowing
 			}
 			case WM_DESTROY:
 			{
-				if constexpr (dv<wmt::on_destroy_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_destroy_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_destroy_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_destroy_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_destroy with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_destroy();
 					handled = true;
@@ -2563,9 +2697,9 @@ namespace windowing
 			}
 			case WM_MOVE:
 			{
-				if constexpr (dv<wmt::on_move_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_move_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_move_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_move_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_move with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_move(param_cast<int32_t>(GET_X_LPARAM(lparam)), param_cast<int32_t>(GET_Y_LPARAM(lparam)));
 					handled = true;
@@ -2578,9 +2712,9 @@ namespace windowing
 			}
 			case WM_SIZE:
 			{
-				if constexpr (dv<wmt::on_size_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_size_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_size_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_size_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_size with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_size(param_cast<resize_type>(wparam), param_cast<int32_t>(GET_X_LPARAM(lparam)), param_cast<int32_t>(GET_Y_LPARAM(lparam)));
 					handled = true;
@@ -2589,9 +2723,9 @@ namespace windowing
 			}
 			case WM_ACTIVATE:
 			{
-				if constexpr (dv<wmt::on_activate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_activate_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_activate_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_activate_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_activate with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_activate(param_cast<activate_type>(LOWORD(wparam)), param_cast<BOOL>(HIWORD(wparam)) == FALSE ? false : true, handle_cast<HWND>(lparam));
 					handled = true;
@@ -2600,9 +2734,9 @@ namespace windowing
 			}
 			case WM_SETFOCUS:
 			{
-				if constexpr (dv<wmt::on_setfocus_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_setfocus_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_setfocus_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_setfocus_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_setfocus with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_setfocus(handle_cast<HWND>(wparam));
 					handled = true;
@@ -2611,9 +2745,9 @@ namespace windowing
 			}
 			case WM_KILLFOCUS:
 			{
-				if constexpr (dv<wmt::on_killfocus_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_killfocus_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_killfocus_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_killfocus_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_killfocus with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_killfocus(handle_cast<HWND>(wparam));
 					handled = true;
@@ -2626,9 +2760,9 @@ namespace windowing
 			}
 			case WM_ENABLE:
 			{
-				if constexpr (dv<wmt::on_enable_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_enable_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_enable_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_enable_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_enable with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_enable(param_cast<BOOL>(wparam) == FALSE ? false : true);
 					handled = true;
@@ -2637,9 +2771,9 @@ namespace windowing
 			}
 			case WM_SETREDRAW:
 			{
-				if constexpr (dv<wmt::on_setredraw_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_setredraw_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_setredraw_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_setredraw_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_setredraw with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_setredraw(param_cast<BOOL>(wparam) == FALSE ? false : true);
 					handled = true;
@@ -2648,9 +2782,9 @@ namespace windowing
 			}
 			case WM_SETTEXT:
 			{
-				if constexpr (dv<wmt::on_settext_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_settext_t>)
 				{
-					static constexpr bool convertable_ret = cv<wmt::on_settext_t, bool>;
+					static constexpr bool convertable_ret = convertable_return_v<DerivedType, wmt::on_settext_t, bool>;
 
 					//This static_assert is deliberately unconditional.
 					//The behaviour of WM_SETTEXT is compromised if you are unable to return a value.
@@ -2663,9 +2797,9 @@ namespace windowing
 			}
 			case WM_GETTEXT:
 			{
-				if constexpr (dv<wmt::on_gettext_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_gettext_t>)
 				{
-					constexpr bool convertable_ret = cv<wmt::on_gettext_t, uintptr_t>;
+					constexpr bool convertable_ret = convertable_return_v<DerivedType, wmt::on_gettext_t, uintptr_t>;
 					
 					//This static_assert is deliberately unconditional.
 					//The behaviour of WM_GETTEXT is compromised if we cannot return a value.
@@ -2683,9 +2817,9 @@ namespace windowing
 			}
 			case WM_GETTEXTLENGTH:
 			{
-				if constexpr (dv<wmt::on_gettextlength_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_gettextlength_t>)
 				{
-					constexpr bool convertable_ret = cv<wmt::on_gettextlength_t, uintptr_t>;
+					constexpr bool convertable_ret = convertable_return_v<DerivedType, wmt::on_gettextlength_t, uintptr_t>;
 					//This static_assert is deliberately unconditional.
 					//The behaviour of WM_GETTEXT is compromised if we cannot return a value.
 					static_assert(convertable_ret, "on_gettextlength must have a return that is convertable to uintptr_t.");
@@ -2697,15 +2831,15 @@ namespace windowing
 			}
 			case WM_PAINT:
 			{
-				constexpr const bool simple_paint = dv<wmt::simple_on_paint_t>;
-				constexpr const bool default_paint = dv<wmt::default_on_paint_t>;
+				constexpr const bool simple_paint = detect_v<DerivedType, wmt::simple_on_paint_t>;
+				constexpr const bool default_paint = detect_v<DerivedType, wmt::default_on_paint_t>;
 
 				//Detect both overloads.
 				static_assert(!(simple_paint && default_paint), "Both paint functions detected, only using on_paint().");
 				//If both exist, only use the default version.
 				if constexpr (simple_paint && !default_paint)
 				{
-					constexpr const bool return_void = sv<wmt::simple_on_paint_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::simple_on_paint_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_paint with a return that is not void found. Ignoring return.");
 
 					PAINTSTRUCT ps{};
@@ -2716,7 +2850,7 @@ namespace windowing
 				}
 				if constexpr (default_paint)
 				{
-					constexpr const bool return_void = sv<wmt::default_on_paint_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::default_on_paint_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_paint with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_paint();
 					handled = true;
@@ -2725,9 +2859,9 @@ namespace windowing
 			}
 			case WM_CLOSE:
 			{
-				if constexpr (dv<wmt::on_close_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_close_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_close_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_close_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_close with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_close();
 					handled = true;
@@ -2736,9 +2870,9 @@ namespace windowing
 			}
 			case WM_QUERYENDSESSION:
 			{
-				if constexpr (dv<wmt::on_queryendsession_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_queryendsession_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_queryendsession_t, bool>;
+					constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_queryendsession_t, bool>;
 					static_assert(convertable_bool, "on_queryendsession with a return that is not convertable to bool found.");
 					auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_queryendsession(param_cast<endsession_reason>(lparam))) == false ? FALSE : TRUE;
 					proc_result = return_cast(result);
@@ -2752,9 +2886,9 @@ namespace windowing
 			}
 			case WM_QUERYOPEN:
 			{
-				if constexpr (dv<wmt::on_queryopen_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_queryopen_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_queryopen_t, bool>;
+					constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_queryopen_t, bool>;
 					static_assert(convertable_bool, "on_queryopen with a return that is not convertable to bool found.");
 					auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_queryopen()) == false ? FALSE : TRUE;
 					proc_result = return_cast(result);
@@ -2764,11 +2898,11 @@ namespace windowing
 			}
 			case WM_ERASEBKGND:
 			{
-				if constexpr (dv<wmt::on_erasebkgnd_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_erasebkgnd_t>)
 				{
-					constexpr const bool return_bool = sv<wmt::on_erasebkgnd_t, bool>;
-					constexpr const bool return_cbool = cv<wmt::on_erasebkgnd_t, bool>;
-					constexpr const bool return_void = sv<wmt::on_erasebkgnd_t, void>;
+					constexpr const bool return_bool = same_return_v<DerivedType, wmt::on_erasebkgnd_t, bool>;
+					constexpr const bool return_cbool = convertable_return_v<DerivedType, wmt::on_erasebkgnd_t, bool>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_erasebkgnd_t, void>;
 
 					if constexpr (return_bool || return_cbool)
 					{
@@ -2789,9 +2923,9 @@ namespace windowing
 			}
 			case WM_SYSCOLORCHANGE:
 			{
-				if constexpr (dv<wmt::on_syscolorchange_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_syscolorchange_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_syscolorchange_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_syscolorchange_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_syscolorchange with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_syscolorchange();
 					handled = true;
@@ -2800,9 +2934,9 @@ namespace windowing
 			}
 			case WM_ENDSESSION:
 			{
-				if constexpr (dv<wmt::on_endsession_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_endsession_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_endsession_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_endsession_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_endsession with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_endsession(param_cast<BOOL>(wparam) == FALSE ? false : true, param_cast<endsession_reason>(lparam));
 					handled = true;
@@ -2815,9 +2949,9 @@ namespace windowing
 			}
 			case WM_SHOWWINDOW:
 			{
-				if constexpr (dv<wmt::on_showwindow_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_showwindow_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_showwindow_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_showwindow_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_showwindow with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_showwindow(param_cast<bool>(wparam), param_cast<showwindow_reason>(lparam));
 					handled = true;
@@ -2830,9 +2964,9 @@ namespace windowing
 			}
 			case WM_SETTINGCHANGE:
 			{
-				if constexpr (dv<wmt::on_settingchange_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_settingchange_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_settingchange_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_settingchange_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_settingchange with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_settingchange(param_cast<uint32_t>(wparam), ptr_param_cast<traits::char_t>(lparam));
 					handled = true;
@@ -2841,9 +2975,9 @@ namespace windowing
 			}
 			case WM_DEVMODECHANGE:
 			{
-				if constexpr (dv<wmt::on_devmodechange_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_devmodechange_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_devmodechange_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_devmodechange_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_devmodechange with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_devmodechange(ptr_param_cast<traits::char_t>(lparam));
 					handled = true;
@@ -2852,9 +2986,9 @@ namespace windowing
 			}
 			case WM_ACTIVATEAPP:
 			{
-				if constexpr (dv<wmt::on_activateapp_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_activateapp_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_activateapp_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_activateapp_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_activateapp with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_activateapp(param_cast<BOOL>(wparam) == FALSE ? false : true, param_cast<uint32_t>(lparam));
 					handled = true;
@@ -2863,9 +2997,9 @@ namespace windowing
 			}
 			case WM_FONTCHANGE:
 			{
-				if constexpr (dv<wmt::on_fontchange_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_fontchange_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_fontchange_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_fontchange_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_fontchange with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_fontchange();
 					handled = true;
@@ -2874,9 +3008,9 @@ namespace windowing
 			}
 			case WM_TIMECHANGE:
 			{
-				if constexpr (dv<wmt::on_timechange_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_timechange_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_timechange_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_timechange_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_timechange with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_timechange();
 					handled = true;
@@ -2885,9 +3019,9 @@ namespace windowing
 			}
 			case WM_CANCELMODE:
 			{
-				if constexpr (dv<wmt::on_cancelmode_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_cancelmode_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_cancelmode_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_cancelmode_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_cancelmode with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_cancelmode();
 					handled = true;
@@ -2896,11 +3030,11 @@ namespace windowing
 			}
 			case WM_SETCURSOR:
 			{
-				if constexpr (dv<wmt::on_setcursor_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_setcursor_t>)
 				{
-					constexpr const bool return_bool = sv<wmt::on_setcursor_t, bool>;
-					constexpr const bool return_cbool = cv<wmt::on_setcursor_t, bool>;
-					constexpr const bool return_void = sv<wmt::on_setcursor_t, void>;
+					constexpr const bool return_bool = same_return_v<DerivedType, wmt::on_setcursor_t, bool>;
+					constexpr const bool return_cbool = convertable_return_v<DerivedType, wmt::on_setcursor_t, bool>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_setcursor_t, void>;
 
 					if constexpr (return_bool || return_cbool)
 					{
@@ -2922,10 +3056,10 @@ namespace windowing
 			}
 			case WM_MOUSEACTIVATE:
 			{
-				if constexpr (dv<wmt::on_mouseactivate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_mouseactivate_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_mouseactivate_t, mouse_activate_type>;
-					constexpr const bool integral_return = iv<wmt::on_mouseactivate_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_mouseactivate_t, mouse_activate_type>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_mouseactivate_t>;
 					static_assert(convertable_to_return || integral_return, "on_mouseactivate found that returns a type that isn't convertable to mouse_activate_type.");
 					auto result = value_cast<mouse_activate_type>(this_cast<DerivedType>(this)->on_mouseactivate(handle_cast<HWND>(wparam), param_cast<hittest_position>(LOWORD(lparam)), param_cast<uint32_t>(HIWORD(lparam))));
 					proc_result = return_cast(result);
@@ -2935,9 +3069,9 @@ namespace windowing
 			}
 			case WM_CHILDACTIVATE:
 			{
-				if constexpr (dv<wmt::on_childactivate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_childactivate_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_childactivate_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_childactivate_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_childactivate with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_childactivate();
 					handled = true;
@@ -2946,9 +3080,9 @@ namespace windowing
 			}
 			case WM_QUEUESYNC:
 			{
-				if constexpr (dv<wmt::on_queuesync_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_queuesync_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_queuesync_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_queuesync_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_queuesync with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_queuesync();
 					handled = true;
@@ -2957,9 +3091,9 @@ namespace windowing
 			}
 			case WM_GETMINMAXINFO:
 			{
-				if constexpr (dv<wmt::on_getminmaxinfo_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_getminmaxinfo_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_getminmaxinfo_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_getminmaxinfo_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_getminmaxinfo with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_getminmaxinfo(ref_param_cast<MINMAXINFO>(lparam));
 					handled = true;
@@ -2977,9 +3111,9 @@ namespace windowing
 			}
 			case WM_NEXTDLGCTL:
 			{
-				if constexpr (dv<wmt::on_nextdlgctl_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_nextdlgctl_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_nextdlgctl_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_nextdlgctl_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_nextdlgctl with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_nextdlgctl(ref_param_cast<next_dlg_ctl_params>(wparam), param_cast<BOOL>(lparam) == FALSE ? false : true);
 					handled = true;
@@ -2994,9 +3128,9 @@ namespace windowing
 			}
 			case WM_DRAWITEM:
 			{
-				if constexpr (dv<wmt::on_drawitem_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_drawitem_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_drawitem_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_drawitem_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_drawitem with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_drawitem(param_cast<uint32_t>(wparam), ref_param_cast<DRAWITEMSTRUCT>(lparam));
 					proc_result = TRUE;
@@ -3006,9 +3140,9 @@ namespace windowing
 			}
 			case WM_MEASUREITEM:
 			{
-				if constexpr (dv<wmt::on_measureitem_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_measureitem_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_measureitem_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_measureitem_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_measureitem with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_measureitem(param_cast<uint32_t>(wparam), ref_param_cast<MEASUREITEMSTRUCT>(lparam));
 					proc_result = TRUE;
@@ -3018,9 +3152,9 @@ namespace windowing
 			}
 			case WM_DELETEITEM:
 			{
-				if constexpr (dv<wmt::on_deleteitem_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_deleteitem_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_deleteitem_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_deleteitem_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_deleteitem with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_deleteitem(param_cast<uint32_t>(wparam), ref_param_cast<MEASUREITEMSTRUCT>(lparam));
 					proc_result = TRUE;
@@ -3030,9 +3164,9 @@ namespace windowing
 			}
 			case WM_VKEYTOITEM:
 			{
-				if constexpr (dv<wmt::on_vkeytoitem_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_vkeytoitem_t>)
 				{
-					constexpr const bool convertable_int = cv<wmt::on_vkeytoitem_t, int32_t>;
+					constexpr const bool convertable_int = convertable_return_v<DerivedType, wmt::on_vkeytoitem_t, int32_t>;
 					static_assert(convertable_int, "on_vkeytoitem must have a return that is convertable to int32_t.");
 					auto result = this_cast<DerivedType>(this)->on_vkeytoitem(LOWORD(wparam), HIWORD(lparam), handle_cast<HWND>(lparam));
 					proc_result = return_cast(result);
@@ -3042,9 +3176,9 @@ namespace windowing
 			}
 			case WM_CHARTOITEM:
 			{
-				if constexpr (dv<wmt::on_chartoitem_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_chartoitem_t>)
 				{
-					constexpr const bool convertable_int = cv<wmt::on_vkeytoitem_t, int32_t>;
+					constexpr const bool convertable_int = convertable_return_v<DerivedType, wmt::on_vkeytoitem_t, int32_t>;
 					static_assert(convertable_int, "on_vkeytoitem must have a return that is convertable to int32_t.");
 					auto result = this_cast<DerivedType>(this)->on_chartoitem(param_cast<traits::char_t>(LOWORD(wparam)), HIWORD(lparam), handle_cast<HWND>(lparam));
 					proc_result = return_cast(result);
@@ -3054,9 +3188,9 @@ namespace windowing
 			}
 			case WM_SETFONT:
 			{
-				if constexpr (dv<wmt::on_setfont_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_setfont_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_setfont_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_setfont_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_setfont with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_setfont(handle_cast<HFONT>(wparam), param_cast<BOOL>(LOWORD(lparam)) == FALSE ? false : true);
 					handled = true;
@@ -3065,9 +3199,9 @@ namespace windowing
 			}
 			case WM_GETFONT:
 			{
-				if constexpr (dv<wmt::on_getfont_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_getfont_t>)
 				{
-					constexpr const bool return_hfont = sv<wmt::on_getfont_t, HFONT>;
+					constexpr const bool return_hfont = same_return_v<DerivedType, wmt::on_getfont_t, HFONT>;
 					static_assert(return_hfont, "on_getfont must have a return of HFONT.");
 					auto result = this_cast<DerivedType>(this)->on_getfont();
 					proc_result = hnd_ptr_return_cast(result);
@@ -3077,10 +3211,10 @@ namespace windowing
 			}
 			case WM_SETHOTKEY:
 			{
-				if constexpr (dv<wmt::on_sethotkey_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_sethotkey_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_sethotkey_t, set_hot_key_result>;
-					constexpr const bool integral_return = iv<wmt::on_sethotkey_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_sethotkey_t, set_hot_key_result>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_sethotkey_t>;
 					static_assert(convertable_to_return || integral_return, "on_sethotkey found that returns a type that isn't set_hot_key_result or is convertable to set_hot_key_result.");
 
 					hot_key_value hkv{};
@@ -3095,9 +3229,9 @@ namespace windowing
 			}
 			case WM_GETHOTKEY:
 			{
-				if constexpr (dv<wmt::on_gethotkey_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_gethotkey_t>)
 				{
-					constexpr const bool return_hot_key_value = sv<wmt::on_gethotkey_t, hot_key_value>;
+					constexpr const bool return_hot_key_value = same_return_v<DerivedType, wmt::on_gethotkey_t, hot_key_value>;
 					static_assert(return_hot_key_value, "on_gethotkey found that returns a type that isn't hot_key_value");
 					auto result = this_cast<DerivedType>(this)->on_gethotkey();
 					uint16_t ret_val = param_cast<uint16_t>(result.vk) | (param_cast<uint16_t>(result.modifier) << 8);
@@ -3118,10 +3252,10 @@ namespace windowing
 			}
 			case WM_COMPAREITEM:
 			{
-				if constexpr (dv<wmt::on_compareitem_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_compareitem_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_compareitem_t, compare_item_result>;
-					constexpr const bool integral_return = iv<wmt::on_compareitem_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_compareitem_t, compare_item_result>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_compareitem_t>;
 					static_assert(convertable_to_return || integral_return, "on_compareitem found that returns a type that isn't convertable to compare_item_result.");
 					auto result = value_cast<compare_item_result>(this_cast<DerivedType>(this)->on_compareitem(param_cast<uint32_t>(wparam), ref_param_cast<COMPAREITEMSTRUCT>(lparam)));
 					proc_result = return_cast(result);
@@ -3137,9 +3271,9 @@ namespace windowing
 			}
 			case WM_GETOBJECT:
 			{
-				if constexpr (dv<wmt::on_getobject_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_getobject_t>)
 				{
-					constexpr const bool convertable_return = cv<wmt::on_getobject_t, LRESULT>;
+					constexpr const bool convertable_return = convertable_return_v<DerivedType, wmt::on_getobject_t, LRESULT>;
 					static_assert(convertable_return, "on_getobject found that returns a type that isn't convertable to LRESULT.");
 					auto result = this_cast<DerivedType>(this)->on_getobject(param_cast<uint32_t>(wparam), param_cast<uint32_t>(lparam));
 					proc_result = return_cast(result);
@@ -3165,9 +3299,9 @@ namespace windowing
 			}
 			case WM_WINDOWPOSCHANGING:
 			{
-				if constexpr (dv<wmt::on_windowposchanging_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_windowposchanging_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_windowposchanging_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_windowposchanging_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_windowposchanging with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_windowposchanging(ref_param_cast<WINDOWPOS>(lparam));
 					handled = true;
@@ -3176,9 +3310,9 @@ namespace windowing
 			}
 			case WM_WINDOWPOSCHANGED:
 			{
-				if constexpr (dv<wmt::on_windowposchanged_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_windowposchanged_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_windowposchanged_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_windowposchanged_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_windowposchanged with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_windowposchanged(ref_param_cast<WINDOWPOS>(lparam));
 					handled = true;
@@ -3193,9 +3327,9 @@ namespace windowing
 			}
 			case WM_COPYDATA:
 			{
-				if constexpr (dv<wmt::on_copydata_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_copydata_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_copydata_t, bool>;
+					constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_copydata_t, bool>;
 					static_assert(convertable_bool, "on_copydata with a return that is not convertable to bool found.");
 					auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_copydata(handle_cast<HWND>(wparam), ref_param_cast<COPYDATASTRUCT>(lparam))) == false ? FALSE : TRUE;
 					proc_result = result;
@@ -3213,9 +3347,9 @@ namespace windowing
 			}
 			case WM_NOTIFY:
 			{
-				if constexpr (dv<wmt::on_notify_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_notify_t>)
 				{
-					constexpr const bool return_complex = cv<wmt::on_notify_t, std::pair<LRESULT, bool>>;
+					constexpr const bool return_complex = convertable_return_v<DerivedType, wmt::on_notify_t, std::pair<LRESULT, bool>>;
 					static_assert(return_complex, "on_notify with a return that is not std::pair<LRESULT, bool> found.");
 					auto &&[notify_result, notify_handled] = this_cast<DerivedType>(this)->on_notify(param_cast<uint32_t>(wparam), ref_param_cast<NMHDR>(lparam));
 					proc_result = notify_result;
@@ -3223,10 +3357,10 @@ namespace windowing
 				}
 				else
 				{
-					if constexpr (dv<wmt::get_commandhandler_t>)
+					if constexpr (detect_v<DerivedType, wmt::get_commandhandler_t>)
 					{
-						constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
-						constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+						constexpr const bool return_command_list = same_return_v<DerivedType, wmt::get_commandhandler_t, command_handler_list &>;
+						constexpr const bool return_ccommand_list = same_return_v<DerivedType, wmt::get_commandhandler_t, const command_handler_list &>;
 						static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list");
 						auto &&[notify_result, notify_handled] = on_notify_default(ref_param_cast<NMHDR>(lparam));
 						proc_result = notify_result;
@@ -3241,9 +3375,9 @@ namespace windowing
 			}
 			case WM_INPUTLANGCHANGEREQUEST:
 			{
-				if constexpr (dv<wmt::on_inputlangchangerequest_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_inputlangchangerequest_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_inputlanguagechangerequest_t, bool>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_inputlanguagechangerequest_t, bool>;
 					static_assert(convertable_to_return, "on_inputlanguagechangerequest with a return that is not convertable to bool found.");
 
 					auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_inputlangchangerequest(param_cast<input_language_change_flags>(wparam), param_cast<uint32_t>(lparam)));
@@ -3255,9 +3389,9 @@ namespace windowing
 			}
 			case WM_INPUTLANGCHANGE:
 			{
-				if constexpr (dv<wmt::on_inputlangchange_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_inputlangchange_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_inputlanguagechange_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_inputlanguagechange_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_inputlanguagechange with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_inputlangchange(param_cast<input_language_character_set>(wparam), LOWORD(HandleToUlong(handle_cast<HKL>(lparam))), handle_cast<HKL>(lparam));
 					proc_result = TRUE; //The documentation states to return non-zero if the message is handled
@@ -3267,9 +3401,9 @@ namespace windowing
 			}
 			case WM_TCARD:
 			{
-				if constexpr (dv<wmt::on_tcard_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_tcard_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_tcard_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_tcard_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_tcard with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_tcard(param_cast<uint32_t>(wparam), param_cast<uint32_t>(lparam));
 					handled = true;
@@ -3278,9 +3412,9 @@ namespace windowing
 			}
 			case WM_HELP:
 			{
-				if constexpr (dv<wmt::on_help_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_help_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_help_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_help_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_help with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_help(ref_param_cast<HELPINFO>(lparam));
 					proc_result = TRUE;
@@ -3295,10 +3429,10 @@ namespace windowing
 			}
 			case WM_NOTIFYFORMAT:
 			{
-				if constexpr (dv<wmt::on_notifyformat_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_notifyformat_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_notifyformat_t, notify_format_result>;
-					constexpr const bool integral_return = iv<wmt::on_notifyformat_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_notifyformat_t, notify_format_result>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_notifyformat_t>;
 
 					static_assert(convertable_to_return || integral_return, "on_notifyformat found with a return that isn't convertable to notify_format_result.");
 					auto result = value_cast<notify_format_result>(this_cast<DerivedType>(this)->on_notifyformat(handle_cast<HWND>(wparam), param_cast<notify_format_type>(lparam)));
@@ -3349,9 +3483,9 @@ namespace windowing
 			}
 			case WM_CONTEXTMENU:
 			{
-				if constexpr (dv<wmt::on_contextmenu_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_contextmenu_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_contextmenu_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_contextmenu_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_contextmenu with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_contextmenu(handle_cast<HWND>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3360,9 +3494,9 @@ namespace windowing
 			}
 			case WM_STYLECHANGING:
 			{
-				if constexpr (dv<wmt::on_stylechanging_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_stylechanging_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_stylechanging_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_stylechanging_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_stylechanging with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_stylechanging(param_cast<style_changing_type>(wparam), ref_param_cast<STYLESTRUCT>(lparam));
 					handled = true;
@@ -3371,9 +3505,9 @@ namespace windowing
 			}
 			case WM_STYLECHANGED:
 			{
-				if constexpr (dv<wmt::on_stylechanged_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_stylechanged_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_stylechanged_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_stylechanged_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_stylechanged with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_stylechanged(param_cast<style_changing_type>(wparam), ref_param_cast<STYLESTRUCT>(lparam));
 					handled = true;
@@ -3382,9 +3516,9 @@ namespace windowing
 			}
 			case WM_DISPLAYCHANGE:
 			{
-				if constexpr (dv<wmt::on_displaychange_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_displaychange_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_displaychange_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_displaychange_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_displaychange with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_displaychange(param_cast<uint32_t>(wparam), LOWORD(lparam), HIWORD(lparam));
 					handled = true;
@@ -3393,9 +3527,9 @@ namespace windowing
 			}
 			case WM_GETICON:
 			{
-				if constexpr (dv<wmt::on_geticon_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_geticon_t>)
 				{
-					constexpr const bool return_hicon = sv<wmt::on_geticon_t, HICON>;
+					constexpr const bool return_hicon = same_return_v<DerivedType, wmt::on_geticon_t, HICON>;
 					static_assert(return_hicon, "on_geticon with a return that is not HICON found.");
 					auto result = this_cast<DerivedType>(this)->on_geticon(param_cast<icon_type>(wparam), param_cast<uint32_t>(lparam));
 					proc_result = hnd_ptr_return_cast(result);
@@ -3405,9 +3539,9 @@ namespace windowing
 			}
 			case WM_SETICON:
 			{
-				if constexpr (dv<wmt::on_seticon_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_seticon_t>)
 				{
-					constexpr const bool return_hicon = sv<wmt::on_seticon_t, HICON>;
+					constexpr const bool return_hicon = same_return_v<DerivedType, wmt::on_seticon_t, HICON>;
 					static_assert(return_hicon, "on_seticon with a return that is not HICON found.");
 					auto result = this_cast<DerivedType>(this)->on_seticon(param_cast<icon_type>(wparam), handle_cast<HICON>(lparam));
 					proc_result = hnd_ptr_return_cast(result);
@@ -3417,11 +3551,11 @@ namespace windowing
 			}
 			case WM_NCCREATE:
 			{
-				if constexpr (dv<wmt::on_nccreate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_nccreate_t>)
 				{
-					constexpr const bool return_bool = sv<wmt::on_nccreate_t, bool>;
-					constexpr const bool return_cbool = cv<wmt::on_nccreate_t, bool>;
-					constexpr const bool return_void = sv<wmt::on_nccreate_t, void>;
+					constexpr const bool return_bool = same_return_v<DerivedType, wmt::on_nccreate_t, bool>;
+					constexpr const bool return_cbool = convertable_return_v<DerivedType, wmt::on_nccreate_t, bool>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_nccreate_t, void>;
 
 					if constexpr (return_bool || return_cbool)
 					{
@@ -3441,9 +3575,9 @@ namespace windowing
 			}
 			case WM_NCDESTROY:
 			{
-				if constexpr (dv<wmt::on_ncdestroy_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncdestroy_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncdestroy_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncdestroy_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncdestroy with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncdestroy();
 					handled = true;
@@ -3452,10 +3586,10 @@ namespace windowing
 			}
 			case WM_NCCALCSIZE:
 			{
-				if constexpr (dv<wmt::on_nccalcsize_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_nccalcsize_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_nccalcsize_t, nccalcsize_return>;
-					constexpr const bool integral_return = iv<wmt::on_nccalcsize_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_nccalcsize_t, nccalcsize_return>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_nccalcsize_t>;
 					static_assert(convertable_to_return || integral_return, "on_nccalcsize found that returns a type that isn't convertable to nccalcsize_return.");
 					BOOL p = param_cast<BOOL>(wparam);
 					nccalcsize_params ncp = (p == FALSE ? nccalcsize_params(*ptr_param_cast<RECT>(lparam)) : nccalcsize_params(*ptr_param_cast<NCCALCSIZE_PARAMS>(lparam)));
@@ -3467,10 +3601,10 @@ namespace windowing
 			}
 			case WM_NCHITTEST:
 			{
-				if constexpr (dv<wmt::on_nchittest_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_nchittest_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_nchittest_t, hittest_position>;
-					constexpr const bool integral_return = iv<wmt::on_ncchittest_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_nchittest_t, hittest_position>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_ncchittest_t>;
 					static_assert(convertable_to_return || integral_return, "on_nccalcsize found that returns a type that isn't convertable to hittest_position.");
 					auto result = value_cast<hittest_position>(this_cast<DerivedType>(this)->on_nchittest(GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)));
 					proc_result = return_cast(result);
@@ -3480,9 +3614,9 @@ namespace windowing
 			}
 			case WM_NCPAINT:
 			{
-				if constexpr (dv<wmt::on_ncpaint_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncpaint_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncpaint_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncpaint_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncpaint with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncpaint(handle_cast<HRGN>(wparam));
 					handled = true;
@@ -3491,9 +3625,9 @@ namespace windowing
 			}
 			case WM_NCACTIVATE:
 			{
-				if constexpr (dv<wmt::on_ncactivate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncactivate_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_ncactivate_t, bool>;
+					constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_ncactivate_t, bool>;
 					static_assert(convertable_bool, "on_ncactivate found that returns a type that isn't convertable to bool.");
 					auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_ncactivate(param_cast<BOOL>(wparam) == FALSE ? false : true, handle_cast<HRGN>(lparam))) == false ? FALSE : TRUE;
 					proc_result = result;
@@ -3503,12 +3637,12 @@ namespace windowing
 			}
 			case WM_GETDLGCODE:
 			{
-				if constexpr (dv<wmt::on_getdlgcode_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_getdlgcode_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_getdlgcode_t, get_dlg_code_return>;
-					constexpr const bool integral_return = iv<wmt::on_getdlgcode_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_getdlgcode_t, get_dlg_code_return>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_getdlgcode_t>;
 					static_assert(convertable_to_return || integral_return, "on_getdlgcode found that returns a type that isn't convertable to get_dlg_code_return.");
-					constexpr bool same_ret = sv<wmt::on_getdlgcode_t, get_dlg_code_return>;
+					constexpr bool same_ret = same_return_v<DerivedType, wmt::on_getdlgcode_t, get_dlg_code_return>;
 					std::optional<std::reference_wrapper<MSG>> m;
 					if (lparam != 0)
 					{
@@ -3523,9 +3657,9 @@ namespace windowing
 			}
 			case WM_SYNCPAINT:
 			{
-				if constexpr (dv<wmt::on_syncpaint_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_syncpaint_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_syncpaint_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_syncpaint_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_syncpaint with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_syncpaint();
 					handled = true;
@@ -3560,9 +3694,9 @@ namespace windowing
 			}
 			case WM_NCMOUSEMOVE:
 			{
-				if constexpr (dv<wmt::on_ncmousemove_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncmousemove_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncmousemove_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncmousemove_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncmousemove with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncmousemove(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3571,9 +3705,9 @@ namespace windowing
 			}
 			case WM_NCLBUTTONDOWN:
 			{
-				if constexpr (dv<wmt::on_nclbuttondown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_nclbuttondown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_nclbuttondown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_nclbuttondown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_nclbuttondown with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_nclbuttondown(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3582,9 +3716,9 @@ namespace windowing
 			}
 			case WM_NCLBUTTONUP:
 			{
-				if constexpr (dv<wmt::on_nclbuttonup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_nclbuttonup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_nclbuttonup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_nclbuttonup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_nclbuttonup with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_nclbuttonup(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3593,9 +3727,9 @@ namespace windowing
 			}
 			case WM_NCLBUTTONDBLCLK:
 			{
-				if constexpr (dv<wmt::on_nclbuttondblclk_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_nclbuttondblclk_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_nclbuttondblclk_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_nclbuttondblclk_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_nclbuttondblclk with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_nclbuttondblclk(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3604,9 +3738,9 @@ namespace windowing
 			}
 			case WM_NCRBUTTONDOWN:
 			{
-				if constexpr (dv<wmt::on_ncrbuttondown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncrbuttondown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncrbuttondown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncrbuttondown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncrbuttondown with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncrbuttondown(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3615,9 +3749,9 @@ namespace windowing
 			}
 			case WM_NCRBUTTONUP:
 			{
-				if constexpr (dv<wmt::on_ncrbuttonup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncrbuttonup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncrbuttonup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncrbuttonup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncrbuttonup with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncrbuttonup(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3626,9 +3760,9 @@ namespace windowing
 			}
 			case WM_NCRBUTTONDBLCLK:
 			{
-				if constexpr (dv<wmt::on_ncrbuttondblclk_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncrbuttondblclk_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncrbuttondblclk_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncrbuttondblclk_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncrbuttondblclk with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncrbuttondblclk(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3637,9 +3771,9 @@ namespace windowing
 			}
 			case WM_NCMBUTTONDOWN:
 			{
-				if constexpr (dv<wmt::on_ncmbuttondown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncmbuttondown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncmbuttondown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncmbuttondown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncmbuttondown with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncmbuttondown(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3648,9 +3782,9 @@ namespace windowing
 			}
 			case WM_NCMBUTTONUP:
 			{
-				if constexpr (dv<wmt::on_ncmbuttonup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncmbuttonup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncmbuttonup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncmbuttonup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncmbuttonup with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncmbuttonup(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3659,9 +3793,9 @@ namespace windowing
 			}
 			case WM_NCMBUTTONDBLCLK:
 			{
-				if constexpr (dv<wmt::on_ncmbuttondblclk_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncmbuttondblclk_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncmbuttondblclk_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncmbuttondblclk_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncmbuttondblclk with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncmbuttondblclk(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -3674,9 +3808,9 @@ namespace windowing
 			}
 			case WM_NCXBUTTONDOWN:
 			{
-				if constexpr (dv<wmt::on_ncxbuttondown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncxbuttondown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncxbuttondown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncxbuttondown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncxbuttondown with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncxbuttondown(param_cast<hittest_position>(wparam), param_cast<xbutton_type>(GET_XBUTTON_WPARAM(wparam)), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					//The xbutton handlers are documented to return true if the message is handled, this is to allows software
@@ -3689,9 +3823,9 @@ namespace windowing
 			}
 			case WM_NCXBUTTONUP:
 			{
-				if constexpr (dv<wmt::on_ncxbuttonup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncxbuttonup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncxbuttonup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncxbuttonup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncxbuttonup with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncxbuttonup(param_cast<hittest_position>(wparam), param_cast<xbutton_type>(GET_XBUTTON_WPARAM(wparam)), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					//The xbutton handlers are documented to return true if the message is handled, this is to allows software
@@ -3704,9 +3838,9 @@ namespace windowing
 			}
 			case WM_NCXBUTTONDBLCLK:
 			{
-				if constexpr (dv<wmt::on_ncxbuttondblclk_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncxbuttondblclk_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncxbuttondblclk_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncxbuttondblclk_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncxbuttondblclk with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncxbuttondblclk(param_cast<hittest_position>(wparam), param_cast<xbutton_type>(GET_XBUTTON_WPARAM(wparam)), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					//The xbutton handlers are documented to return true if the message is handled, this is to allows software
@@ -3802,9 +3936,9 @@ namespace windowing
 			}
 			case WM_INPUT_DEVICE_CHANGE:
 			{
-				if constexpr (dv<wmt::on_input_device_change_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_input_device_change_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_input_device_change_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_input_device_change_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_input_device_change with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_input_device_change(param_cast<input_dev_change_type>(wparam), handle_cast<HANDLE>(lparam));
 					handled = true;
@@ -3813,9 +3947,9 @@ namespace windowing
 			}
 			case WM_INPUT:
 			{
-				if constexpr (dv<wmt::on_input_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_input_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_input_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_input_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_input with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_input(param_cast<input_type>(GET_RAWINPUT_CODE_WPARAM(wparam)), handle_cast<HRAWINPUT>(lparam));
 					//If the raw input code is RIM_INPUT, it is documented that DefWindowProc must be called.
@@ -3826,9 +3960,9 @@ namespace windowing
 			}
 			case WM_KEYDOWN:
 			{
-				if constexpr (dv<wmt::on_keydown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_keydown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_keydown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_keydown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_keydown with a return that is not void found. Ignoring return.");
 					auto &kd = ref_param_cast<keystroke_data>(&lparam);
 					this_cast<DerivedType>(this)->on_keydown(param_cast<virtual_key>(wparam), kd);
@@ -3838,9 +3972,9 @@ namespace windowing
 			}
 			case WM_KEYUP:
 			{
-				if constexpr (dv<wmt::on_keyup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_keyup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_keyup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_keyup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_keyup with a return that is not void found. Ignoring return.");
 					auto &kd = ref_param_cast<keystroke_data>(&lparam);
 					this_cast<DerivedType>(this)->on_keyup(param_cast<virtual_key>(wparam), kd);
@@ -3850,9 +3984,9 @@ namespace windowing
 			}
 			case WM_CHAR:
 			{
-				if constexpr (dv<wmt::on_char_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_char_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_char_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_char_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_char with a return that is not void found. Ignoring return.");
 					auto &key_data = ref_param_cast<keystroke_data>(&lparam);
 					//wparam will be either char or wchar_t depending on whether the window was registered with
@@ -3866,9 +4000,9 @@ namespace windowing
 			}
 			case WM_DEADCHAR:
 			{
-				if constexpr (dv<wmt::on_deadchar_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_deadchar_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_deadchar_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_deadchar_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_deadchar with a return that is not void found. Ignoring return.");
 					auto &key_data = ref_param_cast<keystroke_data>(&lparam);
 					//Like WM_CHAR, the cast is based upon how the window was registered.
@@ -3879,9 +4013,9 @@ namespace windowing
 			}
 			case WM_SYSKEYDOWN:
 			{
-				if constexpr (dv<wmt::on_syskeydown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_syskeydown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_syskeydown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_syskeydown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_syskeydown with a return that is not void found. Ignoring return.");
 					auto &kd = ref_param_cast<keystroke_data>(&lparam);
 					this_cast<DerivedType>(this)->on_syskeydown(param_cast<virtual_key>(wparam), kd);
@@ -3891,9 +4025,9 @@ namespace windowing
 			}
 			case WM_SYSKEYUP:
 			{
-				if constexpr (dv<wmt::on_syskeyup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_syskeyup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_syskeyup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_syskeyup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_syskeyup with a return that is not void found. Ignoring return.");
 					auto &kd = ref_param_cast(&lparam);
 					this_cast<DerivedType>(this)->on_syskeyup(param_cast<virtual_key>(wparam), kd);
@@ -3903,9 +4037,9 @@ namespace windowing
 			}
 			case WM_SYSCHAR:
 			{
-				if constexpr (dv<wmt::on_syschar_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_syschar_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_syschar_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_syschar_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_syschar with a return that is not void found. Ignoring return.");
 					auto &key_data = ref_param_cast<keystroke_data>(&lparam);
 					this_cast<DerivedType>(this)->on_syschar(param_cast<traits::char_t>(wparam), key_data);
@@ -3915,9 +4049,9 @@ namespace windowing
 			}
 			case WM_SYSDEADCHAR:
 			{
-				if constexpr (dv<wmt::on_sysdeadchar_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_sysdeadchar_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_sysdeadchar_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_sysdeadchar_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_sysdeadchar with a return that is not void found. Ignoring return.");
 					auto &key_data = ref_param_cast<keystroke_data>(&lparam);
 					this_cast<DerivedType>(this)->on_sysdeadchar(param_cast<traits::char_t>(wparam), key_data);
@@ -3933,9 +4067,9 @@ namespace windowing
 			{
 				//Even though it has fallen out of favour, provide a handler for this message.
 				//Unicode windows should just let this get handled by DefWindowProc.
-				if constexpr (dv<wmt::on_unichar_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_unichar_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_unichar_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_unichar_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_unichar with a return that is not void found. Ignoring return.");
 					auto &kd = ref_param_cast<keystroke_data>(&lparam);
 					this_cast<DerivedType>(this)->on_unichar(value_cast<uint32_t>(wparam), kd);
@@ -3961,18 +4095,18 @@ namespace windowing
 			}
 			case WM_COMMAND:
 			{
-				if constexpr (dv<wmt::on_command_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_command_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_command_t, bool>;
+					constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_command_t, bool>;
 					static_assert(convertable_bool, "on_command with a return that is not convertable to bool found.");
 					handled = this_cast<DerivedType>(this)->on_command(LOWORD(wparam), HIWORD(wparam), handle_cast<HWND>(lparam));
 				}
 				else
 				{
-					if constexpr (dv<wmt::get_commandhandler_t>)
+					if constexpr (detect_v<DerivedType, wmt::get_commandhandler_t>)
 					{
-						constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
-						constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+						constexpr const bool return_command_list = same_return_v<DerivedType, wmt::get_commandhandler_t, command_handler_list &>;
+						constexpr const bool return_ccommand_list = same_return_v<DerivedType, wmt::get_commandhandler_t, const command_handler_list &>;
 						static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list.");
 						handled = on_command_default(LOWORD(wparam), HIWORD(wparam), handle_cast<HWND>(lparam));
 					}
@@ -3981,23 +4115,23 @@ namespace windowing
 			}
 			case WM_SYSCOMMAND:
 			{
-				if constexpr (dv<wmt::on_syscommand_t> || dv<wmt::get_commandhandler_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_syscommand_t> || detect_v<DerivedType, wmt::get_commandhandler_t>)
 				{
 					syscommand_info info{};
 					info.request = value_cast<syscommand_request>(wparam & 0xFFF0);
 					info.is_secure = value_cast<bool>(wparam & SCF_ISSECURE);
-					if constexpr (dv<wmt::on_syscommand_t>)
+					if constexpr (detect_v<DerivedType, wmt::on_syscommand_t>)
 					{
-						constexpr const bool convertable_bool = cv<wmt::on_syscommand_t, bool>;
+						constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_syscommand_t, bool>;
 						if constexpr (return_type_assert) static_assert(convertable_bool, "on_syscommand with a return that is not convertable to bool found.");
 						handled = this_cast<DerivedType>(this)->on_syscommand(info, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					}
 					else
 					{
-						if constexpr (dv<wmt::get_commandhandler_t>)
+						if constexpr (detect_v<DerivedType, wmt::get_commandhandler_t>)
 						{
-							constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
-							constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+							constexpr const bool return_command_list = same_return_v<DerivedType, wmt::get_commandhandler_t, command_handler_list &>;
+							constexpr const bool return_ccommand_list = same_return_v<DerivedType, wmt::get_commandhandler_t, const command_handler_list &>;
 							static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list.");
 							handled = on_syscommand_default(info, GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 						}
@@ -4007,9 +4141,9 @@ namespace windowing
 			}
 			case WM_TIMER:
 			{
-				if constexpr (dv<wmt::on_timer_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_timer_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_timer_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_timer_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_timer with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_timer(param_cast<uintptr_t>(wparam), ptr_param_cast<TIMERPROC>(lparam));
 					handled = true;
@@ -4018,9 +4152,9 @@ namespace windowing
 			}
 			case WM_HSCROLL:
 			{
-				if constexpr (dv<wmt::on_hscroll_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_hscroll_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_hscroll_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_hscroll_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_hscroll with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_hscroll(param_cast<hscrollbar_request>(LOWORD(wparam)), HIWORD(wparam), handle_cast<HWND>(lparam));
 					handled = true;
@@ -4029,9 +4163,9 @@ namespace windowing
 			}
 			case WM_VSCROLL:
 			{
-				if constexpr (dv<wmt::on_vscroll_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_vscroll_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_vscroll_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_vscroll_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_vscroll with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_vscroll(param_cast<vscrollbar_request>(LOWORD(wparam)), HIWORD(wparam), handle_cast<HWND>(lparam));
 					handled = true;
@@ -4040,9 +4174,9 @@ namespace windowing
 			}
 			case WM_INITMENU:
 			{
-				if constexpr (dv<wmt::on_initmenu_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_initmenu_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_initmenu_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_initmenu_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_initmenu with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_initmenu(handle_cast<HMENU>(wparam));
 					handled = true;
@@ -4051,9 +4185,9 @@ namespace windowing
 			}
 			case WM_INITMENUPOPUP:
 			{
-				if constexpr (dv<wmt::on_initmenupopup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_initmenupopup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_initmenupopup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_initmenupopup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_initmenupopup with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_initmenupopup(handle_cast<HMENU>(wparam), LOWORD(lparam), param_cast<BOOL>(HIWORD(lparam)) == FALSE ? false : true);
 					handled = true;
@@ -4066,9 +4200,9 @@ namespace windowing
 			}
 			case WM_GESTURE:
 			{
-				if constexpr (dv<wmt::on_gesture_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_gesture_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_gesture_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_gesture_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_gesture with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_gesture(value_cast<uint64_t>(wparam), handle_cast<HGESTUREINFO>(lparam));
 					handled = true;
@@ -4077,9 +4211,9 @@ namespace windowing
 			}
 			case WM_GESTURENOTIFY:
 			{
-				if constexpr (dv<wmt::on_gesturenotify_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_gesturenotify_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_gesturenotify_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_gesturenotify_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_gesturenotify with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_gesturenotify(ref_param_cast<GESTURENOTIFYSTRUCT>(lparam));
 					//Never mark the message as handled.
@@ -4096,9 +4230,9 @@ namespace windowing
 			}
 			case WM_MENUSELECT:
 			{
-				if constexpr (dv<wmt::on_menuselect_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_menuselect_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_menuselect_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_menuselect_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_menuselect with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_menuselect(LOWORD(wparam), param_cast<menuselect_flags>(HIWORD(wparam)), handle_cast<HMENU>(lparam));
 					handled = true;
@@ -4107,9 +4241,9 @@ namespace windowing
 			}
 			case WM_MENUCHAR:
 			{
-				if constexpr (dv<wmt::on_menuchar_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_menuchar_t>)
 				{
-					constexpr const bool return_menuchar_return = sv<wmt::on_menuchar_t, menuchar_return>;
+					constexpr const bool return_menuchar_return = same_return_v<DerivedType, wmt::on_menuchar_t, menuchar_return>;
 					static_assert(return_menuchar_return, "on_menuchar found with a return that is not menuchar_return.");
 					auto result = this_cast<DerivedType>(this)->on_menuchar(param_cast<wmt::msg_char_type>(LOWORD(wparam)), param_cast<menuchar_flags>(HIWORD(wparam)), handle_cast<HMENU>(lparam));
 					auto cmb_result = details::make_dword(result.index, param_cast<uint16_t>(result.result));
@@ -4120,9 +4254,9 @@ namespace windowing
 			}
 			case WM_ENTERIDLE:
 			{
-				if constexpr (dv<wmt::on_enteridle_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_enteridle_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_enteridle_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_enteridle_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_enteridle with a return that is not void found. Ignoring return.");
 					enteridle_type ei_param = param_cast<enteridle_type>(wparam);
 					enteridle_param v = ei_param == enteridle_type::dialogbox ? handle_cast<HWND>(lparam) : handle_cast<HMENU>(lparam);
@@ -4133,9 +4267,9 @@ namespace windowing
 			}
 			case WM_MENURBUTTONUP:
 			{
-				if constexpr (dv<wmt::on_menurbuttonup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_menurbuttonup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_menurbuttonup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_menurbuttonup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_menurbuttonup with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_menurbuttonup(param_cast<uint32_t>(wparam), handle_cast<HMENU>(lparam));
 					handled = true;
@@ -4144,10 +4278,10 @@ namespace windowing
 			}
 			case WM_MENUDRAG:
 			{
-				if constexpr (dv<wmt::on_menudrag_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_menudrag_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_menudrag_t, menudrag_return>;
-					constexpr const bool integral_return = iv<wmt::on_menudrag_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_menudrag_t, menudrag_return>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_menudrag_t>;
 					static_assert(convertable_to_return || integral_return, "on_menudrag found with a return that is not convertable to menudrag_return");
 					auto result = value_cast<menudrag_return>(this_cast<DerivedType>(this)->on_menudrag(param_cast<uint32_t>(wparam), handle_cast<HMENU>(lparam)));
 					proc_result = return_cast(result);
@@ -4157,10 +4291,10 @@ namespace windowing
 			}
 			case WM_MENUGETOBJECT:
 			{
-				if constexpr (dv<wmt::on_menugetobject_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_menugetobject_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_menugetobject_t, menugetobject_return>;
-					constexpr const bool integral_return = iv<wmt::on_menugetobject_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_menugetobject_t, menugetobject_return>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_menugetobject_t>;
 					static_assert(convertable_to_return || integral_return, "on_menugetobject found with a return that isn't menugetobject_return.");
 					auto result = value_cast<menugetobject_return>(this_cast<DerivedType>(this)->on_menugetobject(ref_param_cast<MENUGETOBJECTINFO>(lparam)));
 					proc_result = return_cast(result);
@@ -4170,9 +4304,9 @@ namespace windowing
 			}
 			case WM_UNINITMENUPOPUP:
 			{
-				if constexpr (dv<wmt::on_uninitmenupopup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_uninitmenupopup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_uninitmenupopup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_uninitmenupopup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_uninitmenupopup with a return that is not void found. Ignoring return.");
 					//The high order word of lparam is always set to MF_SYSMENU.
 					this_cast<DerivedType>(this)->on_uninitmenupopup(handle_cast<HMENU>(wparam));
@@ -4182,9 +4316,9 @@ namespace windowing
 			}
 			case WM_MENUCOMMAND:
 			{
-				if constexpr (dv<wmt::on_menucommand_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_menucommand_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_menucommand_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_menucommand_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_menucommand with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_menucommand(param_cast<uint32_t>(wparam), handle_cast<HMENU>(lparam));
 					handled = true;
@@ -4193,9 +4327,9 @@ namespace windowing
 			}
 			case WM_CHANGEUISTATE:
 			{
-				if constexpr (dv<wmt::on_changeuistate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_changeuistate_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_changeuistate_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_changeuistate_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_changeuistate with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_changeuistate(param_cast<uistate_action>(LOWORD(wparam)), param_cast<uistate_style>(HIWORD(wparam)));
 					handled = true;
@@ -4204,9 +4338,9 @@ namespace windowing
 			}
 			case WM_UPDATEUISTATE:
 			{
-				if constexpr (dv<wmt::on_updateuistate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_updateuistate_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_updateuistate_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_updateuistate_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_updateuistate with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_updateuistate(param_cast<uistate_action>(LOWORD(wparam)), param_cast<uistate_style>(HIWORD(wparam)));
 					handled = true;
@@ -4215,10 +4349,10 @@ namespace windowing
 			}
 			case WM_QUERYUISTATE:
 			{
-				if constexpr (dv<wmt::on_queryuistate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_queryuistate_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_queryuistate_t, uistate_style>;
-					constexpr const bool integral_return = iv<wmt::on_queryuistate_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_queryuistate_t, uistate_style>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_queryuistate_t>;
 					static_assert(convertable_to_return || integral_return, "on_queryuistate foun with a return that is not convertable to uistate_style");
 					auto result = value_cast<uistate_style>(this_cast<DerivedType>(this)->on_queryuistate());
 					proc_result = return_cast(result);
@@ -4239,9 +4373,9 @@ namespace windowing
 			}
 			case WM_CTLCOLORMSGBOX:
 			{
-				if constexpr (dv<wmt::on_ctlcolormsgbox_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ctlcolormsgbox_t>)
 				{
-					constexpr const bool return_hbrush = sv<wmt::on_ctlcolormsgbox_t, HBRUSH>;
+					constexpr const bool return_hbrush = same_return_v<DerivedType, wmt::on_ctlcolormsgbox_t, HBRUSH>;
 					static_assert(return_hbrush, "on_ctlcolormsgbox found with a return that is not HBRUSH.");
 					auto result = this_cast<DerivedType>(this)->on_ctlcolormsgbox(handle_cast<HDC>(wparam), handle_cast<HWND>(lparam));
 					proc_result = hnd_ptr_return_cast(result);
@@ -4251,9 +4385,9 @@ namespace windowing
 			}
 			case WM_CTLCOLOREDIT:
 			{
-				if constexpr (dv<wmt::on_ctlcoloredit_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ctlcoloredit_t>)
 				{
-					constexpr const bool return_hbrush = sv<wmt::on_ctlcoloredit_t, HBRUSH>;
+					constexpr const bool return_hbrush = same_return_v<DerivedType, wmt::on_ctlcoloredit_t, HBRUSH>;
 					static_assert(return_hbrush, "on_ctlcoloredit found with a return that is not HBRUSH.");
 					auto result = this_cast<DerivedType>(this)->on_ctlcoloredit(handle_cast<HDC>(wparam), handle_cast<HWND>(lparam));
 					proc_result = hnd_ptr_return_cast(result);
@@ -4263,9 +4397,9 @@ namespace windowing
 			}
 			case WM_CTLCOLORLISTBOX:
 			{
-				if constexpr (dv<wmt::on_ctlcolorlistbox_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ctlcolorlistbox_t>)
 				{
-					constexpr const bool return_hbrush = sv<wmt::on_ctlcolorlistbox_t, HBRUSH>;
+					constexpr const bool return_hbrush = same_return_v<DerivedType, wmt::on_ctlcolorlistbox_t, HBRUSH>;
 					static_assert(return_hbrush, "on_ctlcolorlistbox found with a return that is not HBRUSH.");
 					auto result = this_cast<DerivedType>(this)->on_ctlcolorlistbox(handle_cast<HDC>(wparam), handle_cast<HWND>(lparam));
 					proc_result = hnd_ptr_return_cast(result);
@@ -4275,9 +4409,9 @@ namespace windowing
 			}
 			case WM_CTLCOLORBTN:
 			{
-				if constexpr (dv<wmt::on_ctlcolorbtn_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ctlcolorbtn_t>)
 				{
-					constexpr const bool return_hbrush = sv<wmt::on_ctlcolorbtn_t, HBRUSH>;
+					constexpr const bool return_hbrush = same_return_v<DerivedType, wmt::on_ctlcolorbtn_t, HBRUSH>;
 					static_assert(return_hbrush, "on_ctlcolorbtn found with a return that is not HBRUSH.");
 					auto result = this_cast<DerivedType>(this)->on_ctlcolorbtn(handle_cast<HDC>(wparam), handle_cast<HWND>(lparam));
 					proc_result = hnd_ptr_return_cast(result);
@@ -4287,9 +4421,9 @@ namespace windowing
 			}
 			case WM_CTLCOLORDLG:
 			{
-				if constexpr (dv<wmt::on_ctlcolordlg_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ctlcolordlg_t>)
 				{
-					constexpr const bool return_hbrush = sv<wmt::on_ctlcolordlg_t, HBRUSH>;
+					constexpr const bool return_hbrush = same_return_v<DerivedType, wmt::on_ctlcolordlg_t, HBRUSH>;
 					static_assert(return_hbrush, "on_ctlcolordlg found with a return that is not HBRUSH.");
 					auto result = this_cast<DerivedType>(this)->on_ctlcolordlg(handle_cast<HDC>(wparam), handle_cast<HWND>(lparam));
 					proc_result = hnd_ptr_return_cast(result);
@@ -4299,9 +4433,9 @@ namespace windowing
 			}
 			case WM_CTLCOLORSCROLLBAR:
 			{
-				if constexpr (dv<wmt::on_ctlcolorscrollbar_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ctlcolorscrollbar_t>)
 				{
-					constexpr const bool return_hbrush = sv<wmt::on_ctlcolorscrollbar_t, HBRUSH>;
+					constexpr const bool return_hbrush = same_return_v<DerivedType, wmt::on_ctlcolorscrollbar_t, HBRUSH>;
 					static_assert(return_hbrush, "on_ctlcolorscrollbar found with a return that is not HBRUSH.");
 					auto result = this_cast<DerivedType>(this)->on_ctlcolorscrollbar(handle_cast<HDC>(wparam), handle_cast<HWND>(lparam));
 					proc_result = hnd_ptr_return_cast(result);
@@ -4311,9 +4445,9 @@ namespace windowing
 			}
 			case WM_CTLCOLORSTATIC:
 			{
-				if constexpr (dv<wmt::on_ctlcolorstatic_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ctlcolorstatic_t>)
 				{
-					constexpr const bool return_hbrush = sv<wmt::on_ctlcolorstatic_t, HBRUSH>;
+					constexpr const bool return_hbrush = same_return_v<DerivedType, wmt::on_ctlcolorstatic_t, HBRUSH>;
 					static_assert(return_hbrush, "on_ctlcolorstatic found with a return that is not HBRUSH.");
 					auto result = this_cast<DerivedType>(this)->on_ctlcolorstatic(handle_cast<HDC>(wparam), handle_cast<HWND>(lparam));
 					proc_result = hnd_ptr_return_cast(result);
@@ -4494,9 +4628,9 @@ namespace windowing
 			}
 			case MN_GETHMENU:
 			{
-				if constexpr (dv<wmt::on_gethmenu_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_gethmenu_t>)
 				{
-					constexpr const bool return_hbrush = sv<wmt::on_gethmenu_t, HMENU>;
+					constexpr const bool return_hbrush = same_return_v<DerivedType, wmt::on_gethmenu_t, HMENU>;
 					static_assert(return_hbrush, "on_gethmenu found with a return that is not HBRUSH.");
 					auto result = this_cast<DerivedType>(this)->on_gethmenu();
 					proc_result = hnd_ptr_return_cast(result);
@@ -4539,9 +4673,9 @@ namespace windowing
 			}
 			case WM_MOUSEMOVE:
 			{
-				if constexpr (dv<wmt::on_mousemove_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_mousemove_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_mousemove_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_mousemove_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_mousemove with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_mousemove(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4550,9 +4684,9 @@ namespace windowing
 			}
 			case WM_LBUTTONDOWN:
 			{
-				if constexpr (dv<wmt::on_lbuttondown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_lbuttondown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_lbuttondown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_lbuttondown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_lbuttondown with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_lbuttondown(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4561,9 +4695,9 @@ namespace windowing
 			}
 			case WM_LBUTTONUP:
 			{
-				if constexpr (dv<wmt::on_lbuttonup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_lbuttonup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_lbuttonup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_lbuttonup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_lbuttonup with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_lbuttonup(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4572,9 +4706,9 @@ namespace windowing
 			}
 			case WM_LBUTTONDBLCLK:
 			{
-				if constexpr (dv<wmt::on_lbuttondblclk_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_lbuttondblclk_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_lbuttondblclk_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_lbuttondblclk_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_lbuttondblclk with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_lbuttondblclk(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4583,9 +4717,9 @@ namespace windowing
 			}
 			case WM_RBUTTONDOWN:
 			{
-				if constexpr (dv<wmt::on_rbuttondown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_rbuttondown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_rbuttondown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_rbuttondown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_rbuttondown with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_rbuttondown(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4594,9 +4728,9 @@ namespace windowing
 			}
 			case WM_RBUTTONUP:
 			{
-				if constexpr (dv<wmt::on_rbuttonup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_rbuttonup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_rbuttonup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_rbuttonup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_rbuttondown with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_rbuttonup(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4605,9 +4739,9 @@ namespace windowing
 			}
 			case WM_RBUTTONDBLCLK:
 			{
-				if constexpr (dv<wmt::on_rbuttondblclk_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_rbuttondblclk_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_rbuttondblclk_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_rbuttondblclk_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_rbuttondblclk with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_rbuttondblclk(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4616,9 +4750,9 @@ namespace windowing
 			}
 			case WM_MBUTTONDOWN:
 			{
-				if constexpr (dv<wmt::on_mbuttondown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_mbuttondown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_mbuttondown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_mbuttondown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_mbuttondown with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_mbuttondown(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4627,9 +4761,9 @@ namespace windowing
 			}
 			case WM_MBUTTONUP:
 			{
-				if constexpr (dv<wmt::on_mbuttonup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_mbuttonup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_mbuttonup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_mbuttonup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_mbuttonup with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_mbuttonup(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4638,9 +4772,9 @@ namespace windowing
 			}
 			case WM_MBUTTONDBLCLK:
 			{
-				if constexpr (dv<wmt::on_mbuttondblclk_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_mbuttondblclk_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_mbuttondblclk_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_mbuttondblclk_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_mbuttondblclk with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_mbuttondblclk(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4649,9 +4783,9 @@ namespace windowing
 			}
 			case WM_MOUSEWHEEL:
 			{
-				if constexpr (dv<wmt::on_mousewheel_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_mousewheel_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_mousewheel_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_mousewheel_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_mousewheel with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_mousewheel(param_cast<mouse_vkey>(LOWORD(wparam)), GET_WHEEL_DELTA_WPARAM(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4660,9 +4794,9 @@ namespace windowing
 			}
 			case WM_XBUTTONDOWN:
 			{
-				if constexpr (dv<wmt::on_xbuttondown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_xbuttondown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_xbuttondown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_xbuttondown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_xbuttondown with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_xbuttondown(param_cast<mouse_vkey>(wparam), param_cast<xbutton_type>(GET_XBUTTON_WPARAM(wparam)), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					//The xbutton handlers are documented to return true if the message is handled, this is to allows software
@@ -4675,9 +4809,9 @@ namespace windowing
 			}
 			case WM_XBUTTONUP:
 			{
-				if constexpr (dv<wmt::on_xbuttonup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_xbuttonup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_xbuttonup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_xbuttonup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_xbuttonup with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_xbuttonup(param_cast<mouse_vkey>(wparam), param_cast<xbutton_type>(GET_XBUTTON_WPARAM(wparam)), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					//The xbutton handlers are documented to return true if the message is handled, this is to allows software
@@ -4690,9 +4824,9 @@ namespace windowing
 			}
 			case WM_XBUTTONDBLCLK:
 			{
-				if constexpr (dv<wmt::on_xbuttondblclk_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_xbuttondblclk_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_xbuttondblclk_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_xbuttondblclk_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_xbuttondblclk with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_xbuttondblclk(param_cast<mouse_vkey>(wparam), param_cast<xbutton_type>(GET_XBUTTON_WPARAM(wparam)), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					//The xbutton handlers are documented to return true if the message is handled, this is to allows software
@@ -4705,9 +4839,9 @@ namespace windowing
 			}
 			case WM_MOUSEHWHEEL:
 			{
-				if constexpr (dv<wmt::on_mousehwheel_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_mousehwheel_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_mousehwheel_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_mousehwheel_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_mousehwheel with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_mousehwheel(param_cast<mouse_vkey>(LOWORD(wparam)), GET_WHEEL_DELTA_WPARAM(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -4720,9 +4854,9 @@ namespace windowing
 			}
 			case WM_PARENTNOTIFY:
 			{
-				if constexpr (dv<wmt::on_parentnotify_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_parentnotify_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_parentnotify_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_parentnotify_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_parentnotify with a return that is not void found. Ignoring return.");
 					uint16_t msg = LOWORD(wparam);
 					notify_param1 np1{};
@@ -4755,9 +4889,9 @@ namespace windowing
 			}
 			case WM_ENTERMENULOOP:
 			{
-				if constexpr (dv<wmt::on_entermenuloop_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_entermenuloop_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_entermenuloop_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_entermenuloop_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_entermenuloop with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_entermenuloop(param_cast<bool>(wparam));
 					handled = true;
@@ -4766,9 +4900,9 @@ namespace windowing
 			}
 			case WM_EXITMENULOOP:
 			{
-				if constexpr (dv<wmt::on_exitmenuloop_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_exitmenuloop_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_exitmenuloop_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_exitmenuloop_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_exitmenuloop with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_exitmenuloop(param_cast<bool>(wparam));
 					handled = true;
@@ -4781,9 +4915,9 @@ namespace windowing
 			}
 			case WM_SIZING:
 			{
-				if constexpr (dv<wmt::on_sizing_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_sizing_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_sizing_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_sizing_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_sizing with a return that is not void found. Ignoring return.");
 					//Even though the documentation states that this must return TRUE if we handle the message,
 					//the handler still returns void. It is an unconditional return TRUE, so the return of the
@@ -4796,9 +4930,9 @@ namespace windowing
 			}
 			case WM_CAPTURECHANGED:
 			{
-				if constexpr (dv<wmt::on_capturechanged_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_capturechanged_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_capturechanged_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_capturechanged_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_capturechanged with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_capturechanged(handle_cast<HWND>(lparam));
 					handled = true;
@@ -4807,9 +4941,9 @@ namespace windowing
 			}
 			case WM_MOVING:
 			{
-				if constexpr (dv<wmt::on_moving_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_moving_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_moving_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_moving_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_moving with a return that is not void found. Ignoring return.");
 					//Even though the documentation states that this must return TRUE if we handle the message,
 					//the handler still returns void. It is an unconditional return TRUE, so the return of the
@@ -4826,9 +4960,9 @@ namespace windowing
 			}
 			case WM_POWERBROADCAST:
 			{
-				if constexpr (dv<wmt::on_powerbroadcast_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_powerbroadcast_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_powerbroadcast_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_powerbroadcast_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_powerbroadcast with a return that is not void found. Ignoring return.");
 					std::optional<std::reference_wrapper<POWERBROADCAST_SETTING>> ps{};
 					auto evt_type = param_cast<power_event_type>(wparam);
@@ -4844,11 +4978,11 @@ namespace windowing
 			}
 			case WM_DEVICECHANGE:
 			{
-				if constexpr (dv<wmt::on_devicechange_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_devicechange_t>)
 				{
-					constexpr const bool return_bool = sv<wmt::on_devicechange_t, bool>;
-					constexpr const bool return_cbool = cv<wmt::on_devicechange_t, bool>;
-					constexpr const bool return_void = sv<wmt::on_devicechange_t, void>;
+					constexpr const bool return_bool = same_return_v<DerivedType, wmt::on_devicechange_t, bool>;
+					constexpr const bool return_cbool = convertable_return_v<DerivedType, wmt::on_devicechange_t, bool>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_devicechange_t, void>;
 
 					auto change_type = param_cast<devicechange_type>(wparam);
 					std::optional<devicechange_param> evt_data_ref{};
@@ -4925,9 +5059,9 @@ namespace windowing
 			}
 			case WM_TOUCH:
 			{
-				if constexpr (dv<wmt::on_touch_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_touch_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_touch_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_touch_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_touch found with a return that is not void. Ignoring return.");
 					this_cast<DerivedType>(this)->on_touch(param_cast<uint16_t>(LOWORD(wparam)), handle_cast<HTOUCHINPUT>(lparam));
 					handled = true;
@@ -4936,9 +5070,9 @@ namespace windowing
 			}
 			case WM_NCPOINTERUPDATE:
 			{
-				if constexpr (dv<wmt::on_ncpointerupdate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncpointerupdate_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncpointerupdate_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncpointerupdate_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncpointerupdate with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -4953,9 +5087,9 @@ namespace windowing
 			}
 			case WM_NCPOINTERDOWN:
 			{
-				if constexpr (dv<wmt::on_ncpointerdown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncpointerdown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncpointerdown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncpointerdown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncpointerdwon with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -4970,9 +5104,9 @@ namespace windowing
 			}
 			case WM_NCPOINTERUP:
 			{
-				if constexpr (dv<wmt::on_ncpointerup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncpointerup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncpointerup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncpointerup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncpointerup with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -4991,9 +5125,9 @@ namespace windowing
 			}
 			case WM_POINTERUPDATE:
 			{
-				if constexpr (dv<wmt::on_pointerupdate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerupdate_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerupdate_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerupdate_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerupdate with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -5008,9 +5142,9 @@ namespace windowing
 			}
 			case WM_POINTERDOWN:
 			{
-				if constexpr (dv<wmt::on_pointerdown_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerdown_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerdown_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerdown_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerdown with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -5025,9 +5159,9 @@ namespace windowing
 			}
 			case WM_POINTERUP:
 			{
-				if constexpr (dv<wmt::on_pointerup_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerup_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerup_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerup_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerup with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -5046,9 +5180,9 @@ namespace windowing
 			}
 			case WM_POINTERENTER:
 			{
-				if constexpr (dv<wmt::on_pointerenter_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerenter_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerenter_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerenter_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerenter with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -5063,9 +5197,9 @@ namespace windowing
 			}
 			case WM_POINTERLEAVE:
 			{
-				if constexpr (dv<wmt::on_pointerleave_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerleave_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerleave_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerleave_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerleave with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -5080,10 +5214,10 @@ namespace windowing
 			}
 			case WM_POINTERACTIVATE:
 			{
-				if constexpr (dv<wmt::on_pointeractivate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointeractivate_t>)
 				{
-					constexpr const bool convertable_to_return = cv<wmt::on_pointeractivate_t, pointer_activate_type>;
-					constexpr const bool integral_return = iv<wmt::on_pointeractivate_t>;
+					constexpr const bool convertable_to_return = convertable_return_v<DerivedType, wmt::on_pointeractivate_t, pointer_activate_type>;
+					constexpr const bool integral_return = integral_return_v<DerivedType, wmt::on_pointeractivate_t>;
 					static_assert(convertable_to_return || integral_return, "on_pointeractivate with a return that is not convertable to pointer_activate_type found.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -5099,9 +5233,9 @@ namespace windowing
 			}
 			case WM_POINTERCAPTURECHANGED:
 			{
-				if constexpr (dv<wmt::on_pointercapturechanged_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointercapturechanged_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointercapturechanged_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointercapturechanged_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointercapturechanged with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -5116,9 +5250,9 @@ namespace windowing
 			}
 			case WM_TOUCHHITTESTING:
 			{
-				if constexpr (dv<wmt::on_touchhittesting_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_touchhittesting_t>)
 				{
-					constexpr const bool return_lresult = sv<wmt::on_touchhittesting_t, LRESULT>;
+					constexpr const bool return_lresult = same_return_v<DerivedType, wmt::on_touchhittesting_t, LRESULT>;
 					static_assert(return_lresult, "on_touchhittesting with a return that is not LRESULT found.");
 					auto result = this_cast<DerivedType>(this)->on_touchhittesting(ref_param_cast<TOUCH_HIT_TESTING_INPUT>(lparam));
 					proc_result = result;
@@ -5128,9 +5262,9 @@ namespace windowing
 			}
 			case WM_POINTERWHEEL:
 			{
-				if constexpr (dv<wmt::on_pointerwheel_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerwheel_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerwheel_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerwheel_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerwheel with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -5145,9 +5279,9 @@ namespace windowing
 			}
 			case WM_POINTERHWHEEL:
 			{
-				if constexpr (dv<wmt::on_pointerhwheel_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerhwheel_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerhwheel_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerhwheel_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerhwheel with a return that is not void found. Ignoring return.");
 					auto pointerid = GET_POINTERID_WPARAM(wparam);
 					POINTER_INFO pi{};
@@ -5162,9 +5296,9 @@ namespace windowing
 			}
 			case DM_POINTERHITTEST:
 			{
-				if constexpr (dv<wmt::on_pointerhittest_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerhittest_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerhittest_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerhittest_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerhittest with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_pointerhittest();
 					handled = true;
@@ -5173,9 +5307,9 @@ namespace windowing
 			}
 			case WM_POINTERROUTEDTO:
 			{
-				if constexpr (dv<wmt::on_pointerroutedto_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerroutedto_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerroutedto_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerroutedto_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerroutedto with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_pointerroutedto();
 					handled = true;
@@ -5184,9 +5318,9 @@ namespace windowing
 			}
 			case WM_POINTERROUTEDAWAY:
 			{
-				if constexpr (dv<wmt::on_pointerroutedaway_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerroutedaway_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerroutedaway_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerroutedaway_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerroutedaway with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_pointerroutedaway();
 					handled = true;
@@ -5195,9 +5329,9 @@ namespace windowing
 			}
 			case WM_POINTERROUTEDRELEASED:
 			{
-				if constexpr (dv<wmt::on_pointerroutedreleased_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_pointerroutedreleased_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_pointerroutedreleased_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_pointerroutedreleased_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_pointerroutedreleased with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_pointerroutedreleased();
 					handled = true;
@@ -5285,9 +5419,9 @@ namespace windowing
 			}
 			case WM_NCMOUSEHOVER:
 			{
-				if constexpr (dv<wmt::on_ncmousehover_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncmousehover_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncmousehover_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncmousehover_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncmousehover with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncmousehover(param_cast<hittest_position>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -5296,9 +5430,9 @@ namespace windowing
 			}
 			case WM_MOUSEHOVER:
 			{
-				if constexpr (dv<wmt::on_mousehover_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_mousehover_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_mousehover_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_mousehover_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_mousehover with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_mousehover(param_cast<mouse_vkey>(wparam), GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam));
 					handled = true;
@@ -5307,9 +5441,9 @@ namespace windowing
 			}
 			case WM_NCMOUSELEAVE:
 			{
-				if constexpr (dv<wmt::on_ncmouseleave_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_ncmouseleave_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_ncmouseleave_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_ncmouseleave_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_ncmouseleave with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_ncmouseleave();
 					handled = true;
@@ -5318,9 +5452,9 @@ namespace windowing
 			}
 			case WM_MOUSELEAVE:
 			{
-				if constexpr (dv<wmt::on_mouseleave_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_mouseleave_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_mouseleave_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_mouseleave_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_mouseleave with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_mouseleave();
 					handled = true;
@@ -5345,9 +5479,9 @@ namespace windowing
 			}
 			case WM_WTSSESSION_CHANGE:
 			{
-				if constexpr (dv<wmt::on_wtssession_change_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_wtssession_change_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_wtssession_change_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_wtssession_change_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_wtssession_change with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_wtssession_change(param_cast<session_change_type>(wparam), param_cast<uint32_t>(lparam));
 					handled = true;
@@ -5405,9 +5539,9 @@ namespace windowing
 			}
 			case WM_DPICHANGED:
 			{
-				if constexpr (dv<wmt::on_dpichanged_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_dpichanged_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_dpichanged_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_dpichanged_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_dpichanged with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_dpichanged(LOWORD(wparam), HIWORD(wparam), ref_param_cast<RECT>(lparam));
 					handled = true;
@@ -5420,9 +5554,9 @@ namespace windowing
 			}
 			case WM_DPICHANGED_BEFOREPARENT:
 			{
-				if constexpr (dv<wmt::on_dpichanged_beforeparent_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_dpichanged_beforeparent_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_dpichanged_beforeparent_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_dpichanged_beforeparent_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_dpichanged_beforeparent with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_dpichanged_beforeparent();
 					handled = true;
@@ -5431,9 +5565,9 @@ namespace windowing
 			}
 			case WM_DPICHANGED_AFTERPARENT:
 			{
-				if constexpr (dv<wmt::on_dpichanged_afterparent_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_dpichanged_afterparent_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_dpichanged_afterparent_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_dpichanged_afterparent_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_dpichanged_afterparent with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_dpichanged_afterparent();
 					handled = true;
@@ -5442,9 +5576,9 @@ namespace windowing
 			}
 			case WM_GETDPISCALEDSIZE:
 			{
-				if constexpr (dv<wmt::on_getdpiscaledsize_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_getdpiscaledsize_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_getdpiscaledsize_t, bool>;
+					constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_getdpiscaledsize_t, bool>;
 					static_assert(convertable_bool, "on_getdpiscaledsize with a return that is not convertable to bool detected.");
 					auto result = this_cast<DerivedType>(this)->on_getdpiscaledsize(param_cast<uint16_t>(wparam), ref_param_cast<RECT>(lparam)) == false ? FALSE : TRUE;
 					proc_result = result;
@@ -5484,9 +5618,9 @@ namespace windowing
 			}
 			case WM_CUT:
 			{
-				if constexpr (dv<wmt::on_cut_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_cut_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_cut_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_cut_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_cut with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_cut();
 					handled = true;
@@ -5495,9 +5629,9 @@ namespace windowing
 			}
 			case WM_COPY:
 			{
-				if constexpr (dv<wmt::on_copy_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_copy_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_copy_t, bool>;
+					constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_copy_t, bool>;
 					static_assert(convertable_bool, "on_copy with a return that is not convertable to bool found.");
 					auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_copy()) == false ? FALSE : TRUE;
 					proc_result = result;
@@ -5507,9 +5641,9 @@ namespace windowing
 			}
 			case WM_PASTE:
 			{
-				if constexpr (dv<wmt::on_paste_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_paste_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_paste_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_paste_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_paste with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_paste();
 					handled = true;
@@ -5518,9 +5652,9 @@ namespace windowing
 			}
 			case WM_CLEAR:
 			{
-				if constexpr (dv<wmt::on_clear_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_clear_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_clear_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_clear_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_clear with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_clear();
 					handled = true;
@@ -5529,9 +5663,9 @@ namespace windowing
 			}
 			case WM_UNDO:
 			{
-				if constexpr (dv<wmt::on_undo_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_undo_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_undo_t, bool>;
+					constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_undo_t, bool>;
 					static_assert(convertable_bool, "on_undo with a return that is not convertable to bool found.");
 					auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_undo()) == false ? FALSE : TRUE;
 					proc_result = result;
@@ -5541,9 +5675,9 @@ namespace windowing
 			}
 			case WM_RENDERFORMAT:
 			{
-				if constexpr (dv<wmt::on_renderformat_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_renderformat_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_renderformat_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_renderformat_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_renderformat with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_renderformat(param_cast<clipboard_format>(wparam));
 					handled = true;
@@ -5552,9 +5686,9 @@ namespace windowing
 			}
 			case WM_RENDERALLFORMATS:
 			{
-				if constexpr (dv<wmt::on_renderallformats_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_renderallformats_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_renderallformats_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_renderallformats_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_renderallformats with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_renderallformats();
 					handled = true;
@@ -5563,9 +5697,9 @@ namespace windowing
 			}
 			case WM_DESTROYCLIPBOARD:
 			{
-				if constexpr (dv<wmt::on_destroyclipboard_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_destroyclipboard_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_destroyclipboard_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_destroyclipboard_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_destroyclipboard with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_destroyclipboard();
 					handled = true;
@@ -5574,9 +5708,9 @@ namespace windowing
 			}
 			case WM_DRAWCLIPBOARD:
 			{
-				if constexpr (dv<wmt::on_drawclipboard_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_drawclipboard_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_drawclipboard_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_drawclipboard_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_drawclipboard with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_drawclipboard();
 					handled = true;
@@ -5585,9 +5719,9 @@ namespace windowing
 			}
 			case WM_PAINTCLIPBOARD:
 			{
-				if constexpr (dv<wmt::on_paintclipboard_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_paintclipboard_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_paintclipboard_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_paintclipboard_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_paintclipboard with a return that is not void found. Ignoring return.");
 					//The PAINTSTRUCT pointed to by lparam is allocated using GlobalAlloc, it must first be locked.
 					auto ps_cache = handle_cast<HGLOBAL>(lparam);
@@ -5600,9 +5734,9 @@ namespace windowing
 			}
 			case WM_VSCROLLCLIPBOARD:
 			{
-				if constexpr (dv<wmt::on_vscrollclipboard_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_vscrollclipboard_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_vscrollclipboard_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_vscrollclipboard_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_vscrollclipboard with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_vscrollclipboard(handle_cast<HWND>(wparam), param_cast<vscrollbar_request>(lparam));
 					handled = true;
@@ -5611,9 +5745,9 @@ namespace windowing
 			}
 			case WM_SIZECLIPBOARD:
 			{
-				if constexpr (dv<wmt::on_sizeclipboard_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_sizeclipboard_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_sizeclipboard_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_sizeclipboard_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_sizeclipboard with a return that is not void found. Ignoring return.");
 					//The RECT pointed to by lparam is allocated using GlobalAlloc, it must first be locked.
 					auto rc_cache = handle_cast<HGLOBAL>(lparam);
@@ -5625,9 +5759,9 @@ namespace windowing
 			}
 			case WM_ASKCBFORMATNAME:
 			{
-				if constexpr (dv<wmt::on_askcbformatname_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_askcbformatname_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_askcbformatname_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_askcbformatname_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_askcbformatname with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_askcbformatname(param_cast<uintptr_t>(wparam), ptr_param_cast<wmt::msg_char_type>(lparam));
 					handled = true;
@@ -5636,9 +5770,9 @@ namespace windowing
 			}
 			case WM_CHANGECBCHAIN:
 			{
-				if constexpr (dv<wmt::on_changecbchain_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_changecbchain_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_changecbchain_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_changecbchain_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_changecbchain with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_changecbchain(handle_cast<HWND>(wparam), handle_cast<HWND>(lparam));
 					handled = true;
@@ -5647,9 +5781,9 @@ namespace windowing
 			}
 			case WM_HSCROLLCLIPBOARD:
 			{
-				if constexpr (dv<wmt::on_hscrollclipboard_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_hscrollclipboard_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_hscrollclipboard_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_hscrollclipboard_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_hscrollclipboard with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_hscrollclipboard(handle_cast<HWND>(wparam), param_cast<hscrollbar_request>(lparam));
 					handled = true;
@@ -5658,9 +5792,9 @@ namespace windowing
 			}
 			case WM_QUERYNEWPALETTE:
 			{
-				if constexpr (dv<wmt::on_querynewpalette_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_querynewpalette_t>)
 				{
-					constexpr const bool convertable_bool = cv<wmt::on_querynewpalette_t, bool>;
+					constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_querynewpalette_t, bool>;
 					static_assert(convertable_bool, "on_querynewpalette with a return that is not convertable to bool found.");
 					auto result = value_cast<bool>(this_cast<DerivedType>(this)->on_querynewpalette()) == false ? FALSE : TRUE;
 					proc_result = return_cast(result);
@@ -5670,9 +5804,9 @@ namespace windowing
 			}
 			case WM_PALETTEISCHANGING:
 			{
-				if constexpr (dv<wmt::on_paletteischanging_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_paletteischanging_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_paletteischanging_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_paletteischanging_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_paletteischanging with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_paletteischanging(handle_cast<HWND>(wparam));
 					handled = true;
@@ -5681,9 +5815,9 @@ namespace windowing
 			}
 			case WM_PALETTECHANGED:
 			{
-				if constexpr (dv<wmt::on_palettechanged_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_palettechanged_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_palettechanged_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_palettechanged_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_palettechanged with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_palettechanged(handle_cast<HWND>(wparam));
 					handled = true;
@@ -5692,9 +5826,9 @@ namespace windowing
 			}
 			case WM_HOTKEY:
 			{
-				if constexpr (dv<wmt::on_hotkey_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_hotkey_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_hotkey_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_hotkey_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_hotkey with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_hotkey(param_cast<uint32_t>(wparam), param_cast<hotkey_modifier>(lparam));
 					handled = true;
@@ -5710,9 +5844,9 @@ namespace windowing
 			}
 			case WM_PRINT:
 			{
-				if constexpr (dv<wmt::on_print_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_print_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_print_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_print_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_print with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_print(handle_cast<HDC>(wparam), param_cast<print_flags>(lparam));
 					handled = true;
@@ -5721,9 +5855,9 @@ namespace windowing
 			}
 			case WM_PRINTCLIENT:
 			{
-				if constexpr (dv<wmt::on_printclient_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_printclient_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_printclient_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_printclient_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_printclient with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_printclient(handle_cast<HDC>(wparam), param_cast<print_flags>(lparam));
 					handled = true;
@@ -5732,7 +5866,7 @@ namespace windowing
 			}
 			case WM_APPCOMMAND:
 			{
-				if constexpr (dv<wmt::on_appcommand_t> || dv<wmt::get_commandhandler_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_appcommand_t> || detect_v<DerivedType, wmt::get_commandhandler_t>)
 				{
 					appcommand_info info{ handle_cast<HWND>(wparam),
 							value_cast<appcommand_command>(GET_APPCOMMAND_LPARAM(lparam)),
@@ -5747,9 +5881,9 @@ namespace windowing
 						mouse_xpos = GET_X_LPARAM(pos);
 						mouse_ypos = GET_Y_LPARAM(pos);
 					}
-					if constexpr (dv<wmt::on_appcommand_t>)
+					if constexpr (detect_v<DerivedType, wmt::on_appcommand_t>)
 					{
-						constexpr const bool convertable_bool = cv<wmt::on_appcommand_t, bool>;
+						constexpr const bool convertable_bool = convertable_return_v<DerivedType, wmt::on_appcommand_t, bool>;
 						if constexpr (return_type_assert) static_assert(convertable_bool, "on_appcommand with a return that is not convertable to bool found.");
 						handled = this_cast<DerivedType>(this)->on_appcommand(info, mouse_xpos, mouse_ypos);
 						//The documentation states that this should return true for legacy reasons.
@@ -5759,10 +5893,10 @@ namespace windowing
 					}
 					else
 					{
-						if constexpr (dv<wmt::get_commandhandler_t>)
+						if constexpr (detect_v<DerivedType, wmt::get_commandhandler_t>)
 						{
-							constexpr const bool return_command_list = sv<wmt::get_commandhandler_t, command_handler_list &>;
-							constexpr const bool return_ccommand_list = sv<wmt::get_commandhandler_t, const command_handler_list &>;
+							constexpr const bool return_command_list = same_return_v<DerivedType, wmt::get_commandhandler_t, command_handler_list &>;
+							constexpr const bool return_ccommand_list = same_return_v<DerivedType, wmt::get_commandhandler_t, const command_handler_list &>;
 							static_assert(return_command_list || return_ccommand_list, "get_commandhandler must return a reference to command_handler_list.");
 							handled = on_appcommand_default(info, mouse_xpos, mouse_ypos);
 							//The documentation states that this should return true for legacy reasons.
@@ -5776,9 +5910,9 @@ namespace windowing
 			}
 			case WM_THEMECHANGED:
 			{
-				if constexpr (dv<wmt::on_themechanged_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_themechanged_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_themechanged_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_themechanged_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_themechanged with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_themechanged();
 					handled = true;
@@ -5792,9 +5926,9 @@ namespace windowing
 			}
 			case WM_CLIPBOARDUPDATE:
 			{
-				if constexpr (dv<wmt::on_clipboardupdate_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_clipboardupdate_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_clipboardupdate_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_clipboardupdate_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_clipboardupdate with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_clipboardupdate();
 					handled = true;
@@ -5807,9 +5941,9 @@ namespace windowing
 			}
 			case WM_DWMNCRENDERINGCHANGED:
 			{
-				if constexpr (dv<wmt::on_dwmncrenderingchanged_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_dwmncrenderingchanged_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_dwmncrenderingchanged_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_dwmncrenderingchanged_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_dwmncrenderingchanged with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_dwmncrenderingchanged(param_cast<BOOL>(wparam) == FALSE ? false : true);
 					handled = true;
@@ -5818,9 +5952,9 @@ namespace windowing
 			}
 			case WM_DWMCOLORIZATIONCOLORCHANGED:
 			{
-				if constexpr (dv<wmt::on_dwmcolorizationcolorchanged_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_dwmcolorizationcolorchanged_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_dwmcolorizationcolorchanged_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_dwmcolorizationcolorchanged_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_dwmcolorizationcolorchanged with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_dwmcolorizationcolorchanged(param_cast<uint32_t>(wparam), param_cast<BOOL>(lparam) == FALSE ? false : true);
 					handled = true;
@@ -5829,9 +5963,9 @@ namespace windowing
 			}
 			case WM_DWMWINDOWMAXIMIZEDCHANGE:
 			{
-				if constexpr (dv<wmt::on_dwmwindowmaximizedchange_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_dwmwindowmaximizedchange_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_dwmwindowmaximizedchange_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_dwmwindowmaximizedchange_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_dwmwindowmaximizedchange with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_dwmwindowmaximizedchange(handle_cast<HWND>(wparam));
 					handled = true;
@@ -5844,9 +5978,9 @@ namespace windowing
 			}
 			case WM_DWMSENDICONICTHUMBNAIL:
 			{
-				if constexpr (dv<wmt::on_dwmsendiconicthumbnail_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_dwmsendiconicthumbnail_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_dwmsendiconicthumbnail_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_dwmsendiconicthumbnail_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_dwmsendiconicthumbnail with a return that is not void found. Ignoring return.");
 					//x is in the high word. Since we use the standard convention of x first, this requires us
 					//to unpack the high value first.
@@ -5862,9 +5996,9 @@ namespace windowing
 			}
 			case WM_DWMSENDICONICLIVEPREVIEWBITMAP:
 			{
-				if constexpr (dv<wmt::on_dwmsendiconiclivepreviewbitmap_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_dwmsendiconiclivepreviewbitmap_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_dwmsendiconiclivepreviewbitmap_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_dwmsendiconiclivepreviewbitmap_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_dwmsendiconiclivepreviewbitmap with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_dwmsendiconiclivepreviewbitmap();
 					handled = true;
@@ -5900,9 +6034,9 @@ namespace windowing
 			}
 			case WM_GETTITLEBARINFOEX:
 			{
-				if constexpr (dv<wmt::on_gettitlebarinfoex_t>)
+				if constexpr (detect_v<DerivedType, wmt::on_gettitlebarinfoex_t>)
 				{
-					constexpr const bool return_void = sv<wmt::on_gettitlebarinfoex_t, void>;
+					constexpr const bool return_void = same_return_v<DerivedType, wmt::on_gettitlebarinfoex_t, void>;
 					if constexpr (return_type_assert) static_assert(return_void, "on_gettitlebarinfoex with a return that is not void found. Ignoring return.");
 					this_cast<DerivedType>(this)->on_gettitlebarinfoex(ref_param_cast<TITLEBARINFOEX>(lparam));
 					handled = true;
@@ -5932,7 +6066,7 @@ namespace windowing
 
 				if (msg == WM_NCDESTROY)
 				{
-					if constexpr (dv<window_msg_types::on_ncdestroy_t>)
+					if constexpr (details::detect_v<DerivedType, window_msg_types::on_ncdestroy_t>)
 					{
 						//WM_NCDESTROY is documented to free internally allocated
 						//memory. This would hint that we really want to pass this
@@ -5979,7 +6113,7 @@ namespace windowing
 			{
 				LRESULT result = that->message_handler(msg, wparam, lparam);
 
-				if constexpr (dv<window_msg_types::on_nccreate_t>)
+				if constexpr (details::detect_v<DerivedType, window_msg_types::on_nccreate_t>)
 				{
 					//Even if the policy is set to call DefWindowProc on WM_NCCREATE, if
 					//the message handler calls DefWindowProc, we don't want to follow this
