@@ -195,8 +195,10 @@ EXPORTS
 	?clear_message_callbacks@window_base@windowing@@IAEXXZ
 	?is_class_registered@window_base@windowing@@IBE_NABV?$basic_string_view@DU?$char_traits@D@std@@@std@@@Z
 	?is_class_registered@window_base@windowing@@IBE_NABV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@Z
-	?register_class@window_base@windowing@@IAE_NABV?$basic_string_view@DU?$char_traits@D@std@@@std@@0HHP6GJPAUHWND__@@IIJ@ZPAUHBRUSH__@@PAUHICON__@@44@Z
-	?register_class@window_base@windowing@@IAE_NABV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@0HHP6GJPAUHWND__@@IIJ@ZPAUHBRUSH__@@PAUHICON__@@44@Z
+	?register_class@window_base@windowing@@IAE_NIABV?$basic_string_view@DU?$char_traits@D@std@@@std@@0HHP6GJPAUHWND__@@IIJ@ZPAUHBRUSH__@@PAUHICON__@@44@Z
+	?register_class@window_base@windowing@@IAE_NIABV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@0HHP6GJPAUHWND__@@IIJ@ZPAUHBRUSH__@@PAUHICON__@@44@Z
+	?register_class@window_base@windowing@@IAE_NABUtagWNDCLASSEXA@@@Z
+	?register_class@window_base@windowing@@IAE_NABUtagWNDCLASSEXW@@@Z
 	?create_window@window_base@windowing@@IAEPAUHWND__@@IIABV?$basic_string_view@DU?$char_traits@D@std@@@std@@0ABUtagPOINT@@ABUtagSIZE@@PAU3@PAUHMENU__@@PAX@Z
 	?create_window@window_base@windowing@@IAEPAUHWND__@@IIABV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@0ABUtagPOINT@@ABUtagSIZE@@PAU3@PAUHMENU__@@PAX@Z
 	?set_property@window_base@windowing@@IAE_NW4prop_type@2@PAX@Z

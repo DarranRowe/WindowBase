@@ -188,8 +188,10 @@ namespace windowing
 
 		bool is_class_registered(const std::string_view &) const;
 		bool is_class_registered(const std::wstring_view &) const;
-		bool register_class(const std::string_view &, const std::string_view &, int32_t, int32_t, WNDPROC, HBRUSH, HCURSOR, HICON, HICON);
-		bool register_class(const std::wstring_view &, const std::wstring_view &, int32_t, int32_t, WNDPROC, HBRUSH, HCURSOR, HICON, HICON);
+		bool register_class(uint32_t, const std::string_view &, const std::string_view &, int32_t, int32_t, WNDPROC, HBRUSH, HCURSOR, HICON, HICON);
+		bool register_class(uint32_t, const std::wstring_view &, const std::wstring_view &, int32_t, int32_t, WNDPROC, HBRUSH, HCURSOR, HICON, HICON);
+		bool register_class(const WNDCLASSEXA &);
+		bool register_class(const WNDCLASSEXW &);
 		HWND create_window(uint32_t, uint32_t, const std::string_view &, const std::string_view &, const POINT &, const SIZE &, HWND, HMENU, void *);
 		HWND create_window(uint32_t, uint32_t, const std::wstring_view &, const std::wstring_view &, const POINT &, const SIZE &, HWND, HMENU, void *);
 

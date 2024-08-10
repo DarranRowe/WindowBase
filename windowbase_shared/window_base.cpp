@@ -927,7 +927,7 @@ namespace windowing
 		}
 		return false;
 	}
-	bool window_base::register_class(const std::string_view &class_name, const std::string_view &menu_name, int32_t class_extra, int32_t wnd_extra, WNDPROC wndproc, HBRUSH background, HCURSOR cursor, HICON icon, HICON sm_icon)
+	bool window_base::register_class(uint32_t style, const std::string_view &class_name, const std::string_view &menu_name, int32_t class_extra, int32_t wnd_extra, WNDPROC wndproc, HBRUSH background, HCURSOR cursor, HICON icon, HICON sm_icon)
 	{
 		if (is_class_registered(class_name))
 		{
@@ -935,7 +935,7 @@ namespace windowing
 		}
 
 		WNDCLASSEXA wcx{ sizeof(WNDCLASSEXA) };
-
+		wcx.style = style;
 		wcx.hInstance = get_instance();
 		wcx.cbClsExtra = class_extra;
 		wcx.cbWndExtra = wnd_extra;
@@ -949,7 +949,7 @@ namespace windowing
 
 		return RegisterClassExA(&wcx) != 0;
 	}
-	bool window_base::register_class(const std::wstring_view &class_name, const std::wstring_view &menu_name, int32_t class_extra, int32_t wnd_extra, WNDPROC wndproc, HBRUSH background, HCURSOR cursor, HICON icon, HICON sm_icon)
+	bool window_base::register_class(uint32_t style, const std::wstring_view &class_name, const std::wstring_view &menu_name, int32_t class_extra, int32_t wnd_extra, WNDPROC wndproc, HBRUSH background, HCURSOR cursor, HICON icon, HICON sm_icon)
 	{
 		if (is_class_registered(class_name))
 		{
@@ -957,7 +957,7 @@ namespace windowing
 		}
 
 		WNDCLASSEXW wcx{ sizeof(WNDCLASSEXW) };
-
+		wcx.style = style;
 		wcx.hInstance = get_instance();
 		wcx.cbClsExtra = class_extra;
 		wcx.cbWndExtra = wnd_extra;
@@ -968,6 +968,25 @@ namespace windowing
 		wcx.hCursor = cursor;
 		wcx.hIcon = icon;
 		wcx.hIconSm = sm_icon;
+
+		return RegisterClassExW(&wcx) != 0;
+	}
+	//This is used for window_t building the information from the definitions.
+	bool window_base::register_class(const WNDCLASSEXA &wcx)
+	{
+		if (is_class_registered(wcx.lpszClassName))
+		{
+			return true;
+		}
+
+		return RegisterClassExA(&wcx) != 0;
+	}
+	bool window_base::register_class(const WNDCLASSEXW &wcx)
+	{
+		if (is_class_registered(wcx.lpszClassName))
+		{
+			return true;
+		}
 
 		return RegisterClassExW(&wcx) != 0;
 	}

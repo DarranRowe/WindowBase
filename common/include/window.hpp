@@ -987,6 +987,7 @@ namespace windowing
 		using char_t = char;
 		using create_struct_t = CREATESTRUCTA;
 		using cbt_createwnd_t = CBT_CREATEWNDA;
+		using wndclassex_t = WNDCLASSEXA;
 		
 		inline static constexpr const bool window_unicode = false;
 
@@ -1017,6 +1018,7 @@ namespace windowing
 		using char_t = wchar_t;
 		using create_struct_t = CREATESTRUCTW;
 		using cbt_createwnd_t = CBT_CREATEWNDW;
+		using wndclassex_t = WNDCLASSEXW;
 
 		inline static constexpr const bool window_unicode = true;
 
@@ -1055,6 +1057,26 @@ namespace windowing
 	};
 	template <bool UnicodeBase>
 	using choose_window_traits_t = typename choose_window_traits<UnicodeBase>::traits;
+
+	template <typename DerivedType>
+	struct static_assert_wrapper
+	{
+		inline static constexpr bool template_not_specialised = false;
+		static_assert(template_not_specialised);
+
+	};
+
+	template <typename DerivedType>
+	struct class_definitions
+	{
+		inline static constexpr bool value = static_assert_wrapper<DerivedType>::template_not_specialised;
+	};
+
+	template <typename DerivedType>
+	struct window_definitions
+	{
+		inline static constexpr bool value = static_assert_wrapper<DerivedType>::template_not_specialised;
+	};
 
 	struct window_quit_process_t{};
 	struct window_default_t{};
@@ -1159,7 +1181,7 @@ namespace windowing
 
 		template <typename ClassType>
 		struct detect_process_quit_policy<ClassType, std::void_t<typename ClassType::quit_process_policy>> : std::true_type {};
-		
+
 		template <typename ClassType>
 		inline constexpr const bool detect_process_quit_policy_v = detect_process_quit_policy<ClassType>::value;
 
@@ -1315,6 +1337,758 @@ namespace windowing
 		inline constexpr const window_charset_value window_charset_policy_v = window_charset_policy_or_default<ClassType>::value;
 	}
 
+	template<typename DerivedType, bool UnicodeBase = details::get_charset_policy_bool_from_value<details::window_charset_policy_v<DerivedType>>()>
+	class window_t;
+
+	namespace details
+	{
+		namespace class_detect
+		{
+			template <typename ClassType, typename = std::void_t<>>
+			struct detect_class_definitions : std::false_type {};
+
+			template <typename ClassType>
+			struct detect_class_definitions<ClassType, std::void_t<windowing::class_definitions<ClassType>>> : std::true_type {};
+
+			template <typename ClassType>
+			inline constexpr const bool detect_class_definitions_v = detect_class_definitions<ClassType>::value;
+
+			template <typename ClassType, typename = std::void_t<>>
+			struct detect_class_definitions_typedef : std::false_type {};
+
+			template <typename ClassType>
+			struct detect_class_definitions_typedef<ClassType, std::void_t<typename ClassType::class_definitions>> : std::true_type {};
+
+			template <typename ClassType>
+			inline constexpr const bool detect_class_definitions_typedef_v = detect_class_definitions_typedef<ClassType>::value;
+
+			struct class_definition_types
+			{
+				template <typename T>
+				using style_t = decltype(std::declval<T>().style);
+				template <typename T>
+				using class_extra_t = decltype(std::declval<T>().class_extra);
+				template <typename T>
+				using window_extra_t = decltype(std::declval<T>().window_extra);
+				template <typename T>
+				using instance_t = decltype(std::declval<T>().instance);
+				template <typename T>
+				using icon_t = decltype(std::declval<T>().icon);
+				template <typename T>
+				using cursor_t = decltype(std::declval<T>().cursor);
+				template <typename T>
+				using brush_t = decltype(std::declval<T>().brush);
+				template <typename T>
+				using menu_name_t = decltype(std::declval<T>().menu_name);
+				template <typename T>
+				using class_name_t = decltype(std::declval<T>().class_name);
+				template <typename T>
+				using small_icon_t = decltype(std::declval<T>().icon);
+				template <typename T>
+				using existing_class_name_t = decltype(std::declval<T>().existing_class_name);
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::style_t>>
+			struct style_value
+			{
+				static const uint32_t get_value()
+				{
+					return 0;
+				}
+			};
+
+			template <typename T>
+			struct style_value<T, true>
+			{
+				using style_t = typename class_definition_types::style_t<T>;
+
+				static const uint32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<style_t>>);
+					return T::style;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::class_extra_t>>
+			struct class_extra_value
+			{
+				static const int32_t get_value()
+				{
+					return 0;
+				}
+			};
+
+			template <typename T>
+			struct class_extra_value<T, true>
+			{
+				using class_extra_t = typename class_definition_types::class_extra_t<T>;
+
+				static const int32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<class_extra_t>>);
+					return T::class_extra;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::window_extra_t>>
+			struct window_extra_value
+			{
+				static const int32_t get_value()
+				{
+					return 0;
+				}
+			};
+
+			template <typename T>
+			struct window_extra_value<T, true>
+			{
+				using window_extra_t = typename class_definition_types::window_extra_t<T>;
+
+				static const int32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<window_extra_t>>);
+					return T::window_extra;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::instance_t>>
+			struct instance_value
+			{
+				static const HINSTANCE get_value()
+				{
+					//Return the executable's HINSTANCE.
+					return reinterpret_cast<HINSTANCE>(GetModuleHandleW(nullptr));
+				}
+			};
+
+			template <typename T>
+			struct instance_value<T, true>
+			{
+				using instance_t = typename class_definition_types::instance_t<T>;
+
+				static const HINSTANCE get_value()
+				{
+					static_assert(std::is_same_v<std::remove_const_t<instance_t>, HINSTANCE>);
+					return T::instance;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::icon_t>>
+			struct icon_value
+			{
+				static const HICON get_value()
+				{
+					return nullptr;
+				}
+			};
+
+			template <typename T>
+			struct icon_value<T, true>
+			{
+				using icon_t = typename class_definition_types::icon_t<T>;
+
+				static const HICON get_value()
+				{
+					static_assert(std::is_same_v<std::remove_const_t<icon_t>, HICON>);
+					return T::icon;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::cursor_t>>
+			struct cursor_value
+			{
+				static const HCURSOR get_value()
+				{
+					return nullptr;
+				}
+			};
+
+			template <typename T>
+			struct cursor_value<T, true>
+			{
+				using cursor_t = typename class_definition_types::cursor_t<T>;
+
+				static const HCURSOR get_value()
+				{
+					static_assert(std::is_same_v<std::remove_const_t<cursor_t>, HCURSOR>);
+					return T::cursor;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::brush_t>>
+			struct brush_value
+			{
+				static const HBRUSH get_value()
+				{
+					return nullptr;
+				}
+			};
+
+			template <typename T>
+			struct brush_value<T, true>
+			{
+				using brush_t = typename class_definition_types::brush_t<T>;
+
+				static const HBRUSH get_value()
+				{
+					static_assert(std::is_same_v<std::remove_const_t<brush_t>, HBRUSH>);
+					return T::brush;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::menu_name_t>>
+			struct menu_name_value
+			{
+				using traits = typename window_t<typename T::window_type>::traits;
+				//When the menu_name is not detected, return a nullptr.
+				//The type we use is a simple const char_t *.
+				//const char *
+				//const wchar_t *
+				static const traits::char_t *get_value()
+				{
+					return nullptr;
+				}
+			};
+
+			template <typename T>
+			struct menu_name_value<T, true>
+			{
+				using traits = typename window_t<typename T::window_type>::traits;
+				enum class string_return_type
+				{
+					unknown,
+					c_style,
+					basic_string,
+					basic_string_view
+				};
+				template <typename VT>
+				static constexpr string_return_type detect_string_type()
+				{
+					if constexpr (std::is_array_v<VT>)
+					{
+						if constexpr (std::is_same_v<std::remove_const_t<std::remove_all_extents_t<VT>>, typename traits::char_t>)
+						{
+							return string_return_type::c_style;
+						}
+						else
+						{
+							constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+						}
+					}
+					else
+					{
+						if constexpr (std::is_same_v<std::remove_const_t<VT>, std::basic_string<typename traits::char_t>>)
+						{
+							return string_return_type::basic_string;
+						}
+						else
+						{
+							if constexpr (std::is_same_v<std::remove_const_t<VT>, std::basic_string_view<typename traits::char_t>>)
+							{
+								return string_return_type::basic_string_view;
+							}
+							else
+							{
+								constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+							}
+						}
+					}
+				}
+				using menu_name_t = typename class_definition_types::menu_name_t<T>;
+
+				static const traits::char_t *get_value()
+				{
+					constexpr auto ret_type = detect_string_type<menu_name_t>();
+					if constexpr (ret_type == string_return_type::c_style)
+					{
+						return T::menu_name;
+					}
+					else
+					{
+						if constexpr (ret_type == string_return_type::basic_string || ret_type == string_return_type::basic_string_view)
+						{
+							return T::menu_name.data();
+						}
+					}
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::class_name_t>>
+			struct class_name_value
+			{
+				using traits = typename window_t<typename T::window_type>::traits;
+				//When the menu_name is not detected, return a nullptr.
+				//The type we use is a simple const char_t *.
+				//const char *
+				//const wchar_t *
+				static const traits::char_t *get_value()
+				{
+					return nullptr;
+				}
+			};
+
+			template <typename T>
+			struct class_name_value<T, true>
+			{
+				using traits = typename window_t<typename T::window_type>::traits;
+				enum class string_return_type
+				{
+					unknown,
+					c_style,
+					basic_string,
+					basic_string_view
+				};
+				template <typename VT>
+				static constexpr string_return_type detect_string_type()
+				{
+					if constexpr (std::is_array_v<VT>)
+					{
+						if constexpr (std::is_same_v<std::remove_const_t<std::remove_all_extents_t<VT>>, typename traits::char_t>)
+						{
+							return string_return_type::c_style;
+						}
+						else
+						{
+							constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+						}
+					}
+					else
+					{
+						if constexpr (std::is_same_v<std::remove_const_t<VT>, std::basic_string<typename traits::char_t>>)
+						{
+							return string_return_type::basic_string;
+						}
+						else
+						{
+							if constexpr (std::is_same_v<std::remove_const_t<VT>, std::basic_string_view<typename traits::char_t>>)
+							{
+								return string_return_type::basic_string_view;
+							}
+							else
+							{
+								constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+							}
+						}
+					}
+				}
+				using class_name_t = typename class_definition_types::class_name_t<T>;
+
+				static const traits::char_t *get_value()
+				{
+					constexpr auto ret_type = detect_string_type<class_name_t>();
+					if constexpr (ret_type == string_return_type::c_style)
+					{
+						return T::class_name;
+					}
+					else
+					{
+						if constexpr (ret_type == string_return_type::basic_string || ret_type == string_return_type::basic_string_view)
+						{
+							return T::class_name.data();
+						}
+					}
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::small_icon_t>>
+			struct small_icon_value
+			{
+				static const HICON get_value()
+				{
+					return nullptr;
+				}
+			};
+
+			template <typename T>
+			struct small_icon_value<T, true>
+			{
+				using small_icon_t = typename class_definition_types::small_icon_t<T>;
+
+				static const HICON get_value()
+				{
+					static_assert(std::is_same_v<std::remove_const_t<small_icon_t>, HICON>);
+					return T::small_icon;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, class_definition_types::existing_class_name_t>>
+			struct existing_class_name_value
+			{
+				static const bool get_value()
+				{
+					return false;
+				}
+			};
+
+			template <typename T>
+			struct existing_class_name_value<T, true>
+			{
+				using existing_class_name_t = typename class_definition_types::existing_class_name_t<T>;
+
+				static const bool get_value()
+				{
+					static_assert(std::is_convertible_v<std::remove_const_t<existing_class_name_t>, bool>);
+					return T::existing_class_name;
+				}
+			};
+		}
+
+		namespace window_detect
+		{
+			template <typename ClassType, typename = std::void_t<>>
+			struct detect_window_definitions : std::false_type {};
+
+			template <typename ClassType>
+			struct detect_window_definitions<ClassType, std::void_t<windowing::window_definitions<ClassType>>> : std::true_type {};
+
+			template <typename ClassType>
+			inline constexpr const bool detect_window_definitions_v = detect_window_definitions<ClassType>::value;
+
+			template <typename ClassType, typename = std::void_t<>>
+			struct detect_window_definitions_typedef : std::false_type {};
+
+			template <typename ClassType>
+			struct detect_window_definitions_typedef<ClassType, std::void_t<typename ClassType::window_definitions>> : std::true_type {};
+
+			template <typename ClassType>
+			inline constexpr const bool detect_window_definitions_typedef_v = detect_window_definitions_typedef<ClassType>::value;
+
+			struct window_definition_types
+			{
+				template <typename T>
+				using style_t = decltype(std::declval<T>().style);
+				template <typename T>
+				using ex_style_t = decltype(std::declval<T>().ex_style);
+				template <typename T>
+				using window_name_t = decltype(std::declval<T>().window_name);
+				template <typename T>
+				using x_t = decltype(std::declval<T>().x);
+				template <typename T>
+				using y_t = decltype(std::declval<T>().y);
+				template <typename T>
+				using width_t = decltype(std::declval<T>().width);
+				template <typename T>
+				using height_t = decltype(std::declval<T>().height);
+				template <typename T>
+				using position_t = decltype(std::declval<T>().position);
+				template <typename T>
+				using size_t = decltype(std::declval<T>().size);
+				template <typename T>
+				using parent_t = decltype(std::declval<T>().parent);
+				template <typename T>
+				using menu_t = decltype(std::declval<T>().menu);
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::style_t>>
+			struct style_value
+			{
+				static const uint32_t get_value()
+				{
+					return 0;
+				}
+			};
+
+			template <typename T>
+			struct style_value<T, true>
+			{
+				using style_t = typename window_definition_types::style_t<T>;
+
+				static const uint32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<style_t>>);
+					return T::style;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::ex_style_t>>
+			struct ex_style_value
+			{
+				static const uint32_t get_value()
+				{
+					return 0;
+				}
+			};
+
+			template <typename T>
+			struct ex_style_value<T, true>
+			{
+				using ex_style_t = typename window_definition_types::ex_style_t<T>;
+
+				static const uint32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<ex_style_t>>);
+					return T::ex_style;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::window_name_t>>
+			struct window_name_value
+			{
+				using traits = typename window_t<typename T::window_type>::traits;
+				//When the menu_name is not detected, return a nullptr.
+				//The type we use is a simple const char_t *.
+				//const char *
+				//const wchar_t *
+				static const traits::char_t *get_value()
+				{
+					return nullptr;
+				}
+			};
+
+			template <typename T>
+			struct window_name_value<T, true>
+			{
+				using traits = typename window_t<typename T::window_type>::traits;
+				enum class string_return_type
+				{
+					unknown,
+					c_style,
+					basic_string,
+					basic_string_view
+				};
+				template <typename VT>
+				static constexpr string_return_type detect_string_type()
+				{
+					if constexpr (std::is_array_v<VT>)
+					{
+						if constexpr (std::is_same_v<std::remove_const_t<std::remove_all_extents_t<VT>>, typename traits::char_t>)
+						{
+							return string_return_type::c_style;
+						}
+						else
+						{
+							constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+						}
+					}
+					else
+					{
+						if constexpr (std::is_same_v<std::remove_const_t<VT>, std::basic_string<typename traits::char_t>>)
+						{
+							return string_return_type::basic_string;
+						}
+						else
+						{
+							if constexpr (std::is_same_v<std::remove_const_t<VT>, std::basic_string_view<typename traits::char_t>>)
+							{
+								return string_return_type::basic_string_view;
+							}
+							else
+							{
+								constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+							}
+						}
+					}
+				}
+				using window_name_t = typename window_definition_types::window_name_t<T>;
+
+				static const traits::char_t *get_value()
+				{
+					constexpr auto ret_type = detect_string_type<window_name_t>();
+					if constexpr (ret_type == string_return_type::c_style)
+					{
+						return T::window_name;
+					}
+					else
+					{
+						if constexpr (ret_type == string_return_type::basic_string || ret_type == string_return_type::basic_string_view)
+						{
+							return T::window_name.data();
+						}
+					}
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::x_t>>
+			struct x_value
+			{
+				static const int32_t get_value()
+				{
+					return CW_USEDEFAULT;
+				}
+			};
+
+			template <typename T>
+			struct x_value<T, true>
+			{
+				using x_t = typename window_definition_types::x_t<T>;
+
+				static const int32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<x_t>>);
+					return T::x;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::y_t>>
+			struct y_value
+			{
+				static const int32_t get_value()
+				{
+					return 0;
+				}
+			};
+
+			template <typename T>
+			struct y_value<T, true>
+			{
+				using y_t = typename window_definition_types::y_t<T>;
+
+				static const int32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<y_t>>);
+					return T::y;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::width_t>>
+			struct width_value
+			{
+				static const int32_t get_value()
+				{
+					return CW_USEDEFAULT;
+				}
+			};
+
+			template <typename T>
+			struct width_value<T, true>
+			{
+				using width_t = typename window_definition_types::width_t<T>;
+
+				static const uint32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<width_t>>);
+					return T::width;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::height_t>>
+			struct height_value
+			{
+				static const int32_t get_value()
+				{
+					return 0;
+				}
+			};
+
+			template <typename T>
+			struct height_value<T, true>
+			{
+				using height_t = typename window_definition_types::height_t<T>;
+
+				static const int32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<height_t>>);
+					return T::height;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::position_t>>
+			struct position_value
+			{
+				static const POINT get_value()
+				{
+					return {CW_USEDEFAULT, 0};
+				}
+			};
+
+			template <typename T>
+			struct position_value<T, true>
+			{
+				using position_t = typename window_definition_types::position_t<T>;
+
+				static const POINT get_value()
+				{
+					static_assert(std::is_same_v<std::remove_const_t<position_t>, POINT>);
+					return T::position;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::size_t>>
+			struct size_value
+			{
+				static const SIZE get_value()
+				{
+					return { CW_USEDEFAULT, 0 };
+				}
+			};
+
+			template <typename T>
+			struct size_value<T, true>
+			{
+				using size_t = typename window_definition_types::size_t<T>;
+
+				static const SIZE get_value()
+				{
+					static_assert(std::is_same_v<std::remove_const_t<size_t>, SIZE>);
+					return T::size;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::parent_t>>
+			struct parent_value
+			{
+				static const HWND get_value()
+				{
+					return nullptr;
+				}
+			};
+
+			template <typename T>
+			struct parent_value<T, true>
+			{
+				using parent_t = typename window_definition_types::parent_t<T>;
+
+				static const HWND get_value()
+				{
+					static_assert(std::is_same_v<std::remove_const_t<parent_t>, HWND>);
+					return T::parent;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::menu_t>>
+			struct menu_value_nonchild
+			{
+				static const HMENU get_value()
+				{
+					return nullptr;
+				}
+			};
+
+			template <typename T>
+			struct menu_value_nonchild<T, true>
+			{
+				using menu_t = typename window_definition_types::menu_t<T>;
+
+				static const HMENU get_value()
+				{
+					static_assert(std::is_same_v<std::remove_const_t<menu_t>, HMENU>);
+					return T::menu;
+				}
+			};
+
+			template <typename T, bool = details::detect_v<T, window_definition_types::menu_t>>
+			struct menu_value_child
+			{
+				static const int32_t get_value()
+				{
+					return 0;
+				}
+			};
+
+			template <typename T>
+			struct menu_value_child<T, true>
+			{
+				using menu_t = typename window_definition_types::menu_t<T>;
+
+				static const int32_t get_value()
+				{
+					static_assert(std::is_integral_v<std::remove_const_t<menu_t>>);
+					return T::menu;
+				}
+			};
+		}
+	}
+
 	enum class handler_type
 	{
 		unknown,
@@ -1386,9 +2160,6 @@ namespace windowing
 			}
 		}
 	};
-
-	template<typename DerivedType, bool UnicodeBase>
-	class window_t;
 
 	template<typename DerivedType, bool UnicodeBase>
 	class track_mouse_policy
@@ -1724,7 +2495,7 @@ namespace windowing
 		return std::make_shared<message_callback_impl>(f);
 	}
 
-	template<typename DerivedType, bool UnicodeBase = details::get_charset_policy_bool_from_value<details::window_charset_policy_v<DerivedType>>()>
+	template<typename DerivedType, bool UnicodeBase>
 	class window_t : public window_base, public track_mouse_policy<DerivedType, UnicodeBase>
 	{
 	public:
@@ -6174,6 +6945,234 @@ namespace windowing
 			delete that;
 
 			window_post_quit_policy<DerivedType>::post_quit_message(0);
+		}
+
+		template <typename Definitions>
+		static std::pair<bool, std::basic_string<typename traits::char_t>> default_register_from_definition(DerivedType *ptr, HINSTANCE inst)
+		{
+			using namespace std;
+			using namespace details;
+			using namespace details::class_detect;
+
+			using my_definitions = Definitions;
+			std::basic_string<typename traits::char_t> my_class_name;
+			bool result = false;
+
+			if constexpr (detect_v<my_definitions, class_definition_types::existing_class_name_t>)
+			{
+				static_assert(detect_v<my_definitions, class_definition_types::class_name_t>);
+				my_class_name = std::basic_string<typename traits::char_t>{ my_definitions::class_name };
+				result = ptr->is_class_registered(std::basic_string_view<typename traits::char_t>{my_class_name});
+			}
+			else
+			{
+				typename traits::wndclassex_t wcx{ sizeof(typename traits::wndclassex_t) };
+
+				wcx.lpfnWndProc = my_type::window_proc;
+				wcx.hInstance = inst;
+				my_class_name = std::basic_string<typename traits::char_t>{ my_definitions::class_name };
+
+				wcx.style = style_value<my_definitions>::get_value();
+				wcx.cbClsExtra = class_extra_value<my_definitions>::get_value();
+				wcx.cbWndExtra = window_extra_value<my_definitions>::get_value();
+				wcx.hIcon = icon_value<my_definitions>::get_value();
+				wcx.hCursor = cursor_value<my_definitions>::get_value();
+				wcx.hbrBackground = brush_value<my_definitions>::get_value();
+				wcx.lpszMenuName = menu_name_value<my_definitions>::get_value();
+				wcx.lpszClassName = my_class_name.data();
+				wcx.hIconSm = small_icon_value<my_definitions>::get_value();
+
+				result = ptr->register_class(wcx);
+			}
+
+			return { result, my_class_name };
+		}
+
+		template <typename Definitions>
+		static bool default_create_window_from_definition(DerivedType *ptr, const std::basic_string<typename traits::char_t> &class_name)
+		{
+			using namespace std;
+			using namespace details;
+			using namespace details::window_detect;
+
+			constexpr const auto position_detected = detect_v<Definitions, window_definition_types::position_t>;
+			constexpr const auto x_detected = detect_v<Definitions, window_definition_types::x_t>;
+			constexpr const auto y_detected = detect_v<Definitions, window_definition_types::y_t>;
+
+			constexpr const auto size_detected = detect_v<Definitions, window_definition_types::size_t>;
+			constexpr const auto width_detected = detect_v<Definitions, window_definition_types::width_t>;
+			constexpr const auto height_detected = detect_v<Definitions, window_definition_types::height_t>;
+
+			POINT position_cache{};
+			SIZE size_cache{};
+
+			if constexpr (position_detected || x_detected || y_detected)
+			{
+				//If any of these are detected, then assert on any invalid combination.
+				if constexpr (position_detected) static_assert(!(x_detected || y_detected));
+				if constexpr (x_detected || y_detected) static_assert(!position_detected);
+			}
+			else
+			{
+				//This is the case when none of the position values are
+				//detected. Use position value since this will return
+				//a pretty good default.
+				position_cache = position_value<Definitions>::get_value();
+			}
+			if constexpr (!position_detected && (x_detected || y_detected))
+			{
+				//Any missing definitions will default to a pretty good value.
+				position_cache.x = x_value<Definitions>::get_value();
+				position_cache.y = y_value<Definitions>::get_value();
+			}
+			if constexpr (position_detected && !(x_detected || y_detected))
+			{
+				position_cache = position_value<Definitions>::get_value();
+			}
+
+			if constexpr (size_detected || width_detected || height_detected)
+			{
+				//If any of these are detected, then assert on any invalid combination.
+				if constexpr (size_detected) static_assert(!(width_detected || height_detected));
+				if constexpr (width_detected || height_detected) static_assert(!size_detected);
+			}
+			else
+			{
+				//This is the case when none of the size values are
+				//detected. Use size value since this will return
+				//a pretty good default.
+				size_cache = size_value<Definitions>::get_value();
+			}
+			if constexpr (!size_detected && (width_detected || height_detected))
+			{
+				//Any missing definitions will default to a pretty good value.
+				size_cache.cx = width_value<Definitions>::get_value();
+				size_cache.cy = height_value<Definitions>::get_value();
+			}
+			if constexpr (size_detected && !(width_detected || height_detected))
+			{
+				size_cache = size_value<Definitions>::get_value();
+			}
+
+			auto style_cache = style_value<Definitions>::get_value();
+			auto ex_style_cache = ex_style_value<Definitions>::get_value();
+			std::basic_string<typename traits::char_t> window_name_cache;
+			if constexpr (detect_v<Definitions, window_definition_types::window_name_t>)
+			{
+				window_name_cache = std::basic_string<typename traits::char_t>{ Definitions::window_name };
+			}
+			auto parent_cache = parent_value<Definitions>::get_value();
+			HMENU menu_cache = nullptr;
+			if constexpr (detect_v<Definitions, window_definition_types::menu_t>)
+			{
+				if (parent_cache)
+				{
+					constexpr const auto is_integral = std::is_integral_v<window_definition_types::menu_t<Definitions>>;
+					if constexpr (is_integral)
+					{
+						//Parent window is set. Check HMENU for an identifier.
+						menu_cache = reinterpret_cast<HMENU>(menu_value_child<Definitions>::get_value());
+					}
+				}
+				else
+				{
+					constexpr const auto is_hmenu = std::is_same_v<window_definition_types::menu_t<Definitions>, HMENU>;
+					if constexpr (is_hmenu)
+					{
+						menu_cache = menu_value_nonchild<Definitions>::get_value();
+					}
+				}
+			}
+
+			return ptr->create_window(class_name, window_name_cache, style_cache, ex_style_cache, position_cache, size_cache, parent_cache, menu_cache);
+		}
+
+		static auto default_create() -> DerivedType *
+		{
+			using namespace std;
+			using namespace details;
+
+			DerivedType *ptr = nullptr;
+			HINSTANCE inst = nullptr;
+			std::basic_string<typename traits::char_t> class_name;
+			try
+			{
+				{
+					using namespace details::class_detect;
+					if constexpr (detect_class_definitions_typedef_v<DerivedType>)
+					{
+						//This is needed early.
+						using my_definitions = typename DerivedType::class_definitions;
+						inst = instance_value<my_definitions>::get_value();
+						ptr = new DerivedType(inst);
+
+						auto [success, return_class_name] = default_register_from_definition<my_definitions>(ptr, inst);
+
+						if (!success)
+						{
+							delete ptr;
+							ptr = nullptr;
+						}
+						//The class name needs to be stashed for CreateWindowEx.
+						class_name = return_class_name;
+					}
+					else
+					{
+						if constexpr (detect_class_definitions_v<DerivedType>)
+						{
+							//This is needed early.
+							using my_definitions = class_definitions<DerivedType>;
+							inst = instance_value<my_definitions>::get_value();
+							ptr = new DerivedType(inst);
+
+							auto [success, return_class_name] = default_register_from_definition<my_definitions>(ptr, inst);
+
+							if (!success)
+							{
+								delete ptr;
+								ptr = nullptr;
+							}
+							//The class name needs to be stashed for CreateWindowEx.
+							class_name = return_class_name;
+						}
+					}
+				}
+
+				if (ptr != nullptr)
+				{
+					{
+						using namespace details::window_detect;
+						if constexpr (detect_window_definitions_typedef_v<DerivedType>)
+						{
+							using my_definitions = typename DerivedType::window_definitions;
+							if (!default_create_window_from_definition<my_definitions>(ptr, class_name))
+							{
+								delete ptr;
+								ptr = nullptr;
+							}
+						}
+						else
+						{
+							if constexpr (detect_window_definitions_v<DerivedType>)
+							{
+								using my_definitions = window_definitions<DerivedType>;
+								if (!default_create_window_from_definition<my_definitions>(ptr, class_name))
+								{
+									delete ptr;
+									ptr = nullptr;
+								}
+							}
+						}
+					}
+				}
+			}
+			catch (...)
+			{
+				delete ptr;
+				throw;
+			}
+
+			return ptr;
 		}
 	private:
 		window_t() = delete;
