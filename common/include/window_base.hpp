@@ -4,6 +4,7 @@
 #error C++ Compiler Required
 #endif
 
+#include <variant>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -71,8 +72,8 @@ namespace windowing
 
 	struct register_callback
 	{
-		virtual uint32_t register_close_callback(std::function<close_callback_type> &) = 0;
-		virtual void unregister_close_callback(uint32_t) = 0;
+		virtual uint32_t register_close_callback(std::function<close_callback_type> &) noexcept = 0;
+		virtual void unregister_close_callback(uint32_t) noexcept = 0;
 	};
 
 	using message_callback_type = bool(const MSG &);
@@ -84,6 +85,8 @@ namespace windowing
 	{
 		virtual bool invoke(const MSG &) = 0;
 	};
+
+	using aumid_type = std::variant<std::string, std::wstring>;
 
 	bool set_property_a(HWND, prop_type, void *);
 	void *get_property_a(HWND, prop_type);
@@ -145,20 +148,7 @@ namespace windowing
 		void set_window_aumid(const std::string_view &);
 		void set_window_aumid(const std::wstring_view &);
 
-		std::string get_window_aumid_a() const;
-		std::wstring get_window_aumid_w() const;
-		template<typename char_type>
-		auto get_window_aumid() const ->std::basic_string<char_type>
-		{
-			if constexpr (std::is_same_v<char_type, char>)
-			{
-				return get_window_aumid_a();
-			}
-			if constexpr (std::is_same_v<char_type, wchar_t>)
-			{
-				return get_window_aumid_w();
-			}
-		}
+		aumid_type get_window_aumid() const;
 		bool window_has_aumid() const;
 
 		void register_power_notification(power_notify_type);
@@ -186,18 +176,15 @@ namespace windowing
 		void remove_message_callback(uint32_t);
 		void clear_message_callbacks();
 
-		bool is_class_registered(const std::string_view &) const;
-		bool is_class_registered(const std::wstring_view &) const;
-		bool register_class(uint32_t, const std::string_view &, const std::string_view &, int32_t, int32_t, WNDPROC, HBRUSH, HCURSOR, HICON, HICON);
-		bool register_class(uint32_t, const std::wstring_view &, const std::wstring_view &, int32_t, int32_t, WNDPROC, HBRUSH, HCURSOR, HICON, HICON);
-		bool register_class(const WNDCLASSEXA &);
-		bool register_class(const WNDCLASSEXW &);
-		HWND create_window(uint32_t, uint32_t, const std::string_view &, const std::string_view &, const POINT &, const SIZE &, HWND, HMENU, void *);
-		HWND create_window(uint32_t, uint32_t, const std::wstring_view &, const std::wstring_view &, const POINT &, const SIZE &, HWND, HMENU, void *);
+		static bool is_class_registered(HINSTANCE, const std::string_view &);
+		static bool is_class_registered(HINSTANCE, const std::wstring_view &);
+		static bool register_class(uint32_t, const std::string_view &, const std::string_view &, int32_t, int32_t, WNDPROC, HINSTANCE, HBRUSH, HCURSOR, HICON, HICON);
+		static bool register_class(uint32_t, const std::wstring_view &, const std::wstring_view &, int32_t, int32_t, WNDPROC, HINSTANCE, HBRUSH, HCURSOR, HICON, HICON);
+		static bool register_class(const WNDCLASSEXA &);
+		static bool register_class(const WNDCLASSEXW &);
+		static HWND create_window(uint32_t, uint32_t, const std::string_view &, const std::string_view &, const POINT &, const SIZE &, HWND, HMENU, void *);
+		static HWND create_window(uint32_t, uint32_t, const std::wstring_view &, const std::wstring_view &, const POINT &, const SIZE &, HWND, HMENU, void *);
 
-		bool set_property(prop_type, void *);
-		void *get_property(prop_type);
-		void *remove_property(prop_type);
 	private:
 		//completely disable copy/move and default constructor
 		//this class cannot be copied, and while it is technically movable

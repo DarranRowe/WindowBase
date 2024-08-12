@@ -51,14 +51,21 @@ namespace windowing
 			bool window_shown = false;
 		};
 
-		std::unique_ptr<window_data> make_window_data(HINSTANCE inst)
+		inline std::unique_ptr<window_data> make_window_data(HINSTANCE inst) noexcept
 		{
-			auto ptr = std::make_unique<window_data>();
-			ptr->m_instance = inst;
+			std::unique_ptr<window_data> ptr;
+
+			//It is okay if this fails.
+			//The next access will be in window_base::set_window_info.
+			ptr.reset(new(std::nothrow) window_data);
+			if (ptr)
+			{
+				ptr->m_instance = inst;
+			}
 			return ptr;
 		}
 
-		inline static constexpr std::string_view prop_name_from_type_a(prop_type type)
+		inline static constexpr std::string_view prop_name_from_type_a(prop_type type) noexcept
 		{
 			std::string_view sv;
 
@@ -84,7 +91,7 @@ namespace windowing
 			return sv;
 		}
 
-		inline static constexpr std::wstring_view prop_name_from_type_w(prop_type type)
+		inline static constexpr std::wstring_view prop_name_from_type_w(prop_type type) noexcept
 		{
 			std::wstring_view sv;
 
@@ -113,32 +120,32 @@ namespace windowing
 		class close_callback_container : public register_callback
 		{
 		public:
-			virtual uint32_t register_close_callback(std::function<close_callback_type> &) override;
-			virtual void unregister_close_callback(uint32_t) override;
+			virtual uint32_t register_close_callback(std::function<close_callback_type> &) noexcept override;
+			virtual void unregister_close_callback(uint32_t) noexcept override;
 
-			void notify_close(HWND);
+			void notify_close(HWND) noexcept;
 
 		private:
 			std::atomic_uint32_t m_cookie{};
 			std::map<uint32_t, std::function<close_callback_type>> m_callbacks;
 		};
 
-		close_callback_container *get_register_callback_container_a(HWND);
-		close_callback_container *get_register_callback_container_w(HWND);
+		close_callback_container *get_register_callback_container_a(HWND) noexcept;
+		close_callback_container *get_register_callback_container_w(HWND) noexcept;
 
 		class message_callback_container
 		{
 		public:
-			bool add_callback(const std::shared_ptr<message_callback> &, uint32_t);
-			void remove_callback(uint32_t);
-			void clear_callbacks();
-			message_callback *get_callback(uint32_t) const;
-			bool has_callback(uint32_t) const;
+			bool add_callback(const std::shared_ptr<message_callback> &, uint32_t) noexcept;
+			void remove_callback(uint32_t) noexcept;
+			void clear_callbacks() noexcept;
+			message_callback *get_callback(uint32_t) const noexcept;
+			bool has_callback(uint32_t) const noexcept;
 		private:
 			std::map<uint32_t, std::shared_ptr<message_callback>> m_map;
 		};
 
-		bool can_use_win11_features();
-		bool can_use_win11_22h2_features();
+		bool can_use_win11_features() noexcept;
+		bool can_use_win11_22h2_features() noexcept;
 	}
 }

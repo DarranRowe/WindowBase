@@ -982,69 +982,6 @@ namespace windowing
 		appcommand_keys keys;
 	};
 
-	struct window_traits_a
-	{
-		using char_t = char;
-		using create_struct_t = CREATESTRUCTA;
-		using cbt_createwnd_t = CBT_CREATEWNDA;
-		using wndclassex_t = WNDCLASSEXA;
-		
-		inline static constexpr const bool window_unicode = false;
-
-		static LRESULT WndDefWindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
-		{
-			return DefWindowProcA(wnd, msg, wparam, lparam);
-		}
-		static HHOOK WndSetWindowsHookEx(int hook_id, HOOKPROC hook_proc, HINSTANCE mod, DWORD thread_id)
-		{
-			return SetWindowsHookExA(hook_id, hook_proc, mod, thread_id);
-		}
-
-		static void set_property(HWND wnd, prop_type prop, void *value)
-		{
-			windowing::set_property_a(wnd, prop, value);
-		}
-		static void *get_property(HWND wnd, prop_type prop)
-		{
-			return windowing::get_property_a(wnd, prop);
-		}
-		static void *remove_property(HWND wnd, prop_type prop)
-		{
-			return windowing::remove_property_a(wnd, prop);
-		}
-	};
-	struct window_traits_w
-	{
-		using char_t = wchar_t;
-		using create_struct_t = CREATESTRUCTW;
-		using cbt_createwnd_t = CBT_CREATEWNDW;
-		using wndclassex_t = WNDCLASSEXW;
-
-		inline static constexpr const bool window_unicode = true;
-
-		static LRESULT WndDefWindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
-		{
-			return DefWindowProcW(wnd, msg, wparam, lparam);
-		}
-		static HHOOK WndSetWindowsHookEx(int hook_id, HOOKPROC hook_proc, HINSTANCE mod, DWORD thread_id)
-		{
-			return SetWindowsHookExW(hook_id, hook_proc, mod, thread_id);
-		}
-
-		static void set_property(HWND wnd, prop_type prop, void *value)
-		{
-			windowing::set_property_w(wnd, prop, value);
-		}
-		static void *get_property(HWND wnd, prop_type prop)
-		{
-			return windowing::get_property_w(wnd, prop);
-		}
-		static void *remove_property(HWND wnd, prop_type prop)
-		{
-			return windowing::remove_property_w(wnd, prop);
-		}
-	};
-
 	template <bool UnicodeBase = false>
 	struct choose_window_traits
 	{
@@ -1057,6 +994,18 @@ namespace windowing
 	};
 	template <bool UnicodeBase>
 	using choose_window_traits_t = typename choose_window_traits<UnicodeBase>::traits;
+	template <bool UnicodeBase = false>
+	struct choose_prop_traits
+	{
+		using traits = prop_traits_a;
+	};
+	template <>
+	struct choose_prop_traits<true>
+	{
+		using traits = prop_traits_w;
+	};
+	template <bool UnicodeBase>
+	using choose_prop_traits_t = typename choose_prop_traits<UnicodeBase>::traits;
 
 	template <typename DerivedType>
 	struct static_assert_wrapper
@@ -2200,6 +2149,7 @@ namespace windowing
 	protected:
 		void track_mouse(HWND)
 		{
+			using prop_traits = choose_prop_traits_t<UnicodeBase>;
 			using details::this_cast;
 			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
 				details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
@@ -2224,14 +2174,16 @@ namespace windowing
 
 				my_t *that = this_cast<my_t>(this);
 				//Hand the pointers over to the window property;
-				that->set_property(prop_type::mouse_track, tracking_ptr.get());
+				HWND my_handle = that->get_handle();
+				prop_traits::set_property(my_handle, prop_type::mouse_track, tracking_ptr.get());
 				tracking_ptr.release();
-				that->set_property(prop_type::mouse_track_hook, hd.get());
+				prop_traits::set_property(my_handle, prop_type::mouse_track_hook, hd.get());
 				hd.release();
 			}
 		}
 		void untrack_mouse(HWND)
 		{
+			using prop_traits = choose_prop_traits_t<UnicodeBase>;
 			using details::this_cast;
 			using details::prop_cast;
 			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
@@ -2244,14 +2196,15 @@ namespace windowing
 				};
 
 				my_t *that = this_cast<my_t>(this);
+				HWND window_handle = that->get_handle();
 
 				//Bring the pointers under the control of unique_ptr again.
 				std::unique_ptr<hook_data> hd;
 				std::unique_ptr<bool> tracking_ptr;
-				hd.reset(prop_cast<hook_data>(that->get_property(prop_type::mouse_track_hook)));
-				that->remove_property(prop_type::mouse_track_hook);
-				tracking_ptr.reset(prop_cast<bool>(that->get_property(prop_type::mouse_track)));
-				that->remove_property(prop_type::mouse_track);
+				hd.reset(prop_cast<hook_data>(prop_traits::get_property(window_handle, prop_type::mouse_track_hook)));
+				prop_traits::remove_property(window_handle, prop_type::mouse_track_hook);
+				tracking_ptr.reset(prop_cast<bool>(prop_traits::get_property(window_handle, prop_type::mouse_track)));
+				prop_traits::remove_property(window_handle, prop_type::mouse_track);
 				UnhookWindowsHookEx(hd->mh);
 				UnhookWindowsHookEx(hd->gm);
 			}
@@ -2343,9 +2296,10 @@ namespace windowing
 
 		static bool registered_for_tracking_from_handle(HWND wnd)
 		{
+			using prop_traits = choose_prop_traits_t<UnicodeBase>;
 			using details::prop_cast;
 			bool retval = false;
-			auto v = choose_window_traits_t<UnicodeBase>::get_property(wnd, prop_type::mouse_track);
+			auto v = prop_traits::get_property(wnd, prop_type::mouse_track);
 			if (v != nullptr)
 			{
 				//The property was added, but we should be sure that it is set
@@ -2500,6 +2454,7 @@ namespace windowing
 	{
 	public:
 		using traits = choose_window_traits_t<UnicodeBase>;
+		using prop_traits = choose_prop_traits_t<UnicodeBase>;
 		using my_t = DerivedType;
 		using my_tptr = my_t *;
 		using my_type = window_t;
@@ -3236,7 +3191,7 @@ namespace windowing
 					my_tptr that = reinterpret_cast<my_tptr>(params.lpcs->lpCreateParams);
 					that->set_window_info(wnd, GetCurrentThreadId(), UnicodeBase);
 
-					traits::set_property(wnd, prop_type::instance, params.lpcs->lpCreateParams);
+					prop_traits::set_property(wnd, prop_type::instance, params.lpcs->lpCreateParams);
 				}
 
 				auto result = CallNextHookEx(my_type::s_create_hook, code, wparam, lparam);
@@ -3246,13 +3201,13 @@ namespace windowing
 			}
 		}
 
-		bool hook_create()
+		static bool hook_create()
 		{
 			my_type::s_create_hook = traits::WndSetWindowsHookEx(WH_CBT, my_type::cbt_hook_proc, nullptr, GetCurrentThreadId());
 			return my_type::s_create_hook != nullptr ? true : false;
 		}
 
-		bool create_window(const std::string_view &class_name, const std::string_view &title, DWORD style, DWORD ex_style, const POINT &top_left, const SIZE &dimentions, HWND parent = nullptr, HMENU menu = nullptr)
+		static bool create_window(const std::string_view &class_name, const std::string_view &title, DWORD style, DWORD ex_style, const POINT &top_left, const SIZE &dimentions, DerivedType *that, HWND parent = nullptr, HMENU menu = nullptr)
 		{
 			if (!hook_create())
 			{
@@ -3261,11 +3216,11 @@ namespace windowing
 
 			//Cast to the derived type to make sure that the pointer we pass to CreateWindowExA is the correct pointer.
 			//We can't be sure of the derived class layout, so this is to be sure.
-			auto result = base_t::create_window(ex_style, style, class_name, title, top_left, dimentions, parent, menu, details::this_cast<DerivedType>(this));
+			auto result = base_t::create_window(ex_style, style, class_name, title, top_left, dimentions, parent, menu, that);
 
 			return result == nullptr ? false : true;
 		}
-		bool create_window(const std::wstring_view &class_name, const std::wstring_view &title, DWORD style, DWORD ex_style, const POINT &top_left, const SIZE &dimentions, HWND parent = nullptr, HMENU menu = nullptr)
+		static bool create_window(const std::wstring_view &class_name, const std::wstring_view &title, DWORD style, DWORD ex_style, const POINT &top_left, const SIZE &dimentions, DerivedType *that, HWND parent = nullptr, HMENU menu = nullptr)
 		{
 			if (!hook_create())
 			{
@@ -3274,7 +3229,7 @@ namespace windowing
 
 			//Cast to the derived type to make sure that the pointer we pass to CreateWindowExW is the correct pointer.
 			//We can't be sure of the derived class layout, so this is to be sure.
-			auto result = base_t::create_window(ex_style, style, class_name, title, top_left, dimentions, parent, menu, details::this_cast<DerivedType>(this));
+			auto result = base_t::create_window(ex_style, style, class_name, title, top_left, dimentions, parent, menu, that);
 
 			return result == nullptr ? false : true;
 		}
@@ -6921,7 +6876,7 @@ namespace windowing
 		static my_tptr inst_from_handle(HWND wnd)
 		{
 			using details::inst_cast;
-			my_tptr ptr = inst_cast<my_t>(traits::get_property(wnd, prop_type::instance));
+			my_tptr ptr = inst_cast<my_t>(prop_traits::get_property(wnd, prop_type::instance));
 			return ptr;
 		}
 
@@ -6941,14 +6896,14 @@ namespace windowing
 			that->untrack_mouse(wnd);
 			that->cleanup_window_info();
 
-			traits::remove_property(wnd, prop_type::instance);
+			prop_traits::remove_property(wnd, prop_type::instance);
 			delete that;
 
 			window_post_quit_policy<DerivedType>::post_quit_message(0);
 		}
 
 		template <typename Definitions>
-		static std::pair<bool, std::basic_string<typename traits::char_t>> default_register_from_definition(DerivedType *ptr, HINSTANCE inst)
+		static std::pair<bool, std::basic_string<typename traits::char_t>> default_register_from_definition(HINSTANCE inst)
 		{
 			using namespace std;
 			using namespace details;
@@ -6962,7 +6917,7 @@ namespace windowing
 			{
 				static_assert(detect_v<my_definitions, class_definition_types::class_name_t>);
 				my_class_name = std::basic_string<typename traits::char_t>{ my_definitions::class_name };
-				result = ptr->is_class_registered(std::basic_string_view<typename traits::char_t>{my_class_name});
+				result = window_base::is_class_registered(std::basic_string_view<typename traits::char_t>{my_class_name});
 			}
 			else
 			{
@@ -6982,7 +6937,7 @@ namespace windowing
 				wcx.lpszClassName = my_class_name.data();
 				wcx.hIconSm = small_icon_value<my_definitions>::get_value();
 
-				result = ptr->register_class(wcx);
+				result = window_base::register_class(wcx);
 			}
 
 			return { result, my_class_name };
@@ -7084,7 +7039,7 @@ namespace windowing
 				}
 			}
 
-			return ptr->create_window(class_name, window_name_cache, style_cache, ex_style_cache, position_cache, size_cache, parent_cache, menu_cache);
+			return window_t::create_window(class_name, window_name_cache, style_cache, ex_style_cache, position_cache, size_cache, ptr, parent_cache, menu_cache);
 		}
 
 		static auto default_create() -> DerivedType *
@@ -7106,7 +7061,7 @@ namespace windowing
 						inst = instance_value<my_definitions>::get_value();
 						ptr = new DerivedType(inst);
 
-						auto [success, return_class_name] = default_register_from_definition<my_definitions>(ptr, inst);
+						auto [success, return_class_name] = default_register_from_definition<my_definitions>(inst);
 
 						if (!success)
 						{
@@ -7125,7 +7080,7 @@ namespace windowing
 							inst = instance_value<my_definitions>::get_value();
 							ptr = new DerivedType(inst);
 
-							auto [success, return_class_name] = default_register_from_definition<my_definitions>(ptr, inst);
+							auto [success, return_class_name] = default_register_from_definition<my_definitions>(inst);
 
 							if (!success)
 							{
