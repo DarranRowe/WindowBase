@@ -101,6 +101,7 @@ namespace windowing
 		static BOOL IsWindowArrangedWrapper(HWND window) noexcept
 		{
 			_ASSERTE(window != nullptr);
+			FAIL_FAST_IF_NULL(window);
 			if (!s_has_arranged_init)
 			{
 				init_arranged();
@@ -116,36 +117,25 @@ namespace windowing
 		static bool show_window_helper(HWND window, int show_cmd) noexcept
 		{
 			_ASSERTE(window != nullptr);
+			FAIL_FAST_IF_NULL(window);
 			return ShowWindow(window, show_cmd) == FALSE ? false : true;
 		}
 		static DWORD get_window_style(HWND window, bool unicode) noexcept
 		{
-			DWORD style = unicode == true ? static_cast<DWORD>(GetWindowLongPtrW(window, GWL_STYLE)) : static_cast<DWORD>(GetWindowLongPtrA(window, GWL_STYLE));
-
-			return style;
+			_ASSERTE(window != nullptr);
+			FAIL_FAST_IF_NULL(window);
+			return static_cast<DWORD>(TWndGetWindowLongPtr(window, GWL_STYLE, unicode));
 		}
 		static DWORD get_window_ex_style(HWND window, bool unicode) noexcept
 		{
-			DWORD ex_style = unicode == true ? static_cast<DWORD>(GetWindowLongPtrW(window, GWL_EXSTYLE)) : static_cast<DWORD>(GetWindowLongPtrA(window, GWL_EXSTYLE));
-
-			return ex_style;
+			_ASSERTE(window != nullptr);
+			FAIL_FAST_IF_NULL(window);
+			return static_cast<DWORD>(TWndGetWindowLongPtr(window, GWL_EXSTYLE, unicode));
 		}
 
-		void set_window_shown(window_base *wb)
+		static HRESULT prop_var_set_aumid(HWND wnd, std::wstring &aumid) noexcept
 		{
-			auto win_unicode = wb->is_window_unicode();
-			details::window_data *wd = win_unicode == true ? static_cast<details::window_data *>(GetPropW(wb->get_handle(), prop_window_data_w)) : static_cast<details::window_data *>(GetPropA(wb->get_handle(), prop_window_data_a));
-			wd->window_shown = true;
-		}
-		bool get_window_shown(window_base *wb)
-		{
-			auto win_unicode = wb->is_window_unicode();
-			details::window_data *wd = win_unicode == true ? static_cast<details::window_data *>(GetPropW(wb->get_handle(), prop_window_data_w)) : static_cast<details::window_data *>(GetPropA(wb->get_handle(), prop_window_data_a));
-			return wd->window_shown;
-		}
-
-		HRESULT prop_var_set_aumid(HWND wnd, std::wstring &aumid)
-		{
+			FAIL_FAST_IF_NULL(wnd);
 			HRESULT hr = S_OK;
 			Microsoft::WRL::ComPtr<IPropertyStore> win_prop_store;
 
@@ -165,8 +155,9 @@ namespace windowing
 			return hr;
 		}
 
-		HRESULT prop_var_set_aumid(HWND wnd, std::string &aumid)
+		static HRESULT prop_var_set_aumid(HWND wnd, std::string &aumid) noexcept
 		{
+			FAIL_FAST_IF_NULL(wnd);
 			HRESULT hr = S_OK;
 			Microsoft::WRL::ComPtr<IPropertyStore> win_prop_store;
 
@@ -186,8 +177,9 @@ namespace windowing
 			return hr;
 		}
 
-		std::pair<HRESULT, std::wstring> prop_var_get_aumid(HWND wnd)
+		static std::pair<HRESULT, std::wstring> prop_var_get_aumid(HWND wnd) noexcept
 		{
+			FAIL_FAST_IF_NULL(wnd);
 			HRESULT hr = S_OK;
 			std::wstring aumid{};
 			Microsoft::WRL::ComPtr<IPropertyStore> win_prop_store;
@@ -219,17 +211,17 @@ namespace windowing
 			return std::make_pair(hr, aumid);
 		}
 
-		HRESULT set_window_aumid(HWND wnd, std::wstring &aumid)
+		static HRESULT set_window_aumid(HWND wnd, std::wstring &aumid) noexcept
 		{
 			return prop_var_set_aumid(wnd, aumid);
 		}
 
-		HRESULT set_window_aumid(HWND wnd, std::string &aumid)
+		static HRESULT set_window_aumid(HWND wnd, std::string &aumid) noexcept
 		{
 			return prop_var_set_aumid(wnd, aumid);
 		}
 
-		std::pair<HRESULT, std::string> get_window_aumid_a(HWND wnd)
+		static std::pair<HRESULT, std::string> get_window_aumid_a(HWND wnd) noexcept
 		{
 			auto [hr, waumid] = prop_var_get_aumid(wnd);
 
@@ -265,52 +257,58 @@ namespace windowing
 			return {S_OK, aumid};
 		}
 
-		std::pair<HRESULT, std::wstring> get_window_aumid_w(HWND wnd)
+		static std::pair<HRESULT, std::wstring> get_window_aumid_w(HWND wnd) noexcept
 		{
 			return prop_var_get_aumid(wnd);
 		}
 	}
 
-	bool set_property_a(HWND wnd, prop_type prop, void *data)
+	bool set_property_a(HWND wnd, prop_type prop, void *data) noexcept
 	{
+		_ASSERTE(wnd != nullptr);
 		bool result = false;
 		_ASSERTE(data != nullptr);
 		result = SetPropA(wnd, prop_name_from_type_a(prop).data(), data);
 
 		return result;
 	}
-	void *get_property_a(HWND wnd, prop_type prop)
+	void *get_property_a(HWND wnd, prop_type prop) noexcept
 	{
+		_ASSERTE(wnd != nullptr);
 		void *data = nullptr;
 		data = GetPropA(wnd, prop_name_from_type_a(prop).data());
 
 		return data;
 	}
-	void *remove_property_a(HWND wnd, prop_type prop)
+	void *remove_property_a(HWND wnd, prop_type prop) noexcept
 	{
+		_ASSERTE(wnd != nullptr);
 		void *data = nullptr;
 		data = RemovePropA(wnd, prop_name_from_type_a(prop).data());
 
 		return data;
 	}
 
-	bool set_property_w(HWND wnd, prop_type prop, void *data)
+	bool set_property_w(HWND wnd, prop_type prop, void *data) noexcept
 	{
+		_ASSERTE(wnd != nullptr);
 		bool result = false;
 		_ASSERTE(data != nullptr);
 		result = SetPropW(wnd, prop_name_from_type_w(prop).data(), data);
 
 		return result;
 	}
-	void *get_property_w(HWND wnd, prop_type prop)
+	void *get_property_w(HWND wnd, prop_type prop) noexcept
 	{
+		_ASSERTE(wnd != nullptr);
 		void *data = nullptr;
 		data = GetPropW(wnd, prop_name_from_type_w(prop).data());
 
 		return data;
 	}
-	void *remove_property_w(HWND wnd, prop_type prop)
+	void *remove_property_w(HWND wnd, prop_type prop) noexcept
 	{
+		_ASSERTE(wnd != nullptr);
 		void *data = nullptr;
 		data = RemovePropW(wnd, prop_name_from_type_w(prop).data());
 
@@ -377,34 +375,34 @@ namespace windowing
 		return callback != m_map.end();
 	}
 
-	HWND window_base::get_handle() const
+	HWND window_base::get_handle() const noexcept
 	{
 		//make sure that the handle has been initialised
 		_ASSERTE(m_window_data != nullptr);
 		_ASSERTE(m_window_data->m_handle != nullptr);
 		return m_window_data->m_handle;
 	}
-	HINSTANCE window_base::get_instance() const
+	HINSTANCE window_base::get_instance() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		return m_window_data->m_instance;
 	}
-	uint32_t window_base::get_thread_id() const
+	uint32_t window_base::get_thread_id() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		return m_window_data->m_thread_id;
 	}
-	uint32_t window_base::get_dpi() const
+	uint32_t window_base::get_dpi() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		return m_window_data->m_dpi;
 	}
-	float window_base::get_scale() const
+	float window_base::get_scale() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		return m_window_data->m_scale;
 	}
-	bool window_base::is_window_dpi_aware() const
+	bool window_base::is_window_dpi_aware() const noexcept
 	{
 		auto context = GetWindowDpiAwarenessContext(get_handle());
 
@@ -414,19 +412,19 @@ namespace windowing
 		}
 		return true;
 	}
-	bool window_base::is_window_rtl() const
+	bool window_base::is_window_rtl() const noexcept
 	{
 		LONG_PTR ex_styles{};
-		ex_styles = is_window_unicode() == true ? GetWindowLongPtrW(get_handle(), GWL_EXSTYLE) : GetWindowLongPtrA(get_handle(), GWL_EXSTYLE);
+		ex_styles = window_implementation::get_window_ex_style(get_handle(), is_window_unicode());
 		return (ex_styles & WS_EX_LAYOUTRTL) == WS_EX_LAYOUTRTL;
 	}
-	bool window_base::is_window_unicode() const
+	bool window_base::is_window_unicode() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		return m_window_data->window_unicode;
 	}
 
-	bool window_base::is_active() const
+	bool window_base::is_active() const noexcept
 	{
 		WINDOWINFO wi{sizeof(WINDOWINFO)};
 
@@ -434,36 +432,36 @@ namespace windowing
 
 		return (wi.dwWindowStatus == WS_ACTIVECAPTION);
 	}
-	bool window_base::is_visible() const
+	bool window_base::is_visible() const noexcept
 	{
 		return IsWindowVisible(get_handle()) == FALSE ? false : true;
 	}
-	bool window_base::is_enabled() const
+	bool window_base::is_enabled() const noexcept
 	{
 		return IsWindowEnabled(get_handle()) == FALSE ? false : true;
 	}
-	bool window_base::is_minimised() const
+	bool window_base::is_minimised() const noexcept
 	{
 		return IsIconic(get_handle()) == FALSE ? false : true;
 	}
-	bool window_base::is_maximised() const
+	bool window_base::is_maximised() const noexcept
 	{
 		return IsZoomed(get_handle()) == FALSE ? false : true;
 	}
-	bool window_base::is_arranged() const
+	bool window_base::is_arranged() const noexcept
 	{
 		return window_implementation::IsWindowArrangedWrapper(get_handle()) == FALSE ? false : true;
 	}
 
-	bool window_base::show_window_cmd(int show_cmd)
+	bool window_base::show_window_cmd(int show_cmd) noexcept
 	{
 		return window_implementation::show_window_helper(get_handle(), show_cmd);
 	}
-	bool window_base::show_window_default()
+	bool window_base::show_window_default() noexcept
 	{
 		return window_implementation::show_window_helper(get_handle(), SW_SHOWDEFAULT);
 	}
-	bool window_base::show_window(bool activate)
+	bool window_base::show_window(bool activate) noexcept
 	{
 		//There are three things that we need to check for here.
 		//Is the window visible.
@@ -481,7 +479,7 @@ namespace windowing
 
 		return window_implementation::show_window_helper(get_handle(), activate == true ? SW_NORMAL : SW_SHOWNOACTIVATE);
 	}
-	bool window_base::show_window_minimised(bool activate)
+	bool window_base::show_window_minimised(bool activate) noexcept
 	{
 		if (is_visible())
 		{
@@ -490,7 +488,7 @@ namespace windowing
 		}
 		return window_implementation::show_window_helper(get_handle(), activate == true ? SW_SHOWMINIMIZED : SW_SHOWMINNOACTIVE);
 	}
-	bool window_base::show_window_maximised()
+	bool window_base::show_window_maximised() noexcept
 	{
 		if (is_visible())
 		{
@@ -498,7 +496,7 @@ namespace windowing
 		}
 		return window_implementation::show_window_helper(get_handle(), SW_SHOWMAXIMIZED);
 	}
-	bool window_base::minimise_window()
+	bool window_base::minimise_window() noexcept
 	{
 		if (!is_visible())
 		{
@@ -511,7 +509,7 @@ namespace windowing
 
 		return true;
 	}
-	bool window_base::maximise_window()
+	bool window_base::maximise_window() noexcept
 	{
 		if (!is_visible())
 		{
@@ -524,28 +522,28 @@ namespace windowing
 
 		return true;
 	}
-	bool window_base::restore_window()
+	bool window_base::restore_window() noexcept
 	{
 		return false;
 	}
-	bool window_base::hide_window()
+	bool window_base::hide_window() noexcept
 	{
 		return window_implementation::show_window_helper(get_handle(), SW_HIDE);
 	}
-	bool window_base::enable_window()
+	bool window_base::enable_window() noexcept
 	{
 		return EnableWindow(get_handle(), TRUE) == FALSE ? false : true;
 	}
-	bool window_base::disable_window()
+	bool window_base::disable_window() noexcept
 	{
 		return EnableWindow(get_handle(), FALSE) == FALSE ? false : true;
 	}
 
-	void window_base::update_window()
+	void window_base::update_window() noexcept
 	{
 		UpdateWindow(get_handle());
 	}
-	void window_base::redraw_window(std::optional<RECT> rect, HRGN rgn, redraw_window_flags flags)
+	void window_base::redraw_window(std::optional<RECT> rect, HRGN rgn, redraw_window_flags flags) noexcept
 	{
 		//Prioritise region over rect.
 		HRGN rg_rgn = rgn;
@@ -554,11 +552,11 @@ namespace windowing
 		RedrawWindow(get_handle(), rc_rect, rg_rgn, static_cast<UINT>(flags));
 	}
 
-	HWND window_base::get_parent() const
+	HWND window_base::get_parent() const noexcept
 	{
 		return GetParent(get_handle());
 	}
-	SIZE window_base::get_size() const
+	SIZE window_base::get_size() const noexcept
 	{
 		SIZE s{};
 		RECT rc_wnd{};
@@ -570,7 +568,7 @@ namespace windowing
 
 		return s;
 	}
-	SIZE window_base::get_client_size() const
+	SIZE window_base::get_client_size() const noexcept
 	{
 		SIZE s{};
 		RECT rc_wnd{};
@@ -582,7 +580,7 @@ namespace windowing
 
 		return s;
 	}
-	POINT window_base::get_position() const
+	POINT window_base::get_position() const noexcept
 	{
 		POINT p{};
 		RECT rc_wnd{};
@@ -595,11 +593,11 @@ namespace windowing
 		return p;
 	}
 
-	void window_base::set_size(const SIZE &new_size)
+	void window_base::set_size(const SIZE &new_size) noexcept
 	{
 		SetWindowPos(get_handle(), nullptr, 0, 0, new_size.cx, new_size.cy, SWP_NOMOVE | SWP_NOZORDER);
 	}
-	void window_base::set_client_size(const SIZE &client_size)
+	void window_base::set_client_size(const SIZE &client_size) noexcept
 	{
 		RECT rc_original{};
 		RECT rc_adjustrect{};
@@ -637,28 +635,28 @@ namespace windowing
 		}
 		RedrawWindow(get_handle(), nullptr, nullptr, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 	}
-	void window_base::set_position(const POINT &position)
+	void window_base::set_position(const POINT &position) noexcept
 	{
 		SetWindowPos(get_handle(), nullptr, position.x, position.y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 	}
-	void window_base::set_size_position(const POINT &position, const SIZE &size)
+	void window_base::set_size_position(const POINT &position, const SIZE &size) noexcept
 	{
 		SetWindowPos(get_handle(), nullptr, position.x, position.y, size.cx, size.cy, SWP_NOZORDER);
 	}
-	void window_base::set_z_order_top()
+	void window_base::set_z_order_top() noexcept
 	{
 		SetWindowPos(get_handle(), HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	}
-	void window_base::set_z_order_bottom()
+	void window_base::set_z_order_bottom() noexcept
 	{
 		SetWindowPos(get_handle(), HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	}
-	void window_base::set_z_order_after(HWND wnd)
+	void window_base::set_z_order_after(HWND wnd) noexcept
 	{
 		SetWindowPos(get_handle(), wnd, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	}
 
-	void window_base::set_window_aumid_from_process_aumid()
+	void window_base::set_window_aumid_from_process_aumid() noexcept
 	{
 		if (application::application::process_has_explicit_app_user_model_id())
 		{
@@ -666,23 +664,23 @@ namespace windowing
 			window_implementation::set_window_aumid(get_handle(), eaumid);
 		}
 	}
-	void window_base::set_window_aumid(const std::string_view &aumid)
+	void window_base::set_window_aumid(const std::string_view &aumid) noexcept
 	{
 		std::string aumid_cache = std::string(aumid);
 		window_implementation::set_window_aumid(get_handle(), aumid_cache);
 	}
-	void window_base::set_window_aumid(const std::wstring_view &aumid)
+	void window_base::set_window_aumid(const std::wstring_view &aumid) noexcept
 	{
 		std::wstring aumid_cache = std::wstring(aumid);
 		window_implementation::set_window_aumid(get_handle(), aumid_cache);
 	}
-	aumid_type window_base::get_window_aumid() const
+	aumid_type window_base::get_window_aumid() const noexcept
 	{
 		auto win_unicode = is_window_unicode();
 
 		return win_unicode == true ? aumid_type{ window_implementation::get_window_aumid_w(get_handle()).second } : aumid_type{ window_implementation::get_window_aumid_a(get_handle()).second };
 	}
-	bool window_base::window_has_aumid() const
+	bool window_base::window_has_aumid() const noexcept
 	{
 		auto [hr, aumid] = window_implementation::get_window_aumid_w(get_handle());
 
@@ -693,7 +691,7 @@ namespace windowing
 		return !aumid.empty() ? true : false;
 	}
 
-	void window_base::register_power_notification(power_notify_type type)
+	void window_base::register_power_notification(power_notify_type type) noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		HPOWERNOTIFY result{};
@@ -759,7 +757,7 @@ namespace windowing
 			m_window_data->m_power_notify_handles.emplace(std::make_pair(type, result));
 		}
 	}
-	void window_base::unregister_power_notification(power_notify_type type)
+	void window_base::unregister_power_notification(power_notify_type type) noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		auto it = m_window_data->m_power_notify_handles.find(type);
@@ -779,13 +777,13 @@ namespace windowing
 		}
 	}
 
-	register_callback &window_base::get_register_interface() const
+	register_callback &window_base::get_register_interface() const noexcept
 	{
 		close_callback_container *rcc = is_window_unicode() == true ? get_register_callback_container_w(get_handle()) : get_register_callback_container_a(get_handle());
 		_ASSERTE(rcc != nullptr);
 		return *rcc;
 	}
-	message_callback &window_base::get_window_message_callback(HWND wnd, uint32_t index)
+	message_callback &window_base::get_window_message_callback(HWND wnd, uint32_t index) noexcept
 	{
 		auto message_container = IsWindowUnicode(wnd) != FALSE ? static_cast<message_callback_container *>(windowing::get_property_w(wnd, prop_type::message_callback)) : static_cast<message_callback_container *>(windowing::get_property_a(wnd, prop_type::message_callback));
 		_ASSERTE(message_container != nullptr);
@@ -795,21 +793,21 @@ namespace windowing
 		FAIL_FAST_IF_WIN32_BOOL_FALSE(has_callback == false ? FALSE : TRUE);
 		return *message_container->get_callback(index);
 	}
-	bool window_base::has_window_message_callback(HWND wnd, uint32_t index)
+	bool window_base::has_window_message_callback(HWND wnd, uint32_t index) noexcept
 	{
 		auto message_container = IsWindowUnicode(wnd) != FALSE ? static_cast<message_callback_container *>(windowing::get_property_w(wnd, prop_type::message_callback)) : static_cast<message_callback_container *>(windowing::get_property_a(wnd, prop_type::message_callback));
 		return message_container == nullptr ? false : message_container->has_callback(index);
 	}
 
-	window_base::window_base(HINSTANCE inst) : m_window_data(details::make_window_data(inst))
+	window_base::window_base(HINSTANCE inst) noexcept : m_window_data(details::make_window_data(inst))
 	{
 	}
 
-	window_base::~window_base()
+	window_base::~window_base() noexcept
 	{
 	}
 
-	void window_base::notify_window_close()
+	void window_base::notify_window_close() noexcept
 	{
 		close_callback_container *rcc = is_window_unicode() == true ? get_register_callback_container_w(get_handle()) : get_register_callback_container_a(get_handle());
 		if (rcc != nullptr)
@@ -817,7 +815,7 @@ namespace windowing
 			rcc->notify_close(get_handle());
 		}
 	}
-	void window_base::set_window_info(HWND handle, uint32_t thread_id, bool unicode)
+	void window_base::set_window_info(HWND handle, uint32_t thread_id, bool unicode) noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		_ASSERTE(m_window_data->window_initial_construction_complete == false);
@@ -839,7 +837,7 @@ namespace windowing
 
 		unicode == true ? SetPropW(handle, prop_window_data_w, m_window_data.get()) : SetPropA(handle, prop_window_data_a, m_window_data.get());
 	}
-	void window_base::cleanup_window_info()
+	void window_base::cleanup_window_info() noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		_ASSERTE(m_window_data->window_initial_construction_complete == true);
@@ -855,19 +853,19 @@ namespace windowing
 		message_container.reset(static_cast<message_callback_container *>(unicode == true  ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)));
 		unicode == true ? remove_property_w(handle, prop_type::message_callback) : remove_property_a(handle, prop_type::message_callback);
 	}
-	void window_base::set_dpi(uint32_t dpi)
+	void window_base::set_dpi(uint32_t dpi) noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		m_window_data->m_dpi = dpi;
 		m_window_data->m_scale = dpi / 96.f;
 	}
-	bool window_base::has_associated_window() const
+	bool window_base::has_associated_window() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
 		return (m_window_data->m_handle != nullptr);
 	}
 
-	bool window_base::add_message_callback(const std::shared_ptr<message_callback> &callback, uint32_t index)
+	bool window_base::add_message_callback(const std::shared_ptr<message_callback> &callback, uint32_t index) noexcept
 	{
 		auto unicode = is_window_unicode();
 		auto handle = get_handle();
@@ -882,7 +880,7 @@ namespace windowing
 
 		return false;
 	}
-	void window_base::remove_message_callback(uint32_t index)
+	void window_base::remove_message_callback(uint32_t index) noexcept
 	{
 		auto unicode = is_window_unicode();
 		auto handle = get_handle();
@@ -891,7 +889,7 @@ namespace windowing
 
 		message_container->remove_callback(index);
 	}
-	void window_base::clear_message_callbacks()
+	void window_base::clear_message_callbacks() noexcept
 	{
 		auto unicode = is_window_unicode();
 		auto handle = get_handle();
@@ -901,7 +899,7 @@ namespace windowing
 		message_container->clear_callbacks();
 	}
 
-	bool window_base::is_class_registered(HINSTANCE inst, const std::string_view &class_name)
+	bool window_base::is_class_registered(HINSTANCE inst, const std::string_view &class_name) noexcept
 	{
 		WNDCLASSEXA wcx{ sizeof(WNDCLASSEXA) };
 
@@ -915,7 +913,7 @@ namespace windowing
 		FAIL_FAST_IF_WIN32_ERROR(last_error);
 		return false;
 	}
-	bool window_base::is_class_registered(HINSTANCE inst, const std::wstring_view &class_name)
+	bool window_base::is_class_registered(HINSTANCE inst, const std::wstring_view &class_name) noexcept
 	{
 		WNDCLASSEXW wcx{ sizeof(WNDCLASSEXW) };
 
@@ -932,7 +930,7 @@ namespace windowing
 		}
 		return false;
 	}
-	bool window_base::register_class(uint32_t style, const std::string_view &class_name, const std::string_view &menu_name, int32_t class_extra, int32_t wnd_extra, WNDPROC wndproc, HINSTANCE inst, HBRUSH background, HCURSOR cursor, HICON icon, HICON sm_icon)
+	bool window_base::register_class(uint32_t style, const std::string_view &class_name, const std::string_view &menu_name, int32_t class_extra, int32_t wnd_extra, WNDPROC wndproc, HINSTANCE inst, HBRUSH background, HCURSOR cursor, HICON icon, HICON sm_icon) noexcept
 	{
 		if (is_class_registered(inst, class_name))
 		{
@@ -954,7 +952,7 @@ namespace windowing
 
 		return RegisterClassExA(&wcx) != 0;
 	}
-	bool window_base::register_class(uint32_t style, const std::wstring_view &class_name, const std::wstring_view &menu_name, int32_t class_extra, int32_t wnd_extra, WNDPROC wndproc, HINSTANCE inst, HBRUSH background, HCURSOR cursor, HICON icon, HICON sm_icon)
+	bool window_base::register_class(uint32_t style, const std::wstring_view &class_name, const std::wstring_view &menu_name, int32_t class_extra, int32_t wnd_extra, WNDPROC wndproc, HINSTANCE inst, HBRUSH background, HCURSOR cursor, HICON icon, HICON sm_icon) noexcept
 	{
 		if (is_class_registered(inst, class_name))
 		{
@@ -977,7 +975,7 @@ namespace windowing
 		return RegisterClassExW(&wcx) != 0;
 	}
 	//This is used for window_t building the information from the definitions.
-	bool window_base::register_class(const WNDCLASSEXA &wcx)
+	bool window_base::register_class(const WNDCLASSEXA &wcx) noexcept
 	{
 		if (is_class_registered(wcx.hInstance, wcx.lpszClassName))
 		{
@@ -986,7 +984,7 @@ namespace windowing
 
 		return RegisterClassExA(&wcx) != 0;
 	}
-	bool window_base::register_class(const WNDCLASSEXW &wcx)
+	bool window_base::register_class(const WNDCLASSEXW &wcx) noexcept
 	{
 		if (is_class_registered(wcx.hInstance, wcx.lpszClassName))
 		{
@@ -995,14 +993,14 @@ namespace windowing
 
 		return RegisterClassExW(&wcx) != 0;
 	}
-	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::string_view &class_name, const std::string_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, void *data)
+	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::string_view &class_name, const std::string_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, void *data) noexcept
 	{
 		window_base *that = static_cast<window_base *>(data);
 		_ASSERTE(that->has_associated_window() == false);
 		auto result = CreateWindowExA(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, that->get_instance(), data);
 		return result;
 	}
-	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::wstring_view &class_name, const std::wstring_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, void *data)
+	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::wstring_view &class_name, const std::wstring_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, void *data) noexcept
 	{
 		window_base *that = static_cast<window_base *>(data);
 		_ASSERTE(that->has_associated_window() == false);

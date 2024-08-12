@@ -154,12 +154,19 @@ namespace windowing
 		}
 	};
 
-	bool set_property_a(HWND, prop_type, void *);
-	void *get_property_a(HWND, prop_type);
-	void *remove_property_a(HWND, prop_type);
-	bool set_property_w(HWND, prop_type, void *);
-	void *get_property_w(HWND, prop_type);
-	void *remove_property_w(HWND, prop_type);
+	inline LONG_PTR TWndGetWindowLongPtr(HWND wnd, int index, bool unicode)
+	{
+		using ta = window_traits_a;
+		using tw = window_traits_w;
+		return unicode == true ? tw::WndGetWindowLongPtr(wnd, index) : ta::WndGetWindowLongPtr(wnd, index);
+	}
+
+	bool set_property_a(HWND, prop_type, void *) noexcept;
+	void *get_property_a(HWND, prop_type) noexcept;
+	void *remove_property_a(HWND, prop_type) noexcept;
+	bool set_property_w(HWND, prop_type, void *) noexcept;
+	void *get_property_w(HWND, prop_type) noexcept;
+	void *remove_property_w(HWND, prop_type) noexcept;
 
 	struct prop_traits_a
 	{
