@@ -21,14 +21,10 @@
 namespace windowing
 {
 	static inline constexpr char prop_instance_a[] = "PROP_INSTANCE";
-	static inline constexpr char prop_mousetrack_a[] = "PROP_MOUSETRACK";
-	static inline constexpr char prop_mousetrack_hook_a[] = "PROP_MOUSETRACKHOOK";
 	static inline constexpr char prop_message_callback_a[] = "PROP_MESSAGECALLBACK";
 	static inline constexpr char prop_register_callback_a[] = "PROP_REGISTERCALLBACK";
 
 	static inline constexpr wchar_t prop_instance_w[] = L"PROP_INSTANCE";
-	static inline constexpr wchar_t prop_mousetrack_w[] = L"PROP_MOUSETRACK";
-	static inline constexpr wchar_t prop_mousetrack_hook_w[] = L"PROP_MOUSETRACKHOOK";
 	static inline constexpr wchar_t prop_message_callback_w[] = L"PROP_MESSAGECALLBACK";
 	static inline constexpr wchar_t prop_register_callback_w[] = L"PROP_REGISTERCALLBACK";
 
@@ -74,12 +70,6 @@ namespace windowing
 			case prop_type::instance:
 				sv = std::string_view(prop_instance_a, ARRAYSIZE(prop_instance_a));
 				break;
-			case prop_type::mouse_track:
-				sv = std::string_view(prop_mousetrack_a, ARRAYSIZE(prop_mousetrack_a));
-				break;
-			case prop_type::mouse_track_hook:
-				sv = std::string_view(prop_mousetrack_hook_a, ARRAYSIZE(prop_mousetrack_hook_a));
-				break;
 			case prop_type::register_callback:
 				sv = std::string_view(prop_register_callback_a, ARRAYSIZE(prop_register_callback_a));
 				break;
@@ -99,12 +89,6 @@ namespace windowing
 			{
 			case prop_type::instance:
 				sv = std::wstring_view(prop_instance_w, ARRAYSIZE(prop_instance_w));
-				break;
-			case prop_type::mouse_track:
-				sv = std::wstring_view(prop_mousetrack_w, ARRAYSIZE(prop_mousetrack_w));
-				break;
-			case prop_type::mouse_track_hook:
-				sv = std::wstring_view(prop_mousetrack_hook_w, ARRAYSIZE(prop_mousetrack_hook_w));
 				break;
 			case prop_type::register_callback:
 				sv = std::wstring_view(prop_register_callback_w, ARRAYSIZE(prop_register_callback_w));

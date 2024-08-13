@@ -2147,9 +2147,8 @@ namespace windowing
 			}
 		}
 	protected:
-		void track_mouse(HWND)
+		void track_mouse()
 		{
-			using prop_traits = choose_prop_traits_t<UnicodeBase>;
 			using details::this_cast;
 			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
 				details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
@@ -2160,59 +2159,38 @@ namespace windowing
 				HHOOK hook_mh = choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_MOUSE, my_type::mh_hook, nullptr, GetCurrentThreadId());
 				HHOOK hook_gm = choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_GETMESSAGE, my_type::gm_hook, nullptr, GetCurrentThreadId());
 
-				std::unique_ptr<bool> tracking_ptr = std::make_unique<bool>();
-				struct hook_data
-				{
-					HHOOK mh = nullptr;
-					HHOOK gm = nullptr;
-				};
+				m_hook_data.gm = hook_gm;
+				m_hook_data.mh = hook_mh;
 
-				std::unique_ptr<hook_data> hd = std::make_unique<hook_data>();
-				hd->gm = hook_gm;
-				hd->mh = hook_mh;
-				*tracking_ptr = true;
-
-				my_t *that = this_cast<my_t>(this);
-				//Hand the pointers over to the window property;
-				HWND my_handle = that->get_handle();
-				prop_traits::set_property(my_handle, prop_type::mouse_track, tracking_ptr.get());
-				tracking_ptr.release();
-				prop_traits::set_property(my_handle, prop_type::mouse_track_hook, hd.get());
-				hd.release();
+				m_registered_for_tracking = true;
 			}
 		}
-		void untrack_mouse(HWND)
+		void untrack_mouse()
 		{
-			using prop_traits = choose_prop_traits_t<UnicodeBase>;
 			using details::this_cast;
-			using details::prop_cast;
 			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
 				details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
 			{
-				struct hook_data
-				{
-					HHOOK mh = nullptr;
-					HHOOK gm = nullptr;
-				};
-
-				my_t *that = this_cast<my_t>(this);
-				HWND window_handle = that->get_handle();
-
-				//Bring the pointers under the control of unique_ptr again.
-				std::unique_ptr<hook_data> hd;
-				std::unique_ptr<bool> tracking_ptr;
-				hd.reset(prop_cast<hook_data>(prop_traits::get_property(window_handle, prop_type::mouse_track_hook)));
-				prop_traits::remove_property(window_handle, prop_type::mouse_track_hook);
-				tracking_ptr.reset(prop_cast<bool>(prop_traits::get_property(window_handle, prop_type::mouse_track)));
-				prop_traits::remove_property(window_handle, prop_type::mouse_track);
-				UnhookWindowsHookEx(hd->mh);
-				UnhookWindowsHookEx(hd->gm);
+				m_registered_for_tracking = false;
+				UnhookWindowsHookEx(m_hook_data.mh);
+				UnhookWindowsHookEx(m_hook_data.gm);
+				m_hook_data = {};
 			}
+		}
+		bool tracking()
+		{
+			return m_registered_for_tracking;
 		}
 	private:
 		using my_t = DerivedType;
 		using my_type = track_mouse_policy<DerivedType, UnicodeBase>;
 		using derived_type = window_t<DerivedType, UnicodeBase>;
+
+		struct hook_data
+		{
+			HHOOK mh{};
+			HHOOK gm{};
+		};
 
 		BOOL track_mouse(HWND wnd, bool nc)
 		{
@@ -2294,24 +2272,8 @@ namespace windowing
 		std::atomic_bool m_mouse_in_client = false;
 		std::atomic_bool m_first_mouse_message = false;
 
-		static bool registered_for_tracking_from_handle(HWND wnd)
-		{
-			using prop_traits = choose_prop_traits_t<UnicodeBase>;
-			using details::prop_cast;
-			bool retval = false;
-			auto v = prop_traits::get_property(wnd, prop_type::mouse_track);
-			if (v != nullptr)
-			{
-				//The property was added, but we should be sure that it is set
-				//properly.
-				if (*prop_cast<bool>(v) == true)
-				{
-					retval = true;
-				}
-			}
-
-			return retval;
-		}
+		hook_data m_hook_data{};
+		std::atomic_bool m_registered_for_tracking = false;
 
 		static my_type *instance_from_handle(HWND wnd)
 		{
@@ -2337,15 +2299,15 @@ namespace windowing
 			}
 
 			MSG &msg = ref_param_cast<MSG>(lparam);
-
-			if (!my_type::registered_for_tracking_from_handle(msg.hwnd))
+			if (msg.hwnd != nullptr)
 			{
+				my_type *that = my_type::instance_from_handle(msg.hwnd);
+				if (that == nullptr || !that->tracking())
+				{
 				return CallNextHookEx(nullptr, code, wparam, lparam);
 			}
 			else
 			{
-				my_type *that = my_type::instance_from_handle(msg.hwnd);
-
 				if (msg.message == WM_MOUSELEAVE)
 				{
 					that->handle_mouse_leave(msg.hwnd);
@@ -2365,6 +2327,7 @@ namespace windowing
 				return CallNextHookEx(nullptr, code, wparam, lparam);
 			}
 		}
+		}
 
 		static LRESULT CALLBACK mh_hook(_In_ int code, _In_ WPARAM wparam, _In_ LPARAM lparam)
 		{
@@ -2377,14 +2340,15 @@ namespace windowing
 			}
 
 			MOUSEHOOKSTRUCTEX &mh_struct = ref_param_cast<MOUSEHOOKSTRUCTEX>(lparam);
-
-			if (!my_type::registered_for_tracking_from_handle(mh_struct.hwnd))
+			if (mh_struct.hwnd != nullptr)
+			{
+				my_type *that = my_type::instance_from_handle(mh_struct.hwnd);
+				if (that == nullptr || !that->tracking())
 			{
 				return CallNextHookEx(nullptr, code, wparam, lparam);
 			}
 			else
 			{
-				my_type *that = my_type::instance_from_handle(mh_struct.hwnd);
 				if (code == HC_ACTION)
 				{
 					that->handle_mouse_message(mh_struct.hwnd, param_cast<UINT>(wparam), mh_struct);
@@ -2392,6 +2356,7 @@ namespace windowing
 
 				return CallNextHookEx(nullptr, code, wparam, lparam);
 			}
+		}
 		}
 	};
 
@@ -6885,7 +6850,7 @@ namespace windowing
 			auto that = inst_from_handle(wnd);
 			auto dpi = GetDpiForWindow(wnd);
 			that->set_dpi(dpi);
-			that->track_mouse(wnd);
+			that->track_mouse();
 		}
 
 		static void handle_ncdestroy(HWND wnd)
@@ -6893,7 +6858,7 @@ namespace windowing
 			//Remove the class pointer from the window and then we delete the class
 			auto that = my_type::inst_from_handle(wnd);
 			that->notify_window_close();
-			that->untrack_mouse(wnd);
+			that->untrack_mouse();
 			that->cleanup_window_info();
 
 			prop_traits::remove_property(wnd, prop_type::instance);
