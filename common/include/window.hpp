@@ -1116,7 +1116,7 @@ namespace windowing
 		struct ncmouse_policy_or_default<ClassType, true>
 		{
 			using policy = typename ClassType::ncmouse_track_policy;
-			inline static constexpr const mouse_policy_value value = get_mouse_policy_type<typename ClassType::mouse_track_policy>();
+			inline static constexpr const mouse_policy_value value = get_mouse_policy_type<typename ClassType::ncmouse_track_policy>();
 		};
 
 		template <typename ClassType>
@@ -2304,29 +2304,29 @@ namespace windowing
 				my_type *that = my_type::instance_from_handle(msg.hwnd);
 				if (that == nullptr || !that->tracking())
 				{
-				return CallNextHookEx(nullptr, code, wparam, lparam);
+					return CallNextHookEx(nullptr, code, wparam, lparam);
+				}
+				else
+				{
+					if (msg.message == WM_MOUSELEAVE)
+					{
+						that->handle_mouse_leave(msg.hwnd);
+					}
+					if (msg.message == WM_NCMOUSELEAVE)
+					{
+						that->handle_ncmouse_leave(msg.hwnd);
+					}
+					if (msg.message == WM_MOUSEHOVER)
+					{
+						that->handle_mouse_hover(msg.hwnd);
+					}
+					if (msg.message == WM_NCMOUSEHOVER)
+					{
+						that->handle_ncmouse_hover(msg.hwnd);
+					}
+					return CallNextHookEx(nullptr, code, wparam, lparam);
+				}
 			}
-			else
-			{
-				if (msg.message == WM_MOUSELEAVE)
-				{
-					that->handle_mouse_leave(msg.hwnd);
-				}
-				if (msg.message == WM_NCMOUSELEAVE)
-				{
-					that->handle_ncmouse_leave(msg.hwnd);
-				}
-				if (msg.message == WM_MOUSEHOVER)
-				{
-					that->handle_mouse_hover(msg.hwnd);
-				}
-				if (msg.message == WM_NCMOUSEHOVER)
-				{
-					that->handle_ncmouse_hover(msg.hwnd);
-				}
-				return CallNextHookEx(nullptr, code, wparam, lparam);
-			}
-		}
 		}
 
 		static LRESULT CALLBACK mh_hook(_In_ int code, _In_ WPARAM wparam, _In_ LPARAM lparam)
@@ -2344,19 +2344,19 @@ namespace windowing
 			{
 				my_type *that = my_type::instance_from_handle(mh_struct.hwnd);
 				if (that == nullptr || !that->tracking())
-			{
-				return CallNextHookEx(nullptr, code, wparam, lparam);
-			}
-			else
-			{
-				if (code == HC_ACTION)
 				{
-					that->handle_mouse_message(mh_struct.hwnd, param_cast<UINT>(wparam), mh_struct);
+					return CallNextHookEx(nullptr, code, wparam, lparam);
 				}
+				else
+				{
+					if (code == HC_ACTION)
+					{
+						that->handle_mouse_message(mh_struct.hwnd, param_cast<UINT>(wparam), mh_struct);
+					}
 
-				return CallNextHookEx(nullptr, code, wparam, lparam);
+					return CallNextHookEx(nullptr, code, wparam, lparam);
+				}
 			}
-		}
 		}
 	};
 
