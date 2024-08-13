@@ -6,15 +6,6 @@
 
 namespace windowing
 {
-	enum class prop_type
-	{
-		instance,
-		mouse_track,
-		mouse_track_hook,
-		register_callback,
-		message_callback
-	};
-
 	struct window_traits_a
 	{
 		using char_t = char;
@@ -160,42 +151,4 @@ namespace windowing
 		using tw = window_traits_w;
 		return unicode == true ? tw::WndGetWindowLongPtr(wnd, index) : ta::WndGetWindowLongPtr(wnd, index);
 	}
-
-	bool set_property_a(HWND, prop_type, void *) noexcept;
-	void *get_property_a(HWND, prop_type) noexcept;
-	void *remove_property_a(HWND, prop_type) noexcept;
-	bool set_property_w(HWND, prop_type, void *) noexcept;
-	void *get_property_w(HWND, prop_type) noexcept;
-	void *remove_property_w(HWND, prop_type) noexcept;
-
-	struct prop_traits_a
-	{
-		static bool set_property(HWND wnd, prop_type prop, void *data)
-		{
-			return windowing::set_property_a(wnd, prop, data);
-		}
-		static void *get_property(HWND wnd, prop_type prop)
-		{
-			return windowing::get_property_a(wnd, prop);
-		}
-		static void *remove_property(HWND wnd, prop_type prop)
-		{
-			return windowing::remove_property_a(wnd, prop);
-		}
-	};
-	struct prop_traits_w
-	{
-		static bool set_property(HWND wnd, prop_type prop, void *data)
-		{
-			return windowing::set_property_w(wnd, prop, data);
-		}
-		static void *get_property(HWND wnd, prop_type prop)
-		{
-			return windowing::get_property_w(wnd, prop);
-		}
-		static void *remove_property(HWND wnd, prop_type prop)
-		{
-			return windowing::remove_property_w(wnd, prop);
-		}
-	};
 }

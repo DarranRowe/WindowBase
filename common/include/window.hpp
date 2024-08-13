@@ -994,18 +994,6 @@ namespace windowing
 	};
 	template <bool UnicodeBase>
 	using choose_window_traits_t = typename choose_window_traits<UnicodeBase>::traits;
-	template <bool UnicodeBase = false>
-	struct choose_prop_traits
-	{
-		using traits = prop_traits_a;
-	};
-	template <>
-	struct choose_prop_traits<true>
-	{
-		using traits = prop_traits_w;
-	};
-	template <bool UnicodeBase>
-	using choose_prop_traits_t = typename choose_prop_traits<UnicodeBase>::traits;
 
 	template <typename DerivedType>
 	struct static_assert_wrapper
@@ -2327,6 +2315,7 @@ namespace windowing
 					return CallNextHookEx(nullptr, code, wparam, lparam);
 				}
 			}
+			return CallNextHookEx(nullptr, code, wparam, lparam);
 		}
 
 		static LRESULT CALLBACK mh_hook(_In_ int code, _In_ WPARAM wparam, _In_ LPARAM lparam)
@@ -2353,10 +2342,11 @@ namespace windowing
 					{
 						that->handle_mouse_message(mh_struct.hwnd, param_cast<UINT>(wparam), mh_struct);
 					}
-
+					
 					return CallNextHookEx(nullptr, code, wparam, lparam);
 				}
 			}
+			return CallNextHookEx(nullptr, code, wparam, lparam);
 		}
 	};
 
@@ -2419,7 +2409,6 @@ namespace windowing
 	{
 	public:
 		using traits = choose_window_traits_t<UnicodeBase>;
-		using prop_traits = choose_prop_traits_t<UnicodeBase>;
 		using my_t = DerivedType;
 		using my_tptr = my_t *;
 		using my_type = window_t;
@@ -3153,10 +3142,9 @@ namespace windowing
 					HWND wnd = reinterpret_cast<HWND>(wparam);
 					typename traits::cbt_createwnd_t &params = *reinterpret_cast<traits::cbt_createwnd_t *>(lparam);
 
-					my_tptr that = reinterpret_cast<my_tptr>(params.lpcs->lpCreateParams);
-					that->set_window_info(wnd, GetCurrentThreadId(), UnicodeBase);
-
-					prop_traits::set_property(wnd, prop_type::instance, params.lpcs->lpCreateParams);
+					void *instance = params.lpcs->lpCreateParams;
+					my_tptr that = reinterpret_cast<my_tptr>(instance);
+					that->set_window_info(wnd, GetCurrentThreadId(), UnicodeBase, instance);
 				}
 
 				auto result = CallNextHookEx(my_type::s_create_hook, code, wparam, lparam);
@@ -6841,7 +6829,7 @@ namespace windowing
 		static my_tptr inst_from_handle(HWND wnd)
 		{
 			using details::inst_cast;
-			my_tptr ptr = inst_cast<my_t>(prop_traits::get_property(wnd, prop_type::instance));
+			my_tptr ptr = inst_cast<my_t>(raw_inst_from_handle(wnd));
 			return ptr;
 		}
 
@@ -6860,8 +6848,6 @@ namespace windowing
 			that->notify_window_close();
 			that->untrack_mouse();
 			that->cleanup_window_info();
-
-			prop_traits::remove_property(wnd, prop_type::instance);
 			delete that;
 
 			window_post_quit_policy<DerivedType>::post_quit_message(0);

@@ -28,11 +28,15 @@ namespace windowing
 	static inline constexpr wchar_t prop_message_callback_w[] = L"PROP_MESSAGECALLBACK";
 	static inline constexpr wchar_t prop_register_callback_w[] = L"PROP_REGISTERCALLBACK";
 
-	static inline constexpr char prop_window_data_a[] = "PROP_WINDOWDATA";
-	static inline constexpr wchar_t prop_window_data_w[] = L"PROP_WINDOWDATA";
-
 	namespace details
 	{
+		enum class prop_type
+		{
+			instance,
+			register_callback,
+			message_callback
+		};
+
 		struct window_data
 		{
 			HWND m_handle = nullptr;
@@ -128,6 +132,13 @@ namespace windowing
 		private:
 			std::map<uint32_t, std::shared_ptr<message_callback>> m_map;
 		};
+
+		bool set_property_a(HWND, prop_type, void *) noexcept;
+		void *get_property_a(HWND, prop_type) noexcept;
+		void *remove_property_a(HWND, prop_type) noexcept;
+		bool set_property_w(HWND, prop_type, void *) noexcept;
+		void *get_property_w(HWND, prop_type) noexcept;
+		void *remove_property_w(HWND, prop_type) noexcept;
 
 		bool can_use_win11_features() noexcept;
 		bool can_use_win11_22h2_features() noexcept;

@@ -88,13 +88,6 @@ namespace windowing
 
 	using aumid_type = std::variant<std::string, std::wstring>;
 
-	bool set_property_a(HWND, prop_type, void *) noexcept;
-	void *get_property_a(HWND, prop_type) noexcept;
-	void *remove_property_a(HWND, prop_type) noexcept;
-	bool set_property_w(HWND, prop_type, void *) noexcept;
-	void *get_property_w(HWND, prop_type) noexcept;
-	void *remove_property_w(HWND, prop_type) noexcept;
-
 	//Public API
 	//Modification of this class requires adding the functions to the export list.
 	class window_base
@@ -166,7 +159,7 @@ namespace windowing
 		~window_base() noexcept;
 
 		void notify_window_close() noexcept;
-		void set_window_info(HWND, uint32_t, bool) noexcept;
+		void set_window_info(HWND, uint32_t, bool, void *) noexcept;
 		void cleanup_window_info() noexcept;
 		void set_dpi(uint32_t) noexcept;
 
@@ -175,6 +168,8 @@ namespace windowing
 		bool add_message_callback(const std::shared_ptr<message_callback> &, uint32_t) noexcept;
 		void remove_message_callback(uint32_t) noexcept;
 		void clear_message_callbacks() noexcept;
+
+		static void *raw_inst_from_handle(HWND handle);
 
 		static bool is_class_registered(HINSTANCE, const std::string_view &) noexcept;
 		static bool is_class_registered(HINSTANCE, const std::wstring_view &) noexcept;

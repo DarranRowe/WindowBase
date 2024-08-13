@@ -71,6 +71,58 @@ namespace windowing
 
 			return export_exists(mod, export_name);
 		}
+
+		bool set_property_a(HWND wnd, prop_type prop, void *data) noexcept
+		{
+			_ASSERTE(wnd != nullptr);
+			bool result = false;
+			_ASSERTE(data != nullptr);
+			result = SetPropA(wnd, prop_name_from_type_a(prop).data(), data);
+
+			return result;
+		}
+		void *get_property_a(HWND wnd, prop_type prop) noexcept
+		{
+			_ASSERTE(wnd != nullptr);
+			void *data = nullptr;
+			data = GetPropA(wnd, prop_name_from_type_a(prop).data());
+
+			return data;
+		}
+		void *remove_property_a(HWND wnd, prop_type prop) noexcept
+		{
+			_ASSERTE(wnd != nullptr);
+			void *data = nullptr;
+			data = RemovePropA(wnd, prop_name_from_type_a(prop).data());
+
+			return data;
+		}
+
+		bool set_property_w(HWND wnd, prop_type prop, void *data) noexcept
+		{
+			_ASSERTE(wnd != nullptr);
+			bool result = false;
+			_ASSERTE(data != nullptr);
+			result = SetPropW(wnd, prop_name_from_type_w(prop).data(), data);
+
+			return result;
+		}
+		void *get_property_w(HWND wnd, prop_type prop) noexcept
+		{
+			_ASSERTE(wnd != nullptr);
+			void *data = nullptr;
+			data = GetPropW(wnd, prop_name_from_type_w(prop).data());
+
+			return data;
+		}
+		void *remove_property_w(HWND wnd, prop_type prop) noexcept
+		{
+			_ASSERTE(wnd != nullptr);
+			void *data = nullptr;
+			data = RemovePropW(wnd, prop_name_from_type_w(prop).data());
+
+			return data;
+		}
 	}
 
 	namespace window_implementation
@@ -261,58 +313,6 @@ namespace windowing
 		{
 			return prop_var_get_aumid(wnd);
 		}
-	}
-
-	bool set_property_a(HWND wnd, prop_type prop, void *data) noexcept
-	{
-		_ASSERTE(wnd != nullptr);
-		bool result = false;
-		_ASSERTE(data != nullptr);
-		result = SetPropA(wnd, prop_name_from_type_a(prop).data(), data);
-
-		return result;
-	}
-	void *get_property_a(HWND wnd, prop_type prop) noexcept
-	{
-		_ASSERTE(wnd != nullptr);
-		void *data = nullptr;
-		data = GetPropA(wnd, prop_name_from_type_a(prop).data());
-
-		return data;
-	}
-	void *remove_property_a(HWND wnd, prop_type prop) noexcept
-	{
-		_ASSERTE(wnd != nullptr);
-		void *data = nullptr;
-		data = RemovePropA(wnd, prop_name_from_type_a(prop).data());
-
-		return data;
-	}
-
-	bool set_property_w(HWND wnd, prop_type prop, void *data) noexcept
-	{
-		_ASSERTE(wnd != nullptr);
-		bool result = false;
-		_ASSERTE(data != nullptr);
-		result = SetPropW(wnd, prop_name_from_type_w(prop).data(), data);
-
-		return result;
-	}
-	void *get_property_w(HWND wnd, prop_type prop) noexcept
-	{
-		_ASSERTE(wnd != nullptr);
-		void *data = nullptr;
-		data = GetPropW(wnd, prop_name_from_type_w(prop).data());
-
-		return data;
-	}
-	void *remove_property_w(HWND wnd, prop_type prop) noexcept
-	{
-		_ASSERTE(wnd != nullptr);
-		void *data = nullptr;
-		data = RemovePropW(wnd, prop_name_from_type_w(prop).data());
-
-		return data;
 	}
 
 	uint32_t close_callback_container::register_close_callback(std::function<close_callback_type> &f) noexcept
@@ -785,7 +785,10 @@ namespace windowing
 	}
 	message_callback &window_base::get_window_message_callback(HWND wnd, uint32_t index) noexcept
 	{
-		auto message_container = IsWindowUnicode(wnd) != FALSE ? static_cast<message_callback_container *>(windowing::get_property_w(wnd, prop_type::message_callback)) : static_cast<message_callback_container *>(windowing::get_property_a(wnd, prop_type::message_callback));
+		using details::prop_type;
+		using details::set_property_a;
+		using details::set_property_w;
+		auto message_container = IsWindowUnicode(wnd) != FALSE ? static_cast<message_callback_container *>(get_property_w(wnd, prop_type::message_callback)) : static_cast<message_callback_container *>(get_property_a(wnd, prop_type::message_callback));
 		_ASSERTE(message_container != nullptr);
 
 		auto has_callback = message_container->has_callback(index);
@@ -795,7 +798,10 @@ namespace windowing
 	}
 	bool window_base::has_window_message_callback(HWND wnd, uint32_t index) noexcept
 	{
-		auto message_container = IsWindowUnicode(wnd) != FALSE ? static_cast<message_callback_container *>(windowing::get_property_w(wnd, prop_type::message_callback)) : static_cast<message_callback_container *>(windowing::get_property_a(wnd, prop_type::message_callback));
+		using details::prop_type;
+		using details::get_property_a;
+		using details::get_property_w;
+		auto message_container = IsWindowUnicode(wnd) != FALSE ? static_cast<message_callback_container *>(get_property_w(wnd, prop_type::message_callback)) : static_cast<message_callback_container *>(get_property_a(wnd, prop_type::message_callback));
 		return message_container == nullptr ? false : message_container->has_callback(index);
 	}
 
@@ -815,14 +821,20 @@ namespace windowing
 			rcc->notify_close(get_handle());
 		}
 	}
-	void window_base::set_window_info(HWND handle, uint32_t thread_id, bool unicode) noexcept
+	void window_base::set_window_info(HWND handle, uint32_t thread_id, bool unicode, void *instance) noexcept
 	{
+		using details::prop_type;
+		using details::set_property_a;
+		using details::set_property_w;
+
 		_ASSERTE(m_window_data != nullptr);
 		_ASSERTE(m_window_data->window_initial_construction_complete == false);
 
 		m_window_data->m_handle = handle;
 		m_window_data->m_thread_id = thread_id;
 		m_window_data->window_unicode = unicode;
+
+		unicode == true ? set_property_w(handle, prop_type::instance, instance) : set_property_a(handle, prop_type::instance, instance);
 
 		std::unique_ptr<close_callback_container> register_container = std::make_unique<close_callback_container>();
 
@@ -834,17 +846,19 @@ namespace windowing
 		message_callback.release();
 
 		m_window_data->window_initial_construction_complete = true;
-
-		unicode == true ? SetPropW(handle, prop_window_data_w, m_window_data.get()) : SetPropA(handle, prop_window_data_a, m_window_data.get());
 	}
 	void window_base::cleanup_window_info() noexcept
 	{
+		using details::prop_type;
+		using details::get_property_a;
+		using details::get_property_w;
+		using details::remove_property_a;
+		using details::remove_property_w;
+
 		_ASSERTE(m_window_data != nullptr);
 		_ASSERTE(m_window_data->window_initial_construction_complete == true);
 		auto unicode = m_window_data->window_unicode;
 		auto handle = m_window_data->m_handle;
-
-		unicode == true ? RemovePropW(handle, prop_window_data_w) : RemovePropA(handle, prop_window_data_a);
 
 		std::unique_ptr<close_callback_container> register_container;
 		register_container.reset(static_cast<close_callback_container *>(unicode == true ? get_property_w(handle, prop_type::register_callback) : get_property_a(handle, prop_type::register_callback)));
@@ -852,6 +866,7 @@ namespace windowing
 		std::unique_ptr<message_callback_container> message_container;
 		message_container.reset(static_cast<message_callback_container *>(unicode == true  ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)));
 		unicode == true ? remove_property_w(handle, prop_type::message_callback) : remove_property_a(handle, prop_type::message_callback);
+		unicode == true ? remove_property_w(handle, prop_type::instance) : remove_property_a(handle, prop_type::instance);
 	}
 	void window_base::set_dpi(uint32_t dpi) noexcept
 	{
@@ -867,6 +882,10 @@ namespace windowing
 
 	bool window_base::add_message_callback(const std::shared_ptr<message_callback> &callback, uint32_t index) noexcept
 	{
+		using details::prop_type;
+		using details::get_property_a;
+		using details::get_property_w;
+
 		auto unicode = is_window_unicode();
 		auto handle = get_handle();
 		auto message_container = static_cast<message_callback_container *>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback));
@@ -882,6 +901,10 @@ namespace windowing
 	}
 	void window_base::remove_message_callback(uint32_t index) noexcept
 	{
+		using details::prop_type;
+		using details::get_property_a;
+		using details::get_property_w;
+
 		auto unicode = is_window_unicode();
 		auto handle = get_handle();
 		auto message_container = static_cast<message_callback_container *>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback));
@@ -891,12 +914,28 @@ namespace windowing
 	}
 	void window_base::clear_message_callbacks() noexcept
 	{
+		using details::prop_type;
+		using details::get_property_a;
+		using details::get_property_w;
+
 		auto unicode = is_window_unicode();
 		auto handle = get_handle();
 		auto message_container = static_cast<message_callback_container *>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback));
 		_ASSERTE(message_container != nullptr);
 
 		message_container->clear_callbacks();
+	}
+
+	void *window_base::raw_inst_from_handle(HWND handle)
+	{
+		using details::prop_type;
+		using details::get_property_a;
+		using details::get_property_w;
+
+		bool window_unicode = IsWindowUnicode(handle) != FALSE;
+
+		auto value = window_unicode == true ? get_property_w(handle, prop_type::instance) : get_property_a(handle, prop_type::instance);
+		return value;
 	}
 
 	bool window_base::is_class_registered(HINSTANCE inst, const std::string_view &class_name) noexcept

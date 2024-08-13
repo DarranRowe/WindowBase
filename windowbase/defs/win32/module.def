@@ -128,12 +128,6 @@ EXPORTS
 	?add_pump_work_callback@application_thread@application@@QAEXVwork_callback_wrapper@2@@Z
 	?remove_pump_work_callback@application_thread@application@@QAEXXZ
 
-	?set_property_a@windowing@@YA_NPAUHWND__@@W4prop_type@1@PAX@Z
-	?get_property_a@windowing@@YAPAXPAUHWND__@@W4prop_type@1@@Z
-	?remove_property_a@windowing@@YAPAXPAUHWND__@@W4prop_type@1@@Z
-	?set_property_w@windowing@@YA_NPAUHWND__@@W4prop_type@1@PAX@Z
-	?get_property_w@windowing@@YAPAXPAUHWND__@@W4prop_type@1@@Z
-	?remove_property_w@windowing@@YAPAXPAUHWND__@@W4prop_type@1@@Z
 	?get_handle@window_base@windowing@@QBEPAUHWND__@@XZ
 	?get_instance@window_base@windowing@@QBEPAUHINSTANCE__@@XZ
 	?get_thread_id@window_base@windowing@@QBEIXZ
@@ -185,13 +179,14 @@ EXPORTS
 	??0window_base@windowing@@IAE@PAUHINSTANCE__@@@Z
 	??1window_base@windowing@@IAE@XZ
 	?notify_window_close@window_base@windowing@@IAEXXZ
-	?set_window_info@window_base@windowing@@IAEXPAUHWND__@@I_N@Z
+	?set_window_info@window_base@windowing@@IAEXPAUHWND__@@I_NPAX@Z
 	?cleanup_window_info@window_base@windowing@@IAEXXZ
 	?set_dpi@window_base@windowing@@IAEXI@Z
 	?has_associated_window@window_base@windowing@@IBE_NXZ
 	?add_message_callback@window_base@windowing@@IAE_NABV?$shared_ptr@Umessage_callback@windowing@@@std@@I@Z
 	?remove_message_callback@window_base@windowing@@IAEXI@Z
 	?clear_message_callbacks@window_base@windowing@@IAEXXZ
+	?raw_inst_from_handle@window_base@windowing@@KAPAXPAUHWND__@@@Z
 	?is_class_registered@window_base@windowing@@KA_NPAUHINSTANCE__@@ABV?$basic_string_view@DU?$char_traits@D@std@@@std@@@Z
 	?is_class_registered@window_base@windowing@@KA_NPAUHINSTANCE__@@ABV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@Z
 	?register_class@window_base@windowing@@KA_NIABV?$basic_string_view@DU?$char_traits@D@std@@@std@@0HHP6GJPAUHWND__@@IIJ@ZPAUHINSTANCE__@@PAUHBRUSH__@@PAUHICON__@@55@Z
