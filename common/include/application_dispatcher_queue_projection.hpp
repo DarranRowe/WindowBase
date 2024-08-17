@@ -35,8 +35,10 @@ namespace application::projection
 			winrt::attach_abi(dq, abi_dq);
 			return dq;
 #else
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
 			helper::writeln_debugger(L"An attempt to obtain the dispatcher queue when a projection header was not included.");
 			helper::writeln_debugger(L"Make sure that winrt/Windows.System.h is included first.");
+#endif
 			_ASSERTE(false);
 			return dispatcher_queue_dummy_return{};
 #endif
@@ -55,8 +57,10 @@ namespace application::projection
 			winrt::attach_abi(dq, abi_dq);
 			return dq;
 #else
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
 			helper::writeln_debugger(L"An attempt to obtain the dispatcher queue when a projection header was not included.");
 			helper::writeln_debugger(L"Make sure that winrt/Windows.System.h is included first.");
+#endif
 			_ASSERTE(false);
 			return dispatcher_queue_dummy_return{};
 #endif
@@ -81,8 +85,10 @@ namespace application::projection
 			winrt::attach_abi(dq, abi_dq);
 			return dq;
 #else
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
 			helper::writeln_debugger(L"An attempt to obtain the dispatcher queue when a projection header was not included.");
 			helper::writeln_debugger(L"Make sure that winrt/Microsoft.UI.Dispatching.h is included first.");
+#endif
 			_ASSERTE(false);
 			return dispatcher_queue_dummy_return{};
 #endif
@@ -101,8 +107,10 @@ namespace application::projection
 			winrt::attach_abi(dq, abi_dq);
 			return dq;
 #else
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
 			helper::writeln_debugger(L"An attempt to obtain the dispatcher queue when a projection header was not included.");
 			helper::writeln_debugger(L"Make sure that winrt/Microsoft.UI.Dispatching.h is included first.");
+#endif
 			_ASSERTE(false);
 			return dispatcher_queue_dummy_return{};
 #endif

@@ -1481,7 +1481,7 @@ namespace windowing
 				//The type we use is a simple const char_t *.
 				//const char *
 				//const wchar_t *
-				static const traits::char_t *get_value()
+				static const typename traits::char_t *get_value()
 				{
 					return nullptr;
 				}
@@ -1533,7 +1533,7 @@ namespace windowing
 				}
 				using menu_name_t = typename class_definition_types::menu_name_t<T>;
 
-				static const traits::char_t *get_value()
+				static const typename traits::char_t *get_value()
 				{
 					constexpr auto ret_type = detect_string_type<menu_name_t>();
 					if constexpr (ret_type == string_return_type::c_style)
@@ -1558,7 +1558,7 @@ namespace windowing
 				//The type we use is a simple const char_t *.
 				//const char *
 				//const wchar_t *
-				static const traits::char_t *get_value()
+				static const typename traits::char_t *get_value()
 				{
 					return nullptr;
 				}
@@ -1610,7 +1610,7 @@ namespace windowing
 				}
 				using class_name_t = typename class_definition_types::class_name_t<T>;
 
-				static const traits::char_t *get_value()
+				static const typename traits::char_t *get_value()
 				{
 					constexpr auto ret_type = detect_string_type<class_name_t>();
 					if constexpr (ret_type == string_return_type::c_style)
@@ -1766,7 +1766,7 @@ namespace windowing
 				//The type we use is a simple const char_t *.
 				//const char *
 				//const wchar_t *
-				static const traits::char_t *get_value()
+				static const typename traits::char_t *get_value()
 				{
 					return nullptr;
 				}
@@ -1818,7 +1818,7 @@ namespace windowing
 				}
 				using window_name_t = typename window_definition_types::window_name_t<T>;
 
-				static const traits::char_t *get_value()
+				static const typename traits::char_t *get_value()
 				{
 					constexpr auto ret_type = detect_string_type<window_name_t>();
 					if constexpr (ret_type == string_return_type::c_style)
@@ -6816,7 +6816,10 @@ namespace windowing
 			}
 			__except ([&ei](auto &&p) {ei = p; return EXCEPTION_EXECUTE_HANDLER; }(GetExceptionInformation()))
 			{
+				//TODO: replacement versions of these debugger functions.
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
 				application::helper::writeln_debugger("Uncaught exception reached the window procedure.");
+#endif
 				RaiseFailFastException(ei->ExceptionRecord, ei->ContextRecord, FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
 			}
 

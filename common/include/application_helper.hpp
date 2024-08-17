@@ -9,7 +9,9 @@
 #include <cinttypes>
 #include <string>
 #include <string_view>
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
 #include <format>
+#endif
 
 namespace application::helper
 {
@@ -47,6 +49,7 @@ namespace application::helper
 	int write_string_to_stderr(const std::wstring &);
 	int write_string_to_stderr(const std::wstring_view &);
 
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
 	template <typename... _Types>
 	void write_debugger(std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
@@ -418,4 +421,5 @@ namespace application::helper
 		}
 		return write_string_to_stderr(fmt_string);
 	}
+#endif
 }
