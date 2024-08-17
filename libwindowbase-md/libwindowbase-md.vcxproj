@@ -179,7 +179,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -197,7 +197,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -215,7 +215,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -231,7 +231,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -247,7 +247,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -265,7 +265,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -285,7 +285,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -305,7 +305,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>

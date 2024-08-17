@@ -163,7 +163,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -182,7 +182,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -199,7 +199,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;WINDOWBASE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -216,7 +216,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;WINDOWBASE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -233,7 +233,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;WINDOWBASE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -252,7 +252,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;WINDOWBASE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -273,7 +273,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;WINDOWBASE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
@@ -294,7 +294,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;WINDOWBASE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalOptions>/Gw /Zc:__cplusplus,enumTypes,templateScope %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>/Gw /Zc:__cplusplus,__STDC__,checkGwOdr,enumTypes,templateScope,threadSafeInit %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
