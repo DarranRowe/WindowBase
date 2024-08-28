@@ -6741,6 +6741,11 @@ namespace windowing
 			LRESULT result{};
 			if (that != nullptr)
 			{
+				if (msg == WM_DPICHANGED)
+				{
+					that->set_dpi(details::value_cast<uint32_t>(LOWORD(wparam)));
+				}
+
 				result = that->message_handler(msg, wparam, lparam);
 
 				if (msg == WM_NCDESTROY)
