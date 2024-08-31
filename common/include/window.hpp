@@ -2387,21 +2387,16 @@ namespace windowing
 		return std::make_shared<message_callback_impl>(f);
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	class window_t : public window_base, public track_mouse_policy<DerivedType, UnicodeBase>
+	namespace details
 	{
-	public:
-		using traits = choose_window_traits_t<UnicodeBase>;
-		using my_t = DerivedType;
-		using my_tptr = my_t *;
-		using my_type = window_t;
-
-	protected:
 		//The check for these member functions need to be in window_t due to this type being a friend of the
 		//derived type. If these types are not in a friend, the handlers would have to be public.
 		//These are also placed in a structure to wrap them up nicely in the closest we can get to a namespace.
+		template<typename Traits>
 		struct window_msg_types
 		{
+			using traits = Traits;
+
 			//0000 - WM_NULL
 			//0001
 			template <typename T>
@@ -2434,7 +2429,7 @@ namespace windowing
 			using on_setredraw_t = decltype(std::declval<T>().on_setredraw(std::declval<bool>()));
 			//000c
 			template <typename T>
-			using on_settext_t = decltype(std::declval<T>().on_settext(std::declval<const traits::char_t  *>()));
+			using on_settext_t = decltype(std::declval<T>().on_settext(std::declval<const traits::char_t *>()));
 			//000d
 			template <typename T>
 			using on_gettext_t = decltype(std::declval<T>().on_gettext(std::declval<uintptr_t>(), std::declval<typename traits::char_t *>()));
@@ -3097,6 +3092,19 @@ namespace windowing
 			template <typename T>
 			using get_commandhandler_t = decltype(std::declval<T>().get_commandhandler()); //must return a reference to command_handler_list
 		};
+	}
+
+	template<typename DerivedType, bool UnicodeBase>
+	class window_t : public window_base, public track_mouse_policy<DerivedType, UnicodeBase>
+	{
+	public:
+		using traits = choose_window_traits_t<UnicodeBase>;
+		using my_t = DerivedType;
+		using my_tptr = my_t *;
+		using my_type = window_t;
+
+	protected:
+		using window_msg_types = details::window_msg_types<traits>;
 
 		~window_t() = default;
 
