@@ -27,6 +27,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\window.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\window_base.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\window_defs.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\window_implementation.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)apartment_impl.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_private.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)application_impl.hpp" />
