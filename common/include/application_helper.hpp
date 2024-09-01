@@ -50,6 +50,65 @@ namespace application::helper
 	int write_string_to_stderr(const std::wstring &);
 	int write_string_to_stderr(const std::wstring_view &);
 
+	inline std::string format_to_string_s(const char *format, ...)
+	{
+		//snprintf returns the how many characters it would write.
+		va_list args{};
+		va_start(args, format);
+
+		//As long as this is > than the sso size
+		//then it is ok.
+		size_t string_buffer_size = 128;
+		std::string s(string_buffer_size, '\0');
+
+		//The extra +1 because snprintf also writes a null.
+		//The standard does allow writing to the terminator as long
+		//as it is with a default initialised character (CharT()).
+		auto result = vsnprintf(s.data(), s.size() + 1, format, args);
+		if (result > string_buffer_size)
+		{
+			s.resize(string_buffer_size);
+			result = vsnprintf(s.data(), s.size() + 1, format, args);
+		}
+		else
+		{
+			//Shrink the string down to just the result.
+			s.resize(result);
+		}
+		va_end(args);
+		return s;
+	}
+
+	inline std::wstring format_to_string_s(const wchar_t *format, ...)
+	{
+		//swprintf returns -1 if the buffer isn't large enough.
+		//We call it in a loop and double the buffer each time
+		va_list args{};
+		va_start(args, format);
+
+		size_t string_buffer = 128;
+		std::wstring s(string_buffer, '\0');
+		bool do_format = true;
+
+		while (do_format)
+		{
+			//The extra +1 because it also writes a null.
+			auto result = vswprintf(s.data(), s.size() + 1, format, args);
+			if (result != -1)
+			{
+				s.resize(result);
+				do_format = false;
+			}
+			else
+			{
+				string_buffer *= 2;
+				s.resize(string_buffer);
+			}
+		}
+		va_end(args);
+		return s;
+	}
+
 	inline std::string format_to_string_s(const char *format, va_list va)
 	{
 		//snprintf returns the how many characters it would write.
@@ -237,6 +296,30 @@ namespace application::helper
 
 	template <typename... _Types>
 	std::wstring format_to_string_f(const std::locale &_Loc, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
+	{
+		return std::format(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+	}
+
+	template <typename... _Types>
+	std::string format_to_string(std::format_string<_Types...> _Fmt, _Types &&... _Args)
+	{
+		return std::format(_Fmt, std::forward<_Types>(_Args)...);
+	}
+
+	template <typename... _Types>
+	std::string format_to_string(const std::locale &_Loc, std::format_string<_Types...> _Fmt, _Types &&... _Args)
+	{
+		return std::format(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+	}
+
+	template <typename... _Types>
+	std::wstring format_to_string(std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
+	{
+		return std::format(_Fmt, std::forward<_Types>(_Args)...);
+	}
+
+	template <typename... _Types>
+	std::wstring format_to_string(const std::locale &_Loc, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
 		return std::format(_Loc, _Fmt, std::forward<_Types>(_Args)...);
 	}
@@ -529,6 +612,65 @@ namespace application::helper
 		return write_string_to_stderr(fmt_string);
 	}
 #else
+	inline std::string format_to_string(const char *format, ...)
+	{
+		//snprintf returns the how many characters it would write.
+		va_list args{};
+		va_start(args, format);
+
+		//As long as this is > than the sso size
+		//then it is ok.
+		size_t string_buffer_size = 128;
+		std::string s(string_buffer_size, '\0');
+
+		//The extra +1 because snprintf also writes a null.
+		//The standard does allow writing to the terminator as long
+		//as it is with a default initialised character (CharT()).
+		auto result = vsnprintf(s.data(), s.size() + 1, format, args);
+		if (result > string_buffer_size)
+		{
+			s.resize(string_buffer_size);
+			result = vsnprintf(s.data(), s.size() + 1, format, args);
+		}
+		else
+		{
+			//Shrink the string down to just the result.
+			s.resize(result);
+		}
+		va_end(args);
+		return s;
+	}
+
+	inline std::wstring format_to_string(const wchar_t *format, ...)
+	{
+		//swprintf returns -1 if the buffer isn't large enough.
+		//We call it in a loop and double the buffer each time
+		va_list args{};
+		va_start(args, format);
+
+		size_t string_buffer = 128;
+		std::wstring s(string_buffer, '\0');
+		bool do_format = true;
+
+		while (do_format)
+		{
+			//The extra +1 because it also writes a null.
+			auto result = vswprintf(s.data(), s.size() + 1, format, args);
+			if (result != -1)
+			{
+				s.resize(result);
+				do_format = false;
+			}
+			else
+			{
+				string_buffer *= 2;
+				s.resize(string_buffer);
+			}
+		}
+		va_end(args);
+		return s;
+	}
+
 	template <typename CharT>
 	inline void write_debugger(const CharT *format, ...)
 	{
