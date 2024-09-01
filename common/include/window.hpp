@@ -1316,7 +1316,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::style_t>>
 			struct style_value
 			{
-				static const uint32_t get_value()
+				static uint32_t get_value()
 				{
 					return 0;
 				}
@@ -1327,7 +1327,7 @@ namespace windowing
 			{
 				using style_t = typename class_definition_types::style_t<T>;
 
-				static const uint32_t get_value()
+				static uint32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<style_t>>);
 					return T::style;
@@ -1337,7 +1337,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::class_extra_t>>
 			struct class_extra_value
 			{
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					return 0;
 				}
@@ -1348,7 +1348,7 @@ namespace windowing
 			{
 				using class_extra_t = typename class_definition_types::class_extra_t<T>;
 
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<class_extra_t>>);
 					return T::class_extra;
@@ -1358,7 +1358,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::window_extra_t>>
 			struct window_extra_value
 			{
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					return 0;
 				}
@@ -1369,7 +1369,7 @@ namespace windowing
 			{
 				using window_extra_t = typename class_definition_types::window_extra_t<T>;
 
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<window_extra_t>>);
 					return T::window_extra;
@@ -1379,7 +1379,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::instance_t>>
 			struct instance_value
 			{
-				static const HINSTANCE get_value()
+				static HINSTANCE get_value()
 				{
 					//Return the executable's HINSTANCE.
 					return reinterpret_cast<HINSTANCE>(GetModuleHandleW(nullptr));
@@ -1391,7 +1391,7 @@ namespace windowing
 			{
 				using instance_t = typename class_definition_types::instance_t<T>;
 
-				static const HINSTANCE get_value()
+				static HINSTANCE get_value()
 				{
 					static_assert(std::is_same_v<std::remove_const_t<instance_t>, HINSTANCE>);
 					return T::instance;
@@ -1401,7 +1401,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::icon_t>>
 			struct icon_value
 			{
-				static const HICON get_value()
+				static HICON get_value()
 				{
 					return nullptr;
 				}
@@ -1412,7 +1412,7 @@ namespace windowing
 			{
 				using icon_t = typename class_definition_types::icon_t<T>;
 
-				static const HICON get_value()
+				static HICON get_value()
 				{
 					static_assert(std::is_same_v<std::remove_const_t<icon_t>, HICON>);
 					return T::icon;
@@ -1422,7 +1422,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::cursor_t>>
 			struct cursor_value
 			{
-				static const HCURSOR get_value()
+				static HCURSOR get_value()
 				{
 					return nullptr;
 				}
@@ -1433,7 +1433,7 @@ namespace windowing
 			{
 				using cursor_t = typename class_definition_types::cursor_t<T>;
 
-				static const HCURSOR get_value()
+				static HCURSOR get_value()
 				{
 					static_assert(std::is_same_v<std::remove_const_t<cursor_t>, HCURSOR>);
 					return T::cursor;
@@ -1443,7 +1443,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::brush_t>>
 			struct brush_value
 			{
-				static const HBRUSH get_value()
+				static HBRUSH get_value()
 				{
 					return nullptr;
 				}
@@ -1454,7 +1454,7 @@ namespace windowing
 			{
 				using brush_t = typename class_definition_types::brush_t<T>;
 
-				static const HBRUSH get_value()
+				static HBRUSH get_value()
 				{
 					static_assert(std::is_same_v<std::remove_const_t<brush_t>, HBRUSH>);
 					return T::brush;
@@ -1618,7 +1618,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::small_icon_t>>
 			struct small_icon_value
 			{
-				static const HICON get_value()
+				static HICON get_value()
 				{
 					return nullptr;
 				}
@@ -1629,7 +1629,7 @@ namespace windowing
 			{
 				using small_icon_t = typename class_definition_types::small_icon_t<T>;
 
-				static const HICON get_value()
+				static HICON get_value()
 				{
 					static_assert(std::is_same_v<std::remove_const_t<small_icon_t>, HICON>);
 					return T::small_icon;
@@ -1639,7 +1639,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::existing_class_name_t>>
 			struct existing_class_name_value
 			{
-				static const bool get_value()
+				static bool get_value()
 				{
 					return false;
 				}
@@ -1650,7 +1650,7 @@ namespace windowing
 			{
 				using existing_class_name_t = typename class_definition_types::existing_class_name_t<T>;
 
-				static const bool get_value()
+				static bool get_value()
 				{
 					static_assert(std::is_convertible_v<std::remove_const_t<existing_class_name_t>, bool>);
 					return T::existing_class_name;
@@ -1707,7 +1707,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::style_t>>
 			struct style_value
 			{
-				static const uint32_t get_value()
+				static uint32_t get_value()
 				{
 					return 0;
 				}
@@ -1718,7 +1718,7 @@ namespace windowing
 			{
 				using style_t = typename window_definition_types::style_t<T>;
 
-				static const uint32_t get_value()
+				static uint32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<style_t>>);
 					return T::style;
@@ -1728,7 +1728,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::ex_style_t>>
 			struct ex_style_value
 			{
-				static const uint32_t get_value()
+				static uint32_t get_value()
 				{
 					return 0;
 				}
@@ -1739,7 +1739,7 @@ namespace windowing
 			{
 				using ex_style_t = typename window_definition_types::ex_style_t<T>;
 
-				static const uint32_t get_value()
+				static uint32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<ex_style_t>>);
 					return T::ex_style;
@@ -1826,7 +1826,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::x_t>>
 			struct x_value
 			{
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					return CW_USEDEFAULT;
 				}
@@ -1837,7 +1837,7 @@ namespace windowing
 			{
 				using x_t = typename window_definition_types::x_t<T>;
 
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<x_t>>);
 					return T::x;
@@ -1847,7 +1847,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::y_t>>
 			struct y_value
 			{
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					return 0;
 				}
@@ -1858,7 +1858,7 @@ namespace windowing
 			{
 				using y_t = typename window_definition_types::y_t<T>;
 
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<y_t>>);
 					return T::y;
@@ -1868,7 +1868,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::width_t>>
 			struct width_value
 			{
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					return CW_USEDEFAULT;
 				}
@@ -1879,7 +1879,7 @@ namespace windowing
 			{
 				using width_t = typename window_definition_types::width_t<T>;
 
-				static const uint32_t get_value()
+				static uint32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<width_t>>);
 					return T::width;
@@ -1889,7 +1889,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::height_t>>
 			struct height_value
 			{
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					return 0;
 				}
@@ -1900,7 +1900,7 @@ namespace windowing
 			{
 				using height_t = typename window_definition_types::height_t<T>;
 
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<height_t>>);
 					return T::height;
@@ -1910,7 +1910,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::position_t>>
 			struct position_value
 			{
-				static const POINT get_value()
+				static POINT get_value()
 				{
 					return {CW_USEDEFAULT, 0};
 				}
@@ -1921,7 +1921,7 @@ namespace windowing
 			{
 				using position_t = typename window_definition_types::position_t<T>;
 
-				static const POINT get_value()
+				static POINT get_value()
 				{
 					static_assert(std::is_same_v<std::remove_const_t<position_t>, POINT>);
 					return T::position;
@@ -1931,7 +1931,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::size_t>>
 			struct size_value
 			{
-				static const SIZE get_value()
+				static SIZE get_value()
 				{
 					return { CW_USEDEFAULT, 0 };
 				}
@@ -1942,7 +1942,7 @@ namespace windowing
 			{
 				using size_t = typename window_definition_types::size_t<T>;
 
-				static const SIZE get_value()
+				static SIZE get_value()
 				{
 					static_assert(std::is_same_v<std::remove_const_t<size_t>, SIZE>);
 					return T::size;
@@ -1952,7 +1952,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::parent_t>>
 			struct parent_value
 			{
-				static const HWND get_value()
+				static HWND get_value()
 				{
 					return nullptr;
 				}
@@ -1963,7 +1963,7 @@ namespace windowing
 			{
 				using parent_t = typename window_definition_types::parent_t<T>;
 
-				static const HWND get_value()
+				static HWND get_value()
 				{
 					static_assert(std::is_same_v<std::remove_const_t<parent_t>, HWND>);
 					return T::parent;
@@ -1973,7 +1973,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::menu_t>>
 			struct menu_value_nonchild
 			{
-				static const HMENU get_value()
+				static HMENU get_value()
 				{
 					return nullptr;
 				}
@@ -1984,7 +1984,7 @@ namespace windowing
 			{
 				using menu_t = typename window_definition_types::menu_t<T>;
 
-				static const HMENU get_value()
+				static HMENU get_value()
 				{
 					static_assert(std::is_same_v<std::remove_const_t<menu_t>, HMENU>);
 					return T::menu;
@@ -1994,7 +1994,7 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::menu_t>>
 			struct menu_value_child
 			{
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					return 0;
 				}
@@ -2005,7 +2005,7 @@ namespace windowing
 			{
 				using menu_t = typename window_definition_types::menu_t<T>;
 
-				static const int32_t get_value()
+				static int32_t get_value()
 				{
 					static_assert(std::is_integral_v<std::remove_const_t<menu_t>>);
 					return T::menu;
@@ -2358,16 +2358,16 @@ namespace windowing
 		{
 		}
 
-		friend inline static std::shared_ptr<message_callback> make_message_callback(message_callback_ptr_type);
+		friend inline std::shared_ptr<message_callback> make_message_callback(message_callback_ptr_type);
 		template <typename L>
-		friend inline static std::shared_ptr<message_callback> make_message_callback(L lambda);
+		friend inline std::shared_ptr<message_callback> make_message_callback(L lambda);
 		template <typename C>
-		friend inline static std::shared_ptr<message_callback> make_message_callback(message_callback_ptm_type<C> member, C *c);
+		friend inline std::shared_ptr<message_callback> make_message_callback(message_callback_ptm_type<C> member, C *c);
 	private:
 		std::function<message_callback_type> m_callback;
 	};
 
-	inline static std::shared_ptr<message_callback> make_message_callback(message_callback_ptr_type fptr)
+	inline std::shared_ptr<message_callback> make_message_callback(message_callback_ptr_type fptr)
 	{
 		std::function<message_callback_type> f{ [fptr](auto &&p)
 			{
@@ -2377,14 +2377,14 @@ namespace windowing
 	}
 
 	template <typename L>
-	inline static std::shared_ptr<message_callback> make_message_callback(L lambda)
+	inline std::shared_ptr<message_callback> make_message_callback(L lambda)
 	{
 		std::function<message_callback_type> f{ lambda };
 		return std::make_shared<message_callback_impl>(f);
 	}
 
 	template <typename C>
-	inline static std::shared_ptr<message_callback> make_message_callback(message_callback_ptm_type<C> member, C *c)
+	inline std::shared_ptr<message_callback> make_message_callback(message_callback_ptm_type<C> member, C *c)
 	{
 		std::function<message_callback_type> f{ [member, c](auto &&p) {
 				return (c->*member)(p);
@@ -2401,7 +2401,7 @@ namespace windowing
 			//0000 - WM_NULL
 			//0001
 			template <typename T>
-			using on_create_t = decltype(std::declval<T>().on_create(std::declval<const traits::create_struct_t &>()));
+			using on_create_t = decltype(std::declval<T>().on_create(std::declval<const typename traits::create_struct_t &>()));
 			//0002
 			template <typename T>
 			using on_destroy_t = decltype(std::declval<T>().on_destroy());
@@ -2430,7 +2430,7 @@ namespace windowing
 			using on_setredraw_t = decltype(std::declval<T>().on_setredraw(std::declval<bool>()));
 			//000c
 			template <typename T>
-			using on_settext_t = decltype(std::declval<T>().on_settext(std::declval<const traits::char_t  *>()));
+			using on_settext_t = decltype(std::declval<T>().on_settext(std::declval<const typename traits::char_t *>()));
 			//000d
 			template <typename T>
 			using on_gettext_t = decltype(std::declval<T>().on_gettext(std::declval<uintptr_t>(), std::declval<typename traits::char_t *>()));
@@ -2470,10 +2470,10 @@ namespace windowing
 			//0019 - none
 			//001a
 			template <typename T>
-			using on_settingchange_t = decltype(std::declval<T>().on_settingchange(std::declval<uint32_t>(), std::declval<const traits::char_t *>()));
+			using on_settingchange_t = decltype(std::declval<T>().on_settingchange(std::declval<uint32_t>(), std::declval<const typename traits::char_t *>()));
 			//001b
 			template <typename T>
-			using on_devmodechange_t = decltype(std::declval<T>().on_devmodechange(std::declval<const traits::char_t *>()));
+			using on_devmodechange_t = decltype(std::declval<T>().on_devmodechange(std::declval<const typename traits::char_t *>()));
 			//001c
 			template <typename T>
 			using on_activateapp_t = decltype(std::declval<T>().on_activateapp(std::declval<bool>(), std::declval<uint32_t>()));
@@ -2609,7 +2609,7 @@ namespace windowing
 			using on_seticon_t = decltype(std::declval<T>().on_seticon(std::declval<icon_type>(), std::declval<HICON>())); //HICON return
 			//0081
 			template <typename T>
-			using on_nccreate_t = decltype(std::declval<T>().on_nccreate(std::declval<const traits::create_struct_t &>()));
+			using on_nccreate_t = decltype(std::declval<T>().on_nccreate(std::declval<const typename traits::create_struct_t &>()));
 			//0082
 			template <typename T>
 			using on_ncdestroy_t = decltype(std::declval<T>().on_ncdestroy());
