@@ -196,7 +196,7 @@ This potentially means the AUMID wasn't set for the process.
 
 	uint32_t application_impl::add_callback(pump_callback_wrapper callback, HWND window, uint32_t identifier, uint32_t tid)
 	{
-		std::unique_ptr<callback_information> ci = std::make_unique<callback_information>(std::move(callback), window, identifier);
+		std::unique_ptr<callback_information> ci = std::make_unique<callback_information>(callback_information{ std::move(callback), window, identifier });
 
 		auto &tpi = get_pump_info_for_thread(tid);
 		uint32_t cookie{};

@@ -1,9 +1,12 @@
 #pragma once
 
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
 #include <format>
+#endif
 #include <ctxtcall.h>
 #include <wil/wrl.h>
 #include <wil/result_originate.h>
+#include "application_helper.hpp"
 #include "interface_traits.h"
 
 namespace wrl_helpers
@@ -30,7 +33,11 @@ namespace wrl_helpers
 		hr = Windows::Foundation::ActivateInstance(runtime_class, ret.ReleaseAndGetAddressOf());
 		if (FAILED(hr))
 		{
-			auto l_fmtstr = std::format(L"Failed to activate instance. Interface name {}, RuntimeClass name {}", interface_traits<Interface, RuntimeClass>::interface_name, interface_traits<Interface, RuntimeClass>::class_name);
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
+			auto l_fmtstr = application::helper::format_to_string(L"Failed to activate instance. Interface name {}, RuntimeClass name {}", interface_traits<Interface, RuntimeClass>::interface_name, interface_traits<Interface, RuntimeClass>::class_name);
+#else
+			auto l_fmtstr = application::helper::format_to_string(L"Failed to activate instance. Interface name %s, RuntimeClass name %s", interface_traits<Interface, RuntimeClass>::interface_name.data(), interface_traits<Interface, RuntimeClass>::class_name.data());
+#endif
 			RoOriginateErrorW(hr, l_fmtstr.length(), l_fmtstr.c_str());
 			THROW_IF_FAILED(hr);
 		}
@@ -47,7 +54,11 @@ namespace wrl_helpers
 		hr = Windows::Foundation::GetActivationFactory(runtime_class, ret.ReleaseAndGetAddressOf());
 		if (FAILED(hr))
 		{
-			auto l_fmtstr = std::format(L"Failed to get activation factory. Interface name: {}, RuntimeClass name: {}", factory_interface_traits<Interface, RuntimeClass>::interface_name, factory_interface_traits<Interface, RuntimeClass>::class_name);
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
+			auto l_fmtstr = application::helper::format_to_string(L"Failed to get activation factory. Interface name: {}, RuntimeClass name: {}", factory_interface_traits<Interface, RuntimeClass>::interface_name, factory_interface_traits<Interface, RuntimeClass>::class_name);
+#else
+			auto l_fmtstr = application::helper::format_to_string(L"Failed to get activation factory. Interface name: %s, RuntimeClass name: %s", factory_interface_traits<Interface, RuntimeClass>::interface_name.data(), factory_interface_traits<Interface, RuntimeClass>::class_name.data());
+#endif
 			RoOriginateErrorW(hr, static_cast<UINT>(l_fmtstr.length()), l_fmtstr.c_str());
 			THROW_IF_FAILED(hr);
 		}
@@ -63,7 +74,11 @@ namespace wrl_helpers
 		hr = Windows::Foundation::GetActivationFactory(runtime_class, ret.ReleaseAndGetAddressOf());
 		if (FAILED(hr))
 		{
-			auto l_fmtstr = std::format(L"Failed to get activation factory. Interface name: IActivationFactory, RuntimeClass name: {}", class_name);
+#if (__cplusplus >= 202002L || (defined _MSVC_LANG && _MSVC_LANG >= 202002L))
+			auto l_fmtstr = application::helper::format_to_string(L"Failed to get activation factory. Interface name: IActivationFactory, RuntimeClass name: {}", class_name);
+#else
+			auto l_fmtstr = application::helper::format_to_string(L"Failed to get activation factory. Interface name: IActivationFactory, RuntimeClass name: %s", class_name.data());
+#endif
 			RoOriginateErrorW(hr, static_cast<UINT>(l_fmtstr.length()), l_fmtstr.c_str());
 			THROW_IF_FAILED(hr);
 		}
