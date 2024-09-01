@@ -3389,7 +3389,10 @@ namespace windowing
 	template<typename DerivedType, bool UnicodeBase>
 	inline LRESULT CALLBACK window_t<DerivedType, UnicodeBase>::window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
-		/*
+		//clang ICEs on this, so use a simpler version for now.
+#ifdef __clang__
+		return m_proc(wnd, msg, wparam, lparam);
+#else
 		_EXCEPTION_POINTERS *ei = nullptr;
 		__try
 		{
@@ -3408,6 +3411,7 @@ namespace windowing
 		//The compiler complains that not all control paths return a value even though
 		//it has to go through RaiseFailFastException and __fastfail.
 		return traits::WndDefWindowProc(wnd, msg, wparam, lparam);
+#endif
 	}
 
 	template<typename DerivedType, bool UnicodeBase>
