@@ -1262,7 +1262,7 @@ namespace windowing
 		inline constexpr const window_charset_value window_charset_policy_v = window_charset_policy_or_default<ClassType>::value;
 	}
 
-	template<typename DerivedType, bool UnicodeBase = details::get_charset_policy_bool_from_value<details::window_charset_policy_v<DerivedType>>()>
+	template<typename DerivedType, bool CustomHandler = true, bool UnicodeBase = details::get_charset_policy_bool_from_value<details::window_charset_policy_v<DerivedType>>()>
 	class window_t;
 
 	namespace details
@@ -1464,7 +1464,11 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::menu_name_t>>
 			struct menu_name_value
 			{
-				using traits = typename window_t<typename T::window_type>::traits;
+				//T::window_type must be defined.
+				//This will be defined as the most derived type.
+				//traits is public, so the definition can be obtained
+				//through the window type name.
+				using traits = typename T::window_type::traits;
 				//When the menu_name is not detected, return a nullptr.
 				//The type we use is a simple const char_t *.
 				//const char *
@@ -1478,7 +1482,11 @@ namespace windowing
 			template <typename T>
 			struct menu_name_value<T, true>
 			{
-				using traits = typename window_t<typename T::window_type>::traits;
+				//T::window_type must be defined.
+				//This will be defined as the most derived type.
+				//traits is public, so the definition can be obtained
+				//through the window type name.
+				using traits = typename T::window_type::traits;
 				enum class string_return_type
 				{
 					unknown,
@@ -1541,7 +1549,11 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::class_name_t>>
 			struct class_name_value
 			{
-				using traits = typename window_t<typename T::window_type>::traits;
+				//T::window_type must be defined.
+				//This will be defined as the most derived type.
+				//traits is public, so the definition can be obtained
+				//through the window type name.
+				using traits = typename T::window_type::traits;
 				//When the menu_name is not detected, return a nullptr.
 				//The type we use is a simple const char_t *.
 				//const char *
@@ -1555,7 +1567,11 @@ namespace windowing
 			template <typename T>
 			struct class_name_value<T, true>
 			{
-				using traits = typename window_t<typename T::window_type>::traits;
+				//T::window_type must be defined.
+				//This will be defined as the most derived type.
+				//traits is public, so the definition can be obtained
+				//through the window type name.
+				using traits = typename T::window_type::traits;
 				enum class string_return_type
 				{
 					unknown,
@@ -1749,7 +1765,11 @@ namespace windowing
 			template <typename T, bool = details::detect_v<T, window_definition_types::window_name_t>>
 			struct window_name_value
 			{
-				using traits = typename window_t<typename T::window_type>::traits;
+				//T::window_type must be defined.
+				//This will be defined as the most derived type.
+				//traits is public, so the definition can be obtained
+				//through the window type name.
+				using traits = typename T::window_type::traits;
 				//When the menu_name is not detected, return a nullptr.
 				//The type we use is a simple const char_t *.
 				//const char *
@@ -1763,7 +1783,11 @@ namespace windowing
 			template <typename T>
 			struct window_name_value<T, true>
 			{
-				using traits = typename window_t<typename T::window_type>::traits;
+				//T::window_type must be defined.
+				//This will be defined as the most derived type.
+				//traits is public, so the definition can be obtained
+				//through the window type name.
+				using traits = typename T::window_type::traits;
 				enum class string_return_type
 				{
 					unknown,
@@ -2086,7 +2110,7 @@ namespace windowing
 		}
 	};
 
-	template<typename DerivedType, bool UnicodeBase>
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
 	class track_mouse_policy
 	{
 	public:
@@ -2159,8 +2183,8 @@ namespace windowing
 		}
 	private:
 		using my_t = DerivedType;
-		using my_type = track_mouse_policy<DerivedType, UnicodeBase>;
-		using derived_type = window_t<DerivedType, UnicodeBase>;
+		using my_type = track_mouse_policy<DerivedType, CustomHandler, UnicodeBase>;
+		using derived_type = window_t<DerivedType, CustomHandler, UnicodeBase>;
 
 		struct hook_data
 		{
@@ -3095,8 +3119,8 @@ namespace windowing
 		};
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	class window_t : public window_base, public track_mouse_policy<DerivedType, UnicodeBase>
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	class window_t : public window_base, public track_mouse_policy<DerivedType, CustomHandler, UnicodeBase>
 	{
 	public:
 		using traits = choose_window_traits_t<UnicodeBase>;
@@ -3117,7 +3141,7 @@ namespace windowing
 		using base_t::remove_message_callback;
 		using base_t::clear_message_callbacks;
 
-		friend class track_mouse_policy<DerivedType, UnicodeBase>;
+		friend class track_mouse_policy<DerivedType, CustomHandler, UnicodeBase>;
 
 		explicit window_t(HINSTANCE inst) : base_t(inst) {}
 

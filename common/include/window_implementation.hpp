@@ -4,8 +4,8 @@
 
 namespace windowing
 {
-	template<typename DerivedType, bool UnicodeBase>
-	inline LRESULT CALLBACK window_t<DerivedType, UnicodeBase>::cbt_hook_proc(int code, WPARAM wparam, LPARAM lparam)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline LRESULT CALLBACK window_t<DerivedType, CustomHandler, UnicodeBase>::cbt_hook_proc(int code, WPARAM wparam, LPARAM lparam)
 	{
 		if (code < 0 || code != HCBT_CREATEWND)
 		{
@@ -33,15 +33,15 @@ namespace windowing
 		}
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline bool window_t<DerivedType, UnicodeBase>::hook_create()
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline bool window_t<DerivedType, CustomHandler, UnicodeBase>::hook_create()
 	{
 		my_type::s_create_hook = traits::WndSetWindowsHookEx(WH_CBT, my_type::cbt_hook_proc, nullptr, GetCurrentThreadId());
 		return my_type::s_create_hook != nullptr ? true : false;
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline bool window_t<DerivedType, UnicodeBase>::create_window(const std::string_view &class_name, const std::string_view &title, DWORD style, DWORD ex_style, const POINT &top_left, const SIZE &dimentions, DerivedType *that, HWND parent, HMENU menu)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline bool window_t<DerivedType, CustomHandler, UnicodeBase>::create_window(const std::string_view &class_name, const std::string_view &title, DWORD style, DWORD ex_style, const POINT &top_left, const SIZE &dimentions, DerivedType *that, HWND parent, HMENU menu)
 	{
 		if (!hook_create())
 		{
@@ -55,8 +55,8 @@ namespace windowing
 		return result == nullptr ? false : true;
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline bool window_t<DerivedType, UnicodeBase>::create_window(const std::wstring_view &class_name, const std::wstring_view &title, DWORD style, DWORD ex_style, const POINT &top_left, const SIZE &dimentions, DerivedType *that, HWND parent, HMENU menu)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline bool window_t<DerivedType, CustomHandler, UnicodeBase>::create_window(const std::wstring_view &class_name, const std::wstring_view &title, DWORD style, DWORD ex_style, const POINT &top_left, const SIZE &dimentions, DerivedType *that, HWND parent, HMENU menu)
 	{
 		if (!hook_create())
 		{
@@ -70,14 +70,24 @@ namespace windowing
 		return result == nullptr ? false : true;
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline LRESULT window_t<DerivedType, UnicodeBase>::message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline LRESULT window_t<DerivedType, CustomHandler, UnicodeBase>::message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
+		if constexpr (!CustomHandler)
+		{
+			auto [result, handled] = default_message_handler(msg, wparam, lparam);
+
+			if (handled)
+			{
+				return result;
+			}
+		}
+
 		return traits::WndDefWindowProc(base_t::get_handle(), msg, wparam, lparam);
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline bool window_t<DerivedType, UnicodeBase>::on_command_default(uint16_t identifier, uint16_t notification_code, HWND control_handle)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline bool window_t<DerivedType, CustomHandler, UnicodeBase>::on_command_default(uint16_t identifier, uint16_t notification_code, HWND control_handle)
 	{
 		bool handled = false;
 		using wmt = window_msg_types;
@@ -115,8 +125,8 @@ namespace windowing
 		return handled;
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline bool window_t<DerivedType, UnicodeBase>::on_syscommand_default(syscommand_info info, int32_t xpos, int32_t ypos)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline bool window_t<DerivedType, CustomHandler, UnicodeBase>::on_syscommand_default(syscommand_info info, int32_t xpos, int32_t ypos)
 	{
 		bool handled = false;
 		using wmt = window_msg_types;
@@ -141,8 +151,8 @@ namespace windowing
 		return handled;
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline std::pair<LRESULT, bool> window_t<DerivedType, UnicodeBase>::on_notify_default(const NMHDR &notify_info)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline std::pair<LRESULT, bool> window_t<DerivedType, CustomHandler, UnicodeBase>::on_notify_default(const NMHDR &notify_info)
 	{
 		bool handled = false;
 		LRESULT proc_result{};
@@ -169,8 +179,8 @@ namespace windowing
 		return { proc_result, handled };
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline bool window_t<DerivedType, UnicodeBase>::on_appcommand_default(appcommand_info info, int32_t xpos, int32_t ypos)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline bool window_t<DerivedType, CustomHandler, UnicodeBase>::on_appcommand_default(appcommand_info info, int32_t xpos, int32_t ypos)
 	{
 		bool handled = false;
 		using wmt = window_msg_types;
@@ -195,8 +205,8 @@ namespace windowing
 		return handled;
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline std::pair<LRESULT, bool> window_t<DerivedType, UnicodeBase>::default_message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline std::pair<LRESULT, bool> window_t<DerivedType, CustomHandler, UnicodeBase>::default_message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		using details::value_cast;
 		using details::this_cast;
@@ -3300,15 +3310,15 @@ namespace windowing
 		return make_pair(proc_result, handled);
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline LRESULT window_t<DerivedType, UnicodeBase>::simple_default_message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline LRESULT window_t<DerivedType, CustomHandler, UnicodeBase>::simple_default_message_handler(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		auto [result, handled] = default_message_handler(msg, wparam, lparam);
 		return handled == true ? result : message_handler(msg, wparam, lparam);
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline LRESULT window_t<DerivedType, UnicodeBase>::window_proc_seh(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline LRESULT window_t<DerivedType, CustomHandler, UnicodeBase>::window_proc_seh(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		auto that = my_type::inst_from_handle(wnd);
 		LRESULT result{};
@@ -3348,8 +3358,8 @@ namespace windowing
 		return result;
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline LRESULT window_t<DerivedType, UnicodeBase>::window_proc_init_seh(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline LRESULT window_t<DerivedType, CustomHandler, UnicodeBase>::window_proc_init_seh(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		static bool first_message = true;
 		//A hook is used to get in front of the first call to this proc. This means that
@@ -3386,8 +3396,8 @@ namespace windowing
 		}
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline LRESULT CALLBACK window_t<DerivedType, UnicodeBase>::window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline LRESULT CALLBACK window_t<DerivedType, CustomHandler, UnicodeBase>::window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//clang ICEs on this, so use a simpler version for now.
 #ifdef __clang__
@@ -3411,16 +3421,16 @@ namespace windowing
 #endif
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline auto window_t<DerivedType, UnicodeBase>::inst_from_handle(HWND wnd) -> my_tptr
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline auto window_t<DerivedType, CustomHandler, UnicodeBase>::inst_from_handle(HWND wnd) -> my_tptr
 	{
 		using details::inst_cast;
 		my_tptr ptr = inst_cast<my_t>(raw_inst_from_handle(wnd));
 		return ptr;
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline void window_t<DerivedType, UnicodeBase>::handle_first_message(HWND wnd)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline void window_t<DerivedType, CustomHandler, UnicodeBase>::handle_first_message(HWND wnd)
 	{
 		auto that = inst_from_handle(wnd);
 		auto dpi = GetDpiForWindow(wnd);
@@ -3428,8 +3438,8 @@ namespace windowing
 		that->track_mouse();
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline void window_t<DerivedType, UnicodeBase>::handle_ncdestroy(HWND wnd)
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline void window_t<DerivedType, CustomHandler, UnicodeBase>::handle_ncdestroy(HWND wnd)
 	{
 		//Remove the class pointer from the window and then we delete the class
 		auto that = my_type::inst_from_handle(wnd);
@@ -3441,9 +3451,9 @@ namespace windowing
 		window_post_quit_policy<DerivedType>::post_quit_message(0);
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
 	template <typename Definitions>
-	inline auto window_t<DerivedType, UnicodeBase>::default_register_from_definition(HINSTANCE inst) -> std::pair<bool, std::basic_string<typename traits::char_t>>
+	inline auto window_t<DerivedType, CustomHandler, UnicodeBase>::default_register_from_definition(HINSTANCE inst) -> std::pair<bool, std::basic_string<typename traits::char_t>>
 	{
 		using namespace std;
 		using namespace details;
@@ -3484,9 +3494,9 @@ namespace windowing
 		return { result, my_class_name };
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
 	template <typename Definitions>
-	inline bool window_t<DerivedType, UnicodeBase>::default_create_window_from_definition(DerivedType *ptr, const std::basic_string<typename traits::char_t> &class_name)
+	inline bool window_t<DerivedType, CustomHandler, UnicodeBase>::default_create_window_from_definition(DerivedType *ptr, const std::basic_string<typename traits::char_t> &class_name)
 	{
 		using namespace std;
 		using namespace details;
@@ -3584,8 +3594,8 @@ namespace windowing
 		return window_t::create_window(class_name, window_name_cache, style_cache, ex_style_cache, position_cache, size_cache, ptr, parent_cache, menu_cache);
 	}
 
-	template<typename DerivedType, bool UnicodeBase>
-	inline auto window_t<DerivedType, UnicodeBase>::default_create() -> DerivedType *
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	inline auto window_t<DerivedType, CustomHandler, UnicodeBase>::default_create() -> DerivedType *
 	{
 		using namespace std;
 		using namespace details;
