@@ -3452,6 +3452,60 @@ namespace windowing
 	}
 
 	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
+	template <typename ...Types>
+	inline auto window_t<DerivedType, CustomHandler, UnicodeBase>::default_create(Types &&... args) -> DerivedType *
+	{
+		using namespace std;
+		using namespace details;
+
+		DerivedType *ptr = nullptr;
+		HINSTANCE inst = nullptr;
+		std::basic_string<typename traits::char_t> class_name;
+		try
+		{
+			{
+				using namespace details::class_detect;
+				if constexpr (detect_class_definitions_typedef_v<DerivedType>)
+				{
+					//This is needed early.
+					using my_definitions = typename DerivedType::class_definitions;
+					inst = instance_value<my_definitions>::get_value();
+					ptr = new DerivedType(inst, std::forward<Types>(args)...);
+
+					if (!default_create_on_pointer(ptr, inst))
+					{
+						delete ptr;
+						ptr = nullptr;
+					}
+				}
+				else
+				{
+					if constexpr (detect_class_definitions_v<DerivedType>)
+					{
+						//This is needed early.
+						using my_definitions = class_definitions<DerivedType>;
+						inst = instance_value<my_definitions>::get_value();
+						ptr = new DerivedType(inst, std::forward<Types>(args)...);
+
+						if (!default_create_on_pointer(ptr, inst))
+						{
+							delete ptr;
+							ptr = nullptr;
+						}
+					}
+				}
+			}
+		}
+		catch (...)
+		{
+			delete ptr;
+			throw;
+		}
+
+		return ptr;
+	}
+
+	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
 	template <typename Definitions>
 	inline auto window_t<DerivedType, CustomHandler, UnicodeBase>::default_register_from_definition(HINSTANCE inst) -> std::pair<bool, std::basic_string<typename traits::char_t>>
 	{
@@ -3595,91 +3649,60 @@ namespace windowing
 	}
 
 	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
-	inline auto window_t<DerivedType, CustomHandler, UnicodeBase>::default_create() -> DerivedType *
+	inline bool window_t<DerivedType, CustomHandler, UnicodeBase>::default_create_on_pointer(DerivedType *ptr, HINSTANCE inst)
 	{
 		using namespace std;
 		using namespace details;
 
-		DerivedType *ptr = nullptr;
-		HINSTANCE inst = nullptr;
-		std::basic_string<typename traits::char_t> class_name;
-		try
-		{
-			{
-				using namespace details::class_detect;
-				if constexpr (detect_class_definitions_typedef_v<DerivedType>)
-				{
-					//This is needed early.
-					using my_definitions = typename DerivedType::class_definitions;
-					inst = instance_value<my_definitions>::get_value();
-					ptr = new DerivedType(inst);
+		bool result = true;
 
+		std::basic_string<typename traits::char_t> class_name;
+		{
+			using namespace details::class_detect;
+			if constexpr (detect_class_definitions_typedef_v<DerivedType>)
+			{
+				using my_definitions = typename DerivedType::class_definitions;
+
+				auto [success, return_class_name] = default_register_from_definition<my_definitions>(inst);
+
+				result = success;
+				//The class name needs to be stashed for CreateWindowEx.
+				class_name = return_class_name;
+			}
+			else
+			{
+				if constexpr (detect_class_definitions_v<DerivedType>)
+				{
+					using my_definitions = class_definitions<DerivedType>;
 					auto [success, return_class_name] = default_register_from_definition<my_definitions>(inst);
 
-					if (!success)
-					{
-						delete ptr;
-						ptr = nullptr;
-					}
+					result = success;
 					//The class name needs to be stashed for CreateWindowEx.
 					class_name = return_class_name;
 				}
+			}
+		}
+
+		if (result == true)
+		{
+			{
+				using namespace details::window_detect;
+				if constexpr (detect_window_definitions_typedef_v<DerivedType>)
+				{
+					using my_definitions = typename DerivedType::window_definitions;
+					result = default_create_window_from_definition<my_definitions>(ptr, class_name);
+				}
 				else
 				{
-					if constexpr (detect_class_definitions_v<DerivedType>)
+					if constexpr (detect_window_definitions_v<DerivedType>)
 					{
-						//This is needed early.
-						using my_definitions = class_definitions<DerivedType>;
-						inst = instance_value<my_definitions>::get_value();
-						ptr = new DerivedType(inst);
-
-						auto [success, return_class_name] = default_register_from_definition<my_definitions>(inst);
-
-						if (!success)
-						{
-							delete ptr;
-							ptr = nullptr;
-						}
-						//The class name needs to be stashed for CreateWindowEx.
-						class_name = return_class_name;
-					}
-				}
-			}
-
-			if (ptr != nullptr)
-			{
-				{
-					using namespace details::window_detect;
-					if constexpr (detect_window_definitions_typedef_v<DerivedType>)
-					{
-						using my_definitions = typename DerivedType::window_definitions;
-						if (!default_create_window_from_definition<my_definitions>(ptr, class_name))
-						{
-							delete ptr;
-							ptr = nullptr;
-						}
-					}
-					else
-					{
-						if constexpr (detect_window_definitions_v<DerivedType>)
-						{
-							using my_definitions = window_definitions<DerivedType>;
-							if (!default_create_window_from_definition<my_definitions>(ptr, class_name))
-							{
-								delete ptr;
-								ptr = nullptr;
-							}
-						}
+						using my_definitions = window_definitions<DerivedType>;
+						result = default_create_window_from_definition<my_definitions>(ptr, class_name);
 					}
 				}
 			}
 		}
-		catch (...)
-		{
-			delete ptr;
-			throw;
-		}
 
-		return ptr;
+		return result;
 	}
 }

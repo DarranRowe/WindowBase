@@ -3182,13 +3182,8 @@ namespace windowing
 
 		static void handle_ncdestroy(HWND wnd);
 
-		template <typename Definitions>
-		static std::pair<bool, std::basic_string<typename traits::char_t>> default_register_from_definition(HINSTANCE inst);
-
-		template <typename Definitions>
-		static bool default_create_window_from_definition(DerivedType *ptr, const std::basic_string<typename traits::char_t> &class_name);
-
-		static auto default_create() -> DerivedType *;
+		template <typename ...Types>
+		static auto default_create(Types &&...) -> DerivedType *;
 	private:
 		window_t() = delete;
 		window_t(const window_t &) = delete;
@@ -3199,6 +3194,14 @@ namespace windowing
 		static inline std::function<LRESULT(HWND, UINT, WPARAM, LPARAM)> m_proc{ window_proc_init_seh };
 
 		static inline thread_local HHOOK s_create_hook = nullptr;
+
+		template <typename Definitions>
+		static std::pair<bool, std::basic_string<typename traits::char_t>> default_register_from_definition(HINSTANCE inst);
+
+		template <typename Definitions>
+		static bool default_create_window_from_definition(DerivedType *ptr, const std::basic_string<typename traits::char_t> &class_name);
+
+		static bool default_create_on_pointer(DerivedType *, HINSTANCE);
 	};
 }
 
