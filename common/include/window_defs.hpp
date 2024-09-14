@@ -34,8 +34,10 @@ namespace windowing
 		static LONG WndSetWindowLong([[maybe_unused]] HWND wnd, [[maybe_unused]] int index, [[maybe_unused]] LONG new_long)
 		{
 #ifdef _WIN64
+#ifdef _DEBUG
 			const bool set_window_long_called_on_64 = true;
 			_ASSERTE(set_window_long_called_on_64 == false);
+#endif
 			__fastfail(FAST_FAIL_FATAL_APP_EXIT);
 			return 0;
 #else
@@ -53,8 +55,10 @@ namespace windowing
 		static LONG WndGetWindowLong([[maybe_unused]] HWND wnd, [[maybe_unused]] int index)
 		{
 #ifdef _WIN64
-			const bool set_window_long_called_on_64 = true;
-			_ASSERTE(set_window_long_called_on_64 == false);
+#ifdef _DEBUG
+			const bool get_window_long_called_on_64 = true;
+			_ASSERTE(get_window_long_called_on_64 == false);
+#endif
 			__fastfail(FAST_FAIL_FATAL_APP_EXIT);
 			return 0;
 #else
@@ -103,8 +107,10 @@ namespace windowing
 		static LONG WndSetWindowLong([[maybe_unused]] HWND wnd, [[maybe_unused]] int index, [[maybe_unused]] LONG new_long)
 		{
 #ifdef _WIN64
+#ifdef _DEBUG
 			const bool set_window_long_called_on_64 = true;
 			_ASSERTE(set_window_long_called_on_64 == false);
+#endif
 			__fastfail(FAST_FAIL_FATAL_APP_EXIT);
 			return 0;
 #else
@@ -122,8 +128,10 @@ namespace windowing
 		static LONG WndGetWindowLong([[maybe_unused]] HWND wnd, [[maybe_unused]] int index)
 		{
 #ifdef _WIN64
-			const bool set_window_long_called_on_64 = true;
-			_ASSERTE(set_window_long_called_on_64 == false);
+#ifdef _DEBUG
+			const bool get_window_long_called_on_64 = true;
+			_ASSERTE(get_window_long_called_on_64 == false);
+#endif
 			__fastfail(FAST_FAIL_FATAL_APP_EXIT);
 			return 0;
 #else

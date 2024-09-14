@@ -65,15 +65,23 @@ namespace application::helper
 		//The standard does allow writing to the terminator as long
 		//as it is with a default initialised character (CharT()).
 		auto result = vsnprintf(s.data(), s.size() + 1, format, args);
-		if (result > string_buffer_size)
+		if (result >= 0)
 		{
-			s.resize(string_buffer_size);
-			result = vsnprintf(s.data(), s.size() + 1, format, args);
+			if (static_cast<unsigned int>(result) > string_buffer_size)
+			{
+				s.resize(string_buffer_size);
+				result = vsnprintf(s.data(), s.size() + 1, format, args);
+			}
+			else
+			{
+				//Shrink the string down to just the result.
+				s.resize(result);
+			}
 		}
 		else
 		{
-			//Shrink the string down to just the result.
-			s.resize(result);
+			using namespace std::string_view_literals;
+			write_string_to_debugger("vsnprintf failed\r\n"sv);
 		}
 		va_end(args);
 		return s;
@@ -123,15 +131,23 @@ namespace application::helper
 		//The standard does allow writing to the terminator as long
 		//as it is with a default initialised character (CharT()).
 		auto result = vsnprintf(s.data(), s.size() + 1, format, args);
-		if (result > string_buffer_size)
+		if (result >= 0)
 		{
-			s.resize(string_buffer_size);
-			result = vsnprintf(s.data(), s.size() + 1, format, args);
+			if (static_cast<unsigned int>(result) > string_buffer_size)
+			{
+				s.resize(string_buffer_size);
+				result = vsnprintf(s.data(), s.size() + 1, format, args);
+			}
+			else
+			{
+				//Shrink the string down to just the result.
+				s.resize(result);
+			}
 		}
 		else
 		{
-			//Shrink the string down to just the result.
-			s.resize(result);
+			using namespace std::string_view_literals;
+			write_string_to_debugger("vsnprintf failed\r\n"sv);
 		}
 
 		return s;
