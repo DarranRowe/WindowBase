@@ -3399,26 +3399,7 @@ namespace windowing
 	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
 	inline LRESULT CALLBACK window_t<DerivedType, CustomHandler, UnicodeBase>::window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
-		//clang ICEs on this, so use a simpler version for now.
-#ifdef __clang__
 		return m_proc(wnd, msg, wparam, lparam);
-#else
-		_EXCEPTION_POINTERS *ei = nullptr;
-		__try
-		{
-			return m_proc(wnd, msg, wparam, lparam);
-		}
-		__except ([&ei](auto &&p) {ei = p; return EXCEPTION_EXECUTE_HANDLER; }(GetExceptionInformation()))
-		{
-			application::helper::writeln_debugger("Uncaught exception reached the window procedure.");
-			RaiseFailFastException(ei->ExceptionRecord, ei->ContextRecord, FAIL_FAST_GENERATE_EXCEPTION_ADDRESS);
-		}
-
-		__fastfail(FAST_FAIL_FATAL_APP_EXIT);
-		//The compiler complains that not all control paths return a value even though
-		//it has to go through RaiseFailFastException and __fastfail.
-		return traits::WndDefWindowProc(wnd, msg, wparam, lparam);
-#endif
 	}
 
 	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
