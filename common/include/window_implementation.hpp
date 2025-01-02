@@ -3439,51 +3439,41 @@ namespace windowing
 		using namespace std;
 		using namespace details;
 
-		DerivedType *ptr = nullptr;
+		//The raw new is used instead of std::make_unique for an important
+		//reason. The DerivedType constructors are expected to be private, and the
+		//window is expected to be created through a static create function.
+		//std::make_unique would therefore not have access to the constructor without
+		//declaring std::make_unique<DerivedType> as a friend.
+		std::unique_ptr<DerivedType> ptr{ nullptr };
 		HINSTANCE inst = nullptr;
 		std::basic_string<typename traits::char_t> class_name;
-		try
+		bool success{ false };
 		{
+			using namespace details::class_detect;
+			if constexpr (detect_class_definitions_typedef_v<DerivedType>)
 			{
-				using namespace details::class_detect;
-				if constexpr (detect_class_definitions_typedef_v<DerivedType>)
+				//This is needed early.
+				using my_definitions = typename DerivedType::class_definitions;
+				inst = instance_value<my_definitions>::get_value();
+				ptr.reset(new DerivedType(inst, std::forward<Types>(args)...));
+
+				success = default_create_on_pointer(ptr.get(), inst);
+			}
+			else
+			{
+				if constexpr (detect_class_definitions_v<DerivedType>)
 				{
 					//This is needed early.
-					using my_definitions = typename DerivedType::class_definitions;
+					using my_definitions = class_definitions<DerivedType>;
 					inst = instance_value<my_definitions>::get_value();
-					ptr = new DerivedType(inst, std::forward<Types>(args)...);
+					ptr.reset(new DerivedType(inst, std::forward<Types>(args)...));
 
-					if (!default_create_on_pointer(ptr, inst))
-					{
-						delete ptr;
-						ptr = nullptr;
-					}
-				}
-				else
-				{
-					if constexpr (detect_class_definitions_v<DerivedType>)
-					{
-						//This is needed early.
-						using my_definitions = class_definitions<DerivedType>;
-						inst = instance_value<my_definitions>::get_value();
-						ptr = new DerivedType(inst, std::forward<Types>(args)...);
-
-						if (!default_create_on_pointer(ptr, inst))
-						{
-							delete ptr;
-							ptr = nullptr;
-						}
-					}
+					success = default_create_on_pointer(ptr.get(), inst);
 				}
 			}
 		}
-		catch (...)
-		{
-			delete ptr;
-			throw;
-		}
 
-		return ptr;
+		return success == true ? ptr.release() : nullptr;
 	}
 
 	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
