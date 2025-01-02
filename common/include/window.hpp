@@ -30,9 +30,9 @@ namespace windowing
 #endif
 
 #if (defined UNICODE) || defined (_UNICODE)
-	constexpr inline bool window_default_unicode = true;
+	constexpr inline bool window_default_unicode{ true };
 #else
-	constexpr inline bool window_default_unicode = false;
+	constexpr inline bool window_default_unicode{ false };
 #endif
 
 	namespace details
@@ -44,19 +44,19 @@ namespace windowing
 		struct detect<T, Op, std::void_t<Op<T>>> : std::true_type {};
 
 		template <typename T, template <typename> typename Op>
-		inline constexpr bool detect_v = detect<T, Op>::value;
+		inline constexpr bool detect_v{ detect<T, Op>::value };
 
 		template <typename T, template <typename> typename Op>
 		using return_type_t = Op<T>;
 
 		template <typename T, template <typename> typename Op, typename Cmp>
-		inline constexpr bool same_return_v = std::is_same_v<return_type_t<T, Op>, Cmp>;
+		inline constexpr bool same_return_v{ std::is_same_v<return_type_t<T, Op>, Cmp> };
 
 		template <typename T, template <typename> typename Op, typename Cmp>
-		inline constexpr bool convertable_return_v = std::is_convertible_v<return_type_t<T, Op>, Cmp>;
+		inline constexpr bool convertable_return_v{ std::is_convertible_v<return_type_t<T, Op>, Cmp> };
 
 		template <typename T, template <typename> typename Op>
-		inline constexpr bool integral_return_v = std::is_integral_v<return_type_t<T, Op>>;
+		inline constexpr bool integral_return_v{ std::is_integral_v<return_type_t<T, Op>> };
 
 		//Wrap the CRTP static cast into a function.
 		//While this is a safe operation, the static assert helps double
@@ -169,14 +169,14 @@ namespace windowing
 		uint16_t make_word(P1 p1, P2 p2)
 		{
 			//These need to be strengthened to check type sizes
-			uint16_t result = (static_cast<uint16_t>(static_cast<uint8_t>(p1)) | (static_cast<uint16_t>(static_cast<uint8_t>(p2)) << 8));
+			uint16_t result{ (static_cast<uint16_t>(static_cast<uint8_t>(p1)) | (static_cast<uint16_t>(static_cast<uint8_t>(p2)) << 8)) };
 			return result;
 		}
 		template <typename P1, typename P2>
 		uint32_t make_dword(P1 p1, P2 p2)
 		{
 			//These need to be strengthened to check type sizes
-			uint32_t result = (static_cast<uint32_t>(static_cast<uint16_t>(p1)) | (static_cast<uint32_t>(static_cast<uint16_t>(p2)) << 16));
+			uint32_t result{ (static_cast<uint32_t>(static_cast<uint16_t>(p1)) | (static_cast<uint32_t>(static_cast<uint16_t>(p2)) << 16)) };
 			return result;
 		}
 	}
@@ -1007,7 +1007,7 @@ namespace windowing
 	template <typename DerivedType>
 	struct static_assert_wrapper
 	{
-		inline static constexpr bool template_not_specialised = false;
+		inline static constexpr bool template_not_specialised{ false };
 		static_assert(template_not_specialised);
 
 	};
@@ -1015,13 +1015,13 @@ namespace windowing
 	template <typename DerivedType>
 	struct class_definitions
 	{
-		inline static constexpr bool value = static_assert_wrapper<DerivedType>::template_not_specialised;
+		inline static constexpr bool value{ static_assert_wrapper<DerivedType>::template_not_specialised };
 	};
 
 	template <typename DerivedType>
 	struct window_definitions
 	{
-		inline static constexpr bool value = static_assert_wrapper<DerivedType>::template_not_specialised;
+		inline static constexpr bool value{ static_assert_wrapper<DerivedType>::template_not_specialised };
 	};
 
 	struct window_quit_process_t{};
@@ -1077,14 +1077,14 @@ namespace windowing
 		struct mouse_policy_or_default
 		{
 			using policy = window_no_mouse_track_t;
-			inline static constexpr const mouse_policy_value value = mouse_policy_value::no_mouse_track;
+			inline static constexpr const mouse_policy_value value{ mouse_policy_value::no_mouse_track };
 		};
 
 		template <typename ClassType>
 		struct mouse_policy_or_default<ClassType, true>
 		{
 			using policy = typename ClassType::mouse_track_policy;
-			inline static constexpr const mouse_policy_value value = get_mouse_policy_type<typename ClassType::mouse_track_policy>();
+			inline static constexpr const mouse_policy_value value{ get_mouse_policy_type<typename ClassType::mouse_track_policy>() };
 		};
 
 		template <typename ClassType>
@@ -1106,14 +1106,14 @@ namespace windowing
 		struct ncmouse_policy_or_default
 		{
 			using policy = window_no_mouse_track_t;
-			inline static constexpr const mouse_policy_value value = mouse_policy_value::no_mouse_track;
+			inline static constexpr const mouse_policy_value value{ mouse_policy_value::no_mouse_track };
 		};
 
 		template <typename ClassType>
 		struct ncmouse_policy_or_default<ClassType, true>
 		{
 			using policy = typename ClassType::ncmouse_track_policy;
-			inline static constexpr const mouse_policy_value value = get_mouse_policy_type<typename ClassType::ncmouse_track_policy>();
+			inline static constexpr const mouse_policy_value value{ get_mouse_policy_type<typename ClassType::ncmouse_track_policy>() };
 		};
 
 		template <typename ClassType>
@@ -1149,14 +1149,14 @@ namespace windowing
 		struct process_quit_policy_or_default
 		{
 			using policy = window_default_t;
-			inline static constexpr bool value = false;
+			inline static constexpr bool value{ false };
 		};
 
 		template <typename ClassType>
 		struct process_quit_policy_or_default<ClassType, true>
 		{
 			using policy = typename ClassType::quit_process_policy;
-			inline static constexpr const bool value = get_quit_policy_type<typename ClassType::quit_process_policy>();
+			inline static constexpr const bool value{ get_quit_policy_type<typename ClassType::quit_process_policy>() };
 		};
 
 		template <typename ClassType>
@@ -1192,14 +1192,14 @@ namespace windowing
 		struct default_nccreate_policy_or_default
 		{
 			using policy = window_default_t;
-			inline static constexpr const bool value = false;
+			inline static constexpr const bool value{ false };
 		};
 
 		template <typename ClassType>
 		struct default_nccreate_policy_or_default<ClassType, true>
 		{
 			using policy = typename ClassType::default_nccreate_policy;
-			inline static constexpr const bool value = get_nccreate_policy_type<typename ClassType::default_nccreate_policy>();
+			inline static constexpr const bool value{ get_nccreate_policy_type<typename ClassType::default_nccreate_policy>() };
 		};
 
 		template <typename ClassType>
@@ -1266,14 +1266,14 @@ namespace windowing
 		{
 			//If window_charset_policy is not detected in the class, then we use the default based upon the UNICODE definition.
 			using policy = std::conditional_t<window_default_unicode, window_unicode_t, window_ansi_t>;
-			inline static constexpr const window_charset_value value = get_charset_policy_type_from_default<window_default_unicode>();
+			inline static constexpr const window_charset_value value{ get_charset_policy_type_from_default<window_default_unicode>() };
 		};
 
 		template <typename ClassType>
 		struct window_charset_policy_or_default<ClassType, true>
 		{
 			using policy = typename ClassType::window_charset_policy;
-			inline static constexpr const window_charset_value value = get_charset_policy_type_from_policy<typename ClassType::window_charset_policy>();
+			inline static constexpr const window_charset_value value{ get_charset_policy_type_from_policy<typename ClassType::window_charset_policy>() };
 		};
 
 		template <typename ClassType>
@@ -1306,7 +1306,7 @@ namespace windowing
 			struct detect_class_definitions_typedef<ClassType, std::void_t<typename ClassType::class_definitions>> : std::true_type {};
 
 			template <typename ClassType>
-			inline constexpr const bool detect_class_definitions_typedef_v = detect_class_definitions_typedef<ClassType>::value;
+			inline constexpr const bool detect_class_definitions_typedef_v{ detect_class_definitions_typedef<ClassType>::value };
 
 			struct class_definition_types
 			{
@@ -1526,7 +1526,7 @@ namespace windowing
 						}
 						else
 						{
-							constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+							constexpr auto v{ static_assert_wrapper<VT>::template_not_specialised };
 						}
 					}
 					else
@@ -1543,7 +1543,7 @@ namespace windowing
 							}
 							else
 							{
-								constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+								constexpr auto v{ static_assert_wrapper<VT>::template_not_specialised };
 							}
 						}
 					}
@@ -1552,7 +1552,7 @@ namespace windowing
 
 				static const typename traits::char_t *get_value()
 				{
-					constexpr auto ret_type = detect_string_type<menu_name_t>();
+					constexpr auto ret_type{ detect_string_type<menu_name_t>() };
 					if constexpr (ret_type == string_return_type::c_style)
 					{
 						return T::menu_name;
@@ -1611,7 +1611,7 @@ namespace windowing
 						}
 						else
 						{
-							constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+							constexpr auto v{ static_assert_wrapper<VT>::template_not_specialised };
 						}
 					}
 					else
@@ -1628,7 +1628,7 @@ namespace windowing
 							}
 							else
 							{
-								constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+								constexpr auto v{ static_assert_wrapper<VT>::template_not_specialised };
 							}
 						}
 					}
@@ -1637,7 +1637,7 @@ namespace windowing
 
 				static const typename traits::char_t *get_value()
 				{
-					constexpr auto ret_type = detect_string_type<class_name_t>();
+					constexpr auto ret_type{ detect_string_type<class_name_t>() };
 					if constexpr (ret_type == string_return_type::c_style)
 					{
 						return T::class_name;
@@ -1704,7 +1704,7 @@ namespace windowing
 			struct detect_window_definitions<ClassType, std::void_t<windowing::window_definitions<ClassType>>> : std::true_type {};
 
 			template <typename ClassType>
-			inline constexpr const bool detect_window_definitions_v = detect_window_definitions<ClassType>::value;
+			inline constexpr const bool detect_window_definitions_v{ detect_window_definitions<ClassType>::value };
 
 			template <typename ClassType, typename = std::void_t<>>
 			struct detect_window_definitions_typedef : std::false_type {};
@@ -1713,7 +1713,7 @@ namespace windowing
 			struct detect_window_definitions_typedef<ClassType, std::void_t<typename ClassType::window_definitions>> : std::true_type {};
 
 			template <typename ClassType>
-			inline constexpr const bool detect_window_definitions_typedef_v = detect_window_definitions_typedef<ClassType>::value;
+			inline constexpr const bool detect_window_definitions_typedef_v{ detect_window_definitions_typedef<ClassType>::value };
 
 			struct window_definition_types
 			{
@@ -1827,7 +1827,7 @@ namespace windowing
 						}
 						else
 						{
-							constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+							constexpr auto v{ static_assert_wrapper<VT>::template_not_specialised };
 						}
 					}
 					else
@@ -1844,7 +1844,7 @@ namespace windowing
 							}
 							else
 							{
-								constexpr auto v = static_assert_wrapper<VT>::template_not_specialised;
+								constexpr auto v{ static_assert_wrapper<VT>::template_not_specialised };
 							}
 						}
 					}
@@ -1853,7 +1853,7 @@ namespace windowing
 
 				static const typename traits::char_t *get_value()
 				{
-					constexpr auto ret_type = detect_string_type<window_name_t>();
+					constexpr auto ret_type{ detect_string_type<window_name_t>() };
 					if constexpr (ret_type == string_return_type::c_style)
 					{
 						return T::window_name;
@@ -2177,8 +2177,8 @@ namespace windowing
 				//GetCurrentThreadId is used because this will be called during the WM_NCCREATE message handler.
 				//This is one of the messages that Windows will send during the CreateWindowEx call, so this
 				//handler will only ever run on the thread that created the window.
-				HHOOK hook_mh = choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_MOUSE, my_type::mh_hook, nullptr, GetCurrentThreadId());
-				HHOOK hook_gm = choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_GETMESSAGE, my_type::gm_hook, nullptr, GetCurrentThreadId());
+				HHOOK hook_mh{ choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_MOUSE, my_type::mh_hook, nullptr, GetCurrentThreadId()) };
+				HHOOK hook_gm{ choose_window_traits_t<UnicodeBase>::WndSetWindowsHookEx(WH_GETMESSAGE, my_type::gm_hook, nullptr, GetCurrentThreadId()) };
 
 				m_hook_data.gm = hook_gm;
 				m_hook_data.mh = hook_mh;
@@ -2232,7 +2232,7 @@ namespace windowing
 					m_mouse_in_window = true;
 					m_mouse_in_client = true;
 					m_first_mouse_message = true;
-					auto result = track_mouse(wnd, false);
+					auto result{ track_mouse(wnd, false) };
 					_ASSERTE(result == TRUE);
 					FAIL_FAST_IF_WIN32_BOOL_FALSE(result);
 				}
@@ -2245,7 +2245,7 @@ namespace windowing
 					m_mouse_in_window = true;
 					m_mouse_in_nclient = true;
 					m_first_mouse_message = true;
-					auto result = track_mouse(wnd, true);
+					auto result{ track_mouse(wnd, true) };
 					_ASSERTE(result == TRUE);
 					FAIL_FAST_IF_WIN32_BOOL_FALSE(result);
 				}
@@ -2257,7 +2257,7 @@ namespace windowing
 			//stops after a hover message is sent. Since we want to keep getting these messages
 			//we need to re-enable it.
 			_ASSERTE((m_mouse_in_window == true) && (m_mouse_in_client == true));
-			auto result = track_mouse(wnd, false);
+			auto result{ track_mouse(wnd, false) };
 			_ASSERTE(result == TRUE);
 			FAIL_FAST_IF_WIN32_BOOL_FALSE(result);
 		}
@@ -2267,7 +2267,7 @@ namespace windowing
 			//stops after a hover message is sent. Since we want to keep getting these messages
 			//we need to re-enable it.
 			_ASSERTE((m_mouse_in_window == true) && (m_mouse_in_nclient == true));
-			auto result = track_mouse(wnd, true);
+			auto result{ track_mouse(wnd, true) };
 			_ASSERTE(result == TRUE);
 			FAIL_FAST_IF_WIN32_BOOL_FALSE(result);
 		}
@@ -2288,23 +2288,23 @@ namespace windowing
 			m_first_mouse_message = false;
 		}
 
-		std::atomic_bool m_mouse_in_window = false;
-		std::atomic_bool m_mouse_in_nclient = false;
-		std::atomic_bool m_mouse_in_client = false;
-		std::atomic_bool m_first_mouse_message = false;
+		std::atomic_bool m_mouse_in_window{ false };
+		std::atomic_bool m_mouse_in_nclient{ false };
+		std::atomic_bool m_mouse_in_client{ false };
+		std::atomic_bool m_first_mouse_message{ false };
 
 		hook_data m_hook_data{};
-		std::atomic_bool m_registered_for_tracking = false;
+		std::atomic_bool m_registered_for_tracking{ false };
 
 		static my_type *instance_from_handle(HWND wnd)
 		{
 			using details::base_cast;
-			auto v = my_t::inst_from_handle(wnd);
+			auto v{ my_t::inst_from_handle(wnd) };
 			if (v != nullptr)
 			{
 				//v will be set to DerivedType *, we want to cast to
 				//window_t<DerivedType> * and then to this type.
-				my_type *that = base_cast<my_type>(base_cast<derived_type>(v));
+				my_type *that{ base_cast<my_type>(base_cast<derived_type>(v)) };
 
 				return that;
 			}
@@ -2319,10 +2319,10 @@ namespace windowing
 				return CallNextHookEx(nullptr, code, wparam, lparam);
 			}
 
-			MSG &msg = ref_param_cast<MSG>(lparam);
+			MSG &msg{ ref_param_cast<MSG>(lparam) };
 			if (msg.hwnd != nullptr)
 			{
-				my_type *that = my_type::instance_from_handle(msg.hwnd);
+				my_type *that{ my_type::instance_from_handle(msg.hwnd) };
 				if (that == nullptr || !that->tracking())
 				{
 					return CallNextHookEx(nullptr, code, wparam, lparam);
@@ -2361,10 +2361,10 @@ namespace windowing
 				return CallNextHookEx(nullptr, code, wparam, lparam);
 			}
 
-			MOUSEHOOKSTRUCTEX &mh_struct = ref_param_cast<MOUSEHOOKSTRUCTEX>(lparam);
+			MOUSEHOOKSTRUCTEX &mh_struct{ ref_param_cast<MOUSEHOOKSTRUCTEX>(lparam) };
 			if (mh_struct.hwnd != nullptr)
 			{
-				my_type *that = my_type::instance_from_handle(mh_struct.hwnd);
+				my_type *that{ my_type::instance_from_handle(mh_struct.hwnd) };
 				if (that == nullptr || !that->tracking())
 				{
 					return CallNextHookEx(nullptr, code, wparam, lparam);
