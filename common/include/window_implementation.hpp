@@ -1469,7 +1469,7 @@ namespace windowing
 		{
 			if constexpr (detect_v<DerivedType, wmt::template on_syskeyup_t>)
 			{
-				auto &kd = ref_param_cast(&lparam);
+				auto &kd = ref_param_cast<keystroke_data>(&lparam);
 				this_cast<DerivedType>(this)->on_syskeyup(param_cast<virtual_key>(wparam), kd);
 				handled = true;
 			}
