@@ -1133,7 +1133,7 @@ namespace windowing
 					m.emplace(ref_param_cast<MSG>(lparam));
 				}
 
-				auto result = value_cast<get_dlg_code_return>(this_cast<DerivedType>(this)->on_getdlgcode(param_cast<uint8_t>(wparam), m));
+				auto result = value_cast<get_dlg_code_return>(this_cast<DerivedType>(this)->on_getdlgcode(param_cast<virtual_key>(wparam), m));
 				proc_result = return_cast(result);
 				handled = true;
 			}
