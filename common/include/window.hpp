@@ -63,6 +63,9 @@ namespace windowing
 		//check this, and putting the static cast into a function where
 		//the cast happens in one location is easier to handle.
 		template <typename DerivedType, typename BaseType>
+#ifdef _MSC_VER
+		[[msvc::intrinsic]]
+#endif
 		auto this_cast(BaseType *that) -> DerivedType *
 		{
 			static_assert(std::is_base_of_v<BaseType, DerivedType>);
@@ -70,6 +73,9 @@ namespace windowing
 		}
 
 		template <typename BaseType, typename DerivedType>
+#ifdef _MSC_VER
+		[[msvc::intrinsic]]
+#endif
 		auto base_cast(DerivedType *that) -> BaseType *
 		{
 			static_assert(std::is_base_of_v<BaseType, DerivedType>);
@@ -80,6 +86,9 @@ namespace windowing
 		//We use this to indicate that this is a cast that we
 		//want to do.
 		template <typename R, typename Param>
+#ifdef _MSC_VER
+		[[msvc::intrinsic]]
+#endif
 		auto value_cast(Param p) -> R
 		{
 			return static_cast<R>(p);
@@ -89,6 +98,9 @@ namespace windowing
 		//property to the class type. Functionally it is the same as
 		//prop_cast, but it is useful to seperate them.
 		template <typename DerivedType>
+#ifdef _MSC_VER
+		[[msvc::intrinsic]]
+#endif
 		auto inst_cast(void *that) -> DerivedType *
 		{
 			return static_cast<DerivedType *>(that);
@@ -115,6 +127,9 @@ namespace windowing
 		//This is for those parameters that are just different
 		//integer types in WPARAM and LPARAM.
 		template <typename R, typename Param>
+#ifdef _MSC_VER
+		[[msvc::intrinsic]]
+#endif
 		auto param_cast(Param p) -> R
 		{
 			return static_cast<R>(p);
@@ -126,6 +141,9 @@ namespace windowing
 			return reinterpret_cast<LRESULT>(p);
 		}
 		template <typename Param>
+#ifdef _MSC_VER
+		[[msvc::intrinsic]]
+#endif
 		auto return_cast(Param p) -> LRESULT
 		{
 			return static_cast<LRESULT>(p);
@@ -139,6 +157,9 @@ namespace windowing
 
 		//Used for casting a value from GetWindowProp to its type.
 		template <typename Prop>
+#ifdef _MSC_VER
+		[[msvc::intrinsic]]
+#endif
 		auto prop_cast(void *p) -> Prop *
 		{
 			return static_cast<Prop *>(p);
