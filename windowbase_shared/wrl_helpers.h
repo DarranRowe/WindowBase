@@ -46,6 +46,8 @@ namespace wrl_helpers
 	template <typename Interface, typename RuntimeClass>
 	inline auto get_activation_factory()
 	{
+		using application::helper::value_convert;
+
 		Microsoft::WRL::ComPtr<Interface> ret;
 		auto runtime_class = initialise_hstring(factory_interface_traits<Interface, RuntimeClass>::class_name);
 		HRESULT hr{ Windows::Foundation::GetActivationFactory(runtime_class, ret.ReleaseAndGetAddressOf()) };
@@ -56,7 +58,7 @@ namespace wrl_helpers
 #else
 			auto l_fmtstr{ application::helper::format_to_string(L"Failed to get activation factory. Interface name: %s, RuntimeClass name: %s", factory_interface_traits<Interface, RuntimeClass>::interface_name.data(), factory_interface_traits<Interface, RuntimeClass>::class_name.data()) };
 #endif
-			RoOriginateErrorW(hr, static_cast<UINT>(l_fmtstr.length()), l_fmtstr.c_str());
+			RoOriginateErrorW(hr, value_convert<UINT>(l_fmtstr.length()), l_fmtstr.c_str());
 			THROW_IF_FAILED(hr);
 		}
 
@@ -65,6 +67,8 @@ namespace wrl_helpers
 
 	inline auto get_activation_factory(const std::wstring_view &class_name)
 	{
+		using application::helper::value_convert;
+
 		Microsoft::WRL::ComPtr<IActivationFactory> ret;
 		auto runtime_class{ initialise_hstring(class_name) };
 		HRESULT hr{ Windows::Foundation::GetActivationFactory(runtime_class, ret.ReleaseAndGetAddressOf()) };
@@ -75,7 +79,7 @@ namespace wrl_helpers
 #else
 			auto l_fmtstr{ application::helper::format_to_string(L"Failed to get activation factory. Interface name: IActivationFactory, RuntimeClass name: %s", class_name.data()) };
 #endif
-			RoOriginateErrorW(hr, static_cast<UINT>(l_fmtstr.length()), l_fmtstr.c_str());
+			RoOriginateErrorW(hr, value_convert<UINT>(l_fmtstr.length()), l_fmtstr.c_str());
 			THROW_IF_FAILED(hr);
 		}
 

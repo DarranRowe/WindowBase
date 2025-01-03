@@ -58,42 +58,6 @@ namespace windowing
 		template <typename T, template <typename> typename Op>
 		inline constexpr bool integral_return_v{ std::is_integral_v<return_type_t<T, Op>> };
 
-		//Wrap the CRTP static cast into a function.
-		//While this is a safe operation, the static assert helps double
-		//check this, and putting the static cast into a function where
-		//the cast happens in one location is easier to handle.
-		template <typename DerivedType, typename BaseType>
-#ifdef _MSC_VER
-		[[msvc::intrinsic]]
-#endif
-		auto this_cast(BaseType *that) -> DerivedType *
-		{
-			static_assert(std::is_base_of_v<BaseType, DerivedType>);
-			return static_cast<DerivedType *>(that);
-		}
-
-		template <typename BaseType, typename DerivedType>
-#ifdef _MSC_VER
-		[[msvc::intrinsic]]
-#endif
-		auto base_cast(DerivedType *that) -> BaseType *
-		{
-			static_assert(std::is_base_of_v<BaseType, DerivedType>);
-			return static_cast<BaseType *>(that);
-		}
-
-		//A general static cast from one value type to another.
-		//We use this to indicate that this is a cast that we
-		//want to do.
-		template <typename R, typename Param>
-#ifdef _MSC_VER
-		[[msvc::intrinsic]]
-#endif
-		auto value_cast(Param p) -> R
-		{
-			return static_cast<R>(p);
-		}
-
 		//This will be used to cast the this pointer stored in the window
 		//property to the class type. Functionally it is the same as
 		//prop_cast, but it is useful to seperate them.
@@ -2170,7 +2134,6 @@ namespace windowing
 	protected:
 		void track_mouse()
 		{
-			using details::this_cast;
 			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
 				details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
 			{
@@ -2188,7 +2151,6 @@ namespace windowing
 		}
 		void untrack_mouse()
 		{
-			using details::this_cast;
 			if constexpr (details::mouse_policy_v<DerivedType> == details::mouse_policy_value::mouse_track ||
 				details::ncmouse_policy_v<DerivedType> == details::mouse_policy_value::ncmouse_track)
 			{
@@ -2298,13 +2260,14 @@ namespace windowing
 
 		static my_type *instance_from_handle(HWND wnd)
 		{
-			using details::base_cast;
+			using application::helper::up_cast;
+
 			auto v{ my_t::inst_from_handle(wnd) };
 			if (v != nullptr)
 			{
 				//v will be set to DerivedType *, we want to cast to
 				//window_t<DerivedType> * and then to this type.
-				my_type *that{ base_cast<my_type>(base_cast<derived_type>(v)) };
+				my_type *that{ up_cast<my_type>(up_cast<derived_type>(v)) };
 
 				return that;
 			}

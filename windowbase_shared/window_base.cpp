@@ -5,6 +5,7 @@
 #include "window_base_private.hpp"
 
 #include "application.hpp"
+#include "application_helper.hpp"
 
 #include <propsys.h>
 #include <propkey.h>
@@ -22,18 +23,20 @@ namespace windowing
 	using details::prop_name_from_type_w;
 	using details::get_register_callback_container_a;
 	using details::get_register_callback_container_w;
+
+	using application::helper::pointer_convert;
 	
 	namespace details
 	{
 		close_callback_container *get_register_callback_container_a(HWND wnd) noexcept
 		{
-			close_callback_container *ccc{ static_cast<close_callback_container *>(get_property_a(wnd, prop_type::register_callback)) };
+			close_callback_container *ccc{ pointer_convert<close_callback_container>(get_property_a(wnd, prop_type::register_callback)) };
 			_ASSERTE(ccc != nullptr);
 			return ccc;
 		}
 		close_callback_container *get_register_callback_container_w(HWND wnd) noexcept
 		{
-			close_callback_container *ccc{ static_cast<close_callback_container *>(get_property_w(wnd, prop_type::register_callback)) };
+			close_callback_container *ccc{ pointer_convert<close_callback_container>(get_property_w(wnd, prop_type::register_callback)) };
 			_ASSERTE(ccc != nullptr);
 			return ccc;
 		}
@@ -168,15 +171,17 @@ namespace windowing
 		}
 		static DWORD get_window_style(HWND window, bool unicode) noexcept
 		{
+			using application::helper::value_convert;
 			_ASSERTE(window != nullptr);
 			FAIL_FAST_IF_NULL(window);
-			return static_cast<DWORD>(TWndGetWindowLongPtr(window, GWL_STYLE, unicode));
+			return value_convert<DWORD>(TWndGetWindowLongPtr(window, GWL_STYLE, unicode));
 		}
 		static DWORD get_window_ex_style(HWND window, bool unicode) noexcept
 		{
+			using application::helper::value_convert;
 			_ASSERTE(window != nullptr);
 			FAIL_FAST_IF_NULL(window);
-			return static_cast<DWORD>(TWndGetWindowLongPtr(window, GWL_EXSTYLE, unicode));
+			return value_convert<DWORD>(TWndGetWindowLongPtr(window, GWL_EXSTYLE, unicode));
 		}
 
 		static HRESULT prop_var_set_aumid(HWND wnd, std::wstring &aumid) noexcept
@@ -263,6 +268,7 @@ namespace windowing
 
 		static std::pair<HRESULT, std::string> get_window_aumid_a(HWND wnd) noexcept
 		{
+			using application::helper::value_convert;
 			auto [hr, waumid] { prop_var_get_aumid(wnd)};
 
 			if (FAILED(hr) || waumid.empty())
@@ -286,7 +292,7 @@ namespace windowing
 
 			_ASSERTE(aumid.size() < (INT32_MAX - 1));
 
-			buffer_size = WideCharToMultiByte(CP_ACP, 0, waumid.c_str(), -1, aumid.data(), static_cast<int>(aumid.size() + 1), nullptr, nullptr);
+			buffer_size = WideCharToMultiByte(CP_ACP, 0, waumid.c_str(), -1, aumid.data(), value_convert<int>(aumid.size() + 1), nullptr, nullptr);
 
 			if (buffer_size == 0)
 			{
@@ -532,11 +538,12 @@ namespace windowing
 	}
 	void window_base::redraw_window(std::optional<RECT> rect, HRGN rgn, redraw_window_flags flags) noexcept
 	{
+		using application::helper::value_convert;
 		//Prioritise region over rect.
 		HRGN rg_rgn{ rgn };
 		RECT *rc_rect{ rgn != nullptr ? rect.has_value() == true ? &rect.value() : nullptr : nullptr };
 
-		RedrawWindow(get_handle(), rc_rect, rg_rgn, static_cast<UINT>(flags));
+		RedrawWindow(get_handle(), rc_rect, rg_rgn, value_convert<UINT>(flags));
 	}
 
 	HWND window_base::get_parent() const noexcept
@@ -772,10 +779,11 @@ namespace windowing
 	}
 	message_callback &window_base::get_window_message_callback(HWND wnd, uint32_t index) noexcept
 	{
+		using application::helper::pointer_convert;
 		using details::prop_type;
 		using details::set_property_a;
 		using details::set_property_w;
-		auto message_container{ IsWindowUnicode(wnd) != FALSE ? static_cast<message_callback_container *>(get_property_w(wnd, prop_type::message_callback)) : static_cast<message_callback_container *>(get_property_a(wnd, prop_type::message_callback)) };
+		auto message_container{ IsWindowUnicode(wnd) != FALSE ? pointer_convert<message_callback_container>(get_property_w(wnd, prop_type::message_callback)) : pointer_convert<message_callback_container>(get_property_a(wnd, prop_type::message_callback)) };
 		_ASSERTE(message_container != nullptr);
 
 		auto has_callback{ message_container->has_callback(index) };
@@ -785,10 +793,11 @@ namespace windowing
 	}
 	bool window_base::has_window_message_callback(HWND wnd, uint32_t index) noexcept
 	{
+		using application::helper::pointer_convert;
 		using details::prop_type;
 		using details::get_property_a;
 		using details::get_property_w;
-		auto message_container{ IsWindowUnicode(wnd) != FALSE ? static_cast<message_callback_container *>(get_property_w(wnd, prop_type::message_callback)) : static_cast<message_callback_container *>(get_property_a(wnd, prop_type::message_callback)) };
+		auto message_container{ IsWindowUnicode(wnd) != FALSE ? pointer_convert<message_callback_container>(get_property_w(wnd, prop_type::message_callback)) : pointer_convert<message_callback_container>(get_property_a(wnd, prop_type::message_callback)) };
 		return message_container == nullptr ? false : message_container->has_callback(index);
 	}
 
@@ -810,6 +819,7 @@ namespace windowing
 	}
 	void window_base::set_window_info(HWND handle, uint32_t thread_id, bool unicode, void *instance) noexcept
 	{
+		using application::helper::pointer_convert;
 		using details::prop_type;
 		using details::set_property_a;
 		using details::set_property_w;
@@ -825,17 +835,24 @@ namespace windowing
 
 		std::unique_ptr<close_callback_container> register_container{ std::make_unique<close_callback_container>() };
 
-		unicode == true ? set_property_w(handle, prop_type::register_callback, static_cast<void *>(register_container.get())) : set_property_a(handle, prop_type::register_callback, static_cast<void *>(register_container.get()));
+		//This uses pointer_convert (static_cast) to convert the pointer to void *.
+		//This doesn't need to be done, since C++ will convert to void * without issue, but this helps identify that we are converting a pointer.
+		unicode == true ? set_property_w(handle, prop_type::register_callback, pointer_convert<void>(register_container.get())) : set_property_a(handle, prop_type::register_callback, pointer_convert<void>(register_container.get()));
 		register_container.release();
 
 		std::unique_ptr<message_callback_container> message_callback{ std::make_unique<message_callback_container>() };
-		unicode == true ? set_property_w(handle, prop_type::message_callback, static_cast<void *>(message_callback.get())) : set_property_a(handle, prop_type::message_callback, static_cast<void *>(message_callback.get()));
+
+		//This uses pointer_convert (static_cast) to convert the pointer to void *.
+		//This doesn't need to be done, since C++ will convert to void * without issue, but this helps identify that we are converting a pointer.
+		unicode == true ? set_property_w(handle, prop_type::message_callback, pointer_convert<void>(message_callback.get())) : set_property_a(handle, prop_type::message_callback, pointer_convert<void>(message_callback.get()));
 		message_callback.release();
 
 		m_window_data->window_initial_construction_complete = true;
 	}
 	void window_base::cleanup_window_info() noexcept
 	{
+		using application::helper::pointer_convert;
+
 		using details::prop_type;
 		using details::get_property_a;
 		using details::get_property_w;
@@ -847,9 +864,9 @@ namespace windowing
 		auto unicode = m_window_data->window_unicode;
 		auto handle = m_window_data->m_handle;
 
-		std::unique_ptr<close_callback_container> register_container{ static_cast<close_callback_container *>(unicode == true ? get_property_w(handle, prop_type::register_callback) : get_property_a(handle, prop_type::register_callback)) };
+		std::unique_ptr<close_callback_container> register_container{ pointer_convert<close_callback_container>(unicode == true ? get_property_w(handle, prop_type::register_callback) : get_property_a(handle, prop_type::register_callback)) };
 		unicode == true ? remove_property_w(handle, prop_type::register_callback) : remove_property_a(handle, prop_type::register_callback);
-		std::unique_ptr<message_callback_container> message_container{ static_cast<message_callback_container *>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)) };
+		std::unique_ptr<message_callback_container> message_container{ pointer_convert<message_callback_container>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)) };
 		unicode == true ? remove_property_w(handle, prop_type::message_callback) : remove_property_a(handle, prop_type::message_callback);
 		unicode == true ? remove_property_w(handle, prop_type::instance) : remove_property_a(handle, prop_type::instance);
 	}
@@ -867,13 +884,15 @@ namespace windowing
 
 	bool window_base::add_message_callback(const std::shared_ptr<message_callback> &callback, uint32_t index) noexcept
 	{
+		using application::helper::pointer_convert;
+
 		using details::prop_type;
 		using details::get_property_a;
 		using details::get_property_w;
 
 		auto unicode{ is_window_unicode() };
 		auto handle{ get_handle() };
-		auto message_container{ static_cast<message_callback_container *>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)) };
+		auto message_container{ pointer_convert<message_callback_container>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)) };
 		_ASSERTE(message_container != nullptr);
 
 		if (!message_container->has_callback(index))
@@ -886,26 +905,30 @@ namespace windowing
 	}
 	void window_base::remove_message_callback(uint32_t index) noexcept
 	{
+		using application::helper::pointer_convert;
+
 		using details::prop_type;
 		using details::get_property_a;
 		using details::get_property_w;
 
 		auto unicode{ is_window_unicode() };
 		auto handle{ get_handle() };
-		auto message_container{ static_cast<message_callback_container *>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)) };
+		auto message_container{ pointer_convert<message_callback_container>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)) };
 		_ASSERTE(message_container != nullptr);
 
 		message_container->remove_callback(index);
 	}
 	void window_base::clear_message_callbacks() noexcept
 	{
+		using application::helper::pointer_convert;
+
 		using details::prop_type;
 		using details::get_property_a;
 		using details::get_property_w;
 
 		auto unicode{ is_window_unicode() };
 		auto handle{ get_handle() };
-		auto message_container{ static_cast<message_callback_container *>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)) };
+		auto message_container{ pointer_convert<message_callback_container>(unicode == true ? get_property_w(handle, prop_type::message_callback) : get_property_a(handle, prop_type::message_callback)) };
 		_ASSERTE(message_container != nullptr);
 
 		message_container->clear_callbacks();
@@ -1055,14 +1078,18 @@ namespace windowing
 	}
 	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::string_view &class_name, const std::string_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, window_base *data) noexcept
 	{
+		using application::helper::pointer_convert;
+
 		_ASSERTE(data->has_associated_window() == false);
-		auto result{ CreateWindowExA(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, data->get_instance(), static_cast<void *>(data)) };
+		auto result{ CreateWindowExA(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, data->get_instance(), pointer_convert<void>(data)) };
 		return result;
 	}
 	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::wstring_view &class_name, const std::wstring_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, window_base *data) noexcept
 	{
+		using application::helper::pointer_convert;
+
 		_ASSERTE(data->has_associated_window() == false);
-		auto result{ CreateWindowExW(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, data->get_instance(), static_cast<void *>(data)) };
+		auto result{ CreateWindowExW(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, data->get_instance(), pointer_convert<void>(data)) };
 		return result;
 	}
 }

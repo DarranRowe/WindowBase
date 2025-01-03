@@ -5,6 +5,7 @@
 
 namespace application::details
 {
+	using helper::value_convert;
 	void apartment_impl::init_com(COINIT init_type)
 	{
 		HRESULT hr{ CoInitializeEx(nullptr, init_type) };
@@ -106,7 +107,7 @@ namespace application::details
 
 	uint32_t apartment_impl::get_mta_cookie_count() const
 	{
-		return static_cast<uint32_t>(m_mta_cookies.size());
+		return value_convert<uint32_t>(m_mta_cookies.size());
 	}
 
 	HRESULT apartment_impl::failure_code() const

@@ -21,16 +21,16 @@ namespace application::helper
 		{
 			bool has_81_actctx{};
 			bool has_10_actctx{};
-			auto exe_handle = GetModuleHandleW(nullptr);
-			SIZE_T buffer_required = 0;
+			auto exe_handle{ GetModuleHandleW(nullptr) };
+			SIZE_T buffer_required{ 0 };
 			QueryActCtxW(QUERY_ACTCTX_FLAG_ACTCTX_IS_HMODULE, exe_handle, nullptr, CompatibilityInformationInActivationContext, nullptr, 0, &buffer_required);
 
-			std::unique_ptr<std::byte[]> act_ctx_buffer = std::make_unique<std::byte[]>(buffer_required);
+			std::unique_ptr<std::byte[]> act_ctx_buffer{ std::make_unique<std::byte[]>(buffer_required) };
 
 			QueryActCtxW(QUERY_ACTCTX_FLAG_ACTCTX_IS_HMODULE, exe_handle, nullptr, CompatibilityInformationInActivationContext, act_ctx_buffer.get(), buffer_required, &buffer_required);
 
 			{
-				ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION &actctx_ci = *reinterpret_cast<ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION *>(act_ctx_buffer.get());
+				ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION &actctx_ci{ *reinterpret_cast<ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION *>(act_ctx_buffer.get()) };
 
 				COMPATIBILITY_CONTEXT_ELEMENT target_id{};
 
@@ -62,7 +62,7 @@ namespace application::helper
 
 			GetVersionExW(reinterpret_cast<OSVERSIONINFOW *>(&vi));
 
-			return static_cast<uint32_t>(vi.dwBuildNumber);
+			return value_convert<uint32_t>(vi.dwBuildNumber);
 		}
 
 		uint32_t estimate_build_from_exports()
@@ -94,13 +94,13 @@ namespace application::helper
 		{
 			//If we only want to be sure that we are on Windows 8.1, just look for a function in one of the libraries.
 			//We use IsProcessCritical from the process/threads API.
-			HMODULE kernel_base = GetModuleHandleW(L"kernelbase.dll");
+			HMODULE kernel_base{ GetModuleHandleW(L"kernelbase.dll") };
 			if (kernel_base == nullptr)
 			{
 				return false;
 			}
 
-			auto fp = GetProcAddress(kernel_base, "IsProcessCritical");
+			auto fp{ GetProcAddress(kernel_base, "IsProcessCritical") };
 
 			return fp != nullptr;
 		}
@@ -110,13 +110,13 @@ namespace application::helper
 			//If we only want to be sure that we are on Windows 10, just look for a function in one of the libraries.
 			//We use SetProcessValidCallTargets from CFG to do this.
 
-			HMODULE kernel_base = GetModuleHandleW(L"kernelbase.dll");
+			HMODULE kernel_base{ GetModuleHandleW(L"kernelbase.dll") };
 			if (kernel_base == nullptr)
 			{
 				return false;
 			}
 
-			auto fp = GetProcAddress(kernel_base, "SetProcessValidCallTargets");
+			auto fp{ GetProcAddress(kernel_base, "SetProcessValidCallTargets") };
 
 			return fp != nullptr;
 		}
@@ -126,20 +126,20 @@ namespace application::helper
 			//If we only want to be sure that we are on Windows 11, just look for a function in one of the libraries.
 			//We use GetMachineTypeAttributes to do this.
 
-			HMODULE kernel_base = GetModuleHandleW(L"kernelbase.dll");
+			HMODULE kernel_base{ GetModuleHandleW(L"kernelbase.dll") };
 			if (kernel_base == nullptr)
 			{
 				return false;
 			}
 
-			auto fp = GetProcAddress(kernel_base, "GetMachineTypeAttributes");
+			auto fp{ GetProcAddress(kernel_base, "GetMachineTypeAttributes") };
 
 			return fp != nullptr;
 		}
 
 		bool can_get_full_version()
 		{
-			auto [ac_81, ac_10] = has_actctx();
+			auto [ac_81, ac_10] { has_actctx()};
 
 			//We can get the Windows 10 and 11 version
 			//numbers in this case.
@@ -194,13 +194,24 @@ namespace application::helper
 		{
 			return false;
 		}
-		OSVERSIONINFOEXW osv{};
-		osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
-		osv.dwMajorVersion = 10;
-		osv.dwMinorVersion = 0;
-		osv.dwBuildNumber = build;
 
-		auto cm = VerSetConditionMask(VerSetConditionMask(VerSetConditionMask(0, VER_BUILDNUMBER, VER_GREATER_EQUAL), VER_MINORVERSION, VER_EQUAL), VER_MAJORVERSION, VER_EQUAL);
+#if ((__cplusplus >= 202002L) || ((defined (_MSVC_VER)) && (_MSVC_VER >= 202002L)))
+		OSVERSIONINFOEXW osv{
+			.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW),
+			.dwMajorVersion = 10,
+			.dwMinorVersion = 0,
+			.dwBuildNumber = build
+		};
+#else
+		OSVERSIONINFOEXW osv{
+			sizeof(OSVERSIONINFOEXW),
+			10,
+			0,
+			build
+		};
+#endif
+
+		auto cm{ VerSetConditionMask(VerSetConditionMask(VerSetConditionMask(0, VER_BUILDNUMBER, VER_GREATER_EQUAL), VER_MINORVERSION, VER_EQUAL), VER_MAJORVERSION, VER_EQUAL) };
 
 		return VerifyVersionInfoW(&osv, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, cm);
 	}
@@ -211,13 +222,23 @@ namespace application::helper
 		{
 			return false;
 		}
-		OSVERSIONINFOEXW osv{};
-		osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW);
-		osv.dwMajorVersion = 10;
-		osv.dwMinorVersion = 0;
-		osv.dwBuildNumber = build;
+#if ((__cplusplus >= 202002L) || ((defined (_MSVC_VER)) && (_MSVC_VER >= 202002L)))
+		OSVERSIONINFOEXW osv{
+			.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEXW),
+			.dwMajorVersion = 10,
+			.dwMinorVersion = 0,
+			.dwBuildNumber = build
+		};
+#else
+		OSVERSIONINFOEXW osv{
+			sizeof(OSVERSIONINFOEXW),
+			10,
+			0,
+			build
+		};
+#endif
 
-		auto cm = VerSetConditionMask(VerSetConditionMask(VerSetConditionMask(0, VER_BUILDNUMBER, VER_EQUAL), VER_MINORVERSION, VER_EQUAL), VER_MAJORVERSION, VER_EQUAL);
+		auto cm{ VerSetConditionMask(VerSetConditionMask(VerSetConditionMask(0, VER_BUILDNUMBER, VER_EQUAL), VER_MINORVERSION, VER_EQUAL), VER_MAJORVERSION, VER_EQUAL) };
 
 		return VerifyVersionInfoW(&osv, VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER, cm);
 	}
@@ -246,8 +267,8 @@ namespace application::helper
 	//Has the stdout and stderr files
 	//been set for unicode output.
 	//Assume false because this is how the files are initialised.
-	static bool s_stdout_unicode = false;
-	static bool s_stderr_unicode = false;
+	static bool s_stdout_unicode{ false };
+	static bool s_stderr_unicode{ false };
 	
 	enum class translated_state
 	{
@@ -260,13 +281,13 @@ namespace application::helper
 
 	void allocate_console_for_ui_process()
 	{
-		auto d_in_handle = GetStdHandle(STD_INPUT_HANDLE);
-		auto d_out_handle = GetStdHandle(STD_OUTPUT_HANDLE);
-		auto d_err_handle = GetStdHandle(STD_ERROR_HANDLE);
+		auto d_in_handle{ GetStdHandle(STD_INPUT_HANDLE) };
+		auto d_out_handle{ GetStdHandle(STD_OUTPUT_HANDLE) };
+		auto d_err_handle{ GetStdHandle(STD_ERROR_HANDLE) };
 
 		if (!AllocConsole())
 		{
-			DWORD last_error = GetLastError();
+			DWORD last_error{ GetLastError() };
 			write_debugger(L"AllocConsole failed. Last error: {}. Process is likely attached to a console.", last_error);
 			return;
 		}
@@ -275,7 +296,7 @@ namespace application::helper
 		//Also, only reopen the files if the standard handle wasn't null before
 		//we allocated the console. This indicates that the handles were redirected.
 		//Opening them will direct them back to the console.
-		FILE *dummy = nullptr;
+		FILE *dummy{};
 		if (d_in_handle == nullptr)
 		{
 			freopen_s(&dummy, "CONIN$", "r", stdin);
@@ -298,13 +319,13 @@ namespace application::helper
 
 	bool is_file_translated(FILE *stream)
 	{
-		auto fd = _fileno(stream);
+		auto fd{ _fileno(stream) };
 
 		if (fd == -1)
 		{
 			writeln_debugger(L"File given is invalid.");
 			_ASSERTE(false);
-			__fastfail(static_cast<unsigned int>(-1));
+			__fastfail(value_convert<unsigned int>(-1));
 		}
 
 		if (fd == -2)
@@ -312,12 +333,12 @@ namespace application::helper
 			_ASSERTE(stream == stdout || stream == stderr);
 			writeln_debugger(L"Standard out or standard error not associated with a console.");
 			_ASSERTE(false);
-			__fastfail(static_cast<unsigned int>(-2));
+			__fastfail(value_convert<unsigned int>(-2));
 		}
 
 		//This should shortcircuit.
 		//The only known cases where fd is negative have been dealt with.
-		if (s_mode.size() < static_cast<size_t>(fd) || s_mode[fd] == translated_state::unknown)
+		if (s_mode.size() < value_convert<size_t>(fd) || s_mode[fd] == translated_state::unknown)
 		{
 			return no_cache_is_file_translated(stream);
 		}
@@ -337,7 +358,7 @@ namespace application::helper
 
 	bool no_cache_is_file_translated(FILE *stream)
 	{
-		auto fd = _fileno(stream);
+		auto fd{ _fileno(stream) };
 
 		if (fd == -1)
 		{
@@ -352,18 +373,18 @@ namespace application::helper
 			_ASSERTE(false);
 		}
 
-		if (s_mode.size() < static_cast<size_t>(fd))
+		if (s_mode.size() < value_convert<size_t>(fd))
 		{
 			//Add an extra 1 to the descriptor so that
 			//the vector operators are guaranteed to work.
 			s_mode.resize(fd + 1, translated_state::unknown);
 		}
 
-		auto old_mode = _setmode(fd, _O_TEXT);
-		auto ignore_old_mode = _setmode(fd, old_mode);
+		auto old_mode{ _setmode(fd, _O_TEXT) };
+		auto ignore_old_mode{ _setmode(fd, old_mode) };
 		ignore_old_mode;
 
-		bool translated = old_mode & _O_TEXT;
+		bool translated{ (old_mode & _O_TEXT) == _O_TEXT };
 		if (translated)
 		{
 			s_mode[fd] = translated_state::yes;

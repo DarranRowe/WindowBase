@@ -4,6 +4,8 @@
 
 namespace application
 {
+	using helper::value_convert;
+
 	std::pair<APTTYPE, APTTYPEQUALIFIER> query_apt_type()
 	{
 		APTTYPE apt_type{};
@@ -131,7 +133,7 @@ namespace application
 	{
 		if (!m_impl)
 		{
-			return static_cast<uint32_t>(E_FAIL);
+			return value_convert<uint32_t>(E_FAIL);
 		}
 		return m_impl->failure_code();
 	}

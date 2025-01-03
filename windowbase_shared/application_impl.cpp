@@ -4,6 +4,8 @@
 
 namespace application::details
 {
+	using helper::value_convert;
+
 	static application_impl *g_app_inst{ nullptr };
 	static std::mutex g_app_inst_mutex;
 
@@ -318,7 +320,7 @@ This potentially means the AUMID wasn't set for the process.
 			}
 		}
 
-		int result{ static_cast<int>(msg.wParam) };
+		int result{ value_convert<int>(msg.wParam) };
 
 		tpi.in_message_pump = false;
 
@@ -374,7 +376,7 @@ This potentially means the AUMID wasn't set for the process.
 			}
 		}
 
-		int result{ static_cast<int>(msg.wParam) };
+		int result{ value_convert<int>(msg.wParam) };
 
 		tpi.in_message_pump = false;
 
@@ -451,7 +453,7 @@ This potentially means the AUMID wasn't set for the process.
 			}
 		}
 
-		int result{ static_cast<int>(msg.wParam) };
+		int result{ value_convert<int>(msg.wParam) };
 
 		tpi.in_message_pump = false;
 
@@ -527,7 +529,7 @@ This potentially means the AUMID wasn't set for the process.
 			}
 		}
 
-		int result{ static_cast<int>(msg.wParam) };
+		int result{ value_convert<int>(msg.wParam) };
 
 		tpi.in_message_pump = false;
 
@@ -646,12 +648,12 @@ This potentially means the AUMID wasn't set for the process.
 
 	uint32_t application_impl::get_current_thread_id() noexcept
 	{
-		return static_cast<uint32_t>(GetCurrentThreadId());
+		return value_convert<uint32_t>(GetCurrentThreadId());
 	}
 
 	bool application_impl::post_quit_message_for_thread(uint32_t tid, int result) noexcept
 	{
-		return PostThreadMessageW(static_cast<DWORD>(tid), WM_QUIT, static_cast<WPARAM>(result), 0) != FALSE;
+		return PostThreadMessageW(value_convert<DWORD>(tid), WM_QUIT, value_convert<WPARAM>(result), 0) != FALSE;
 	}
 
 	bool application_impl::did_initialisation_fail() const

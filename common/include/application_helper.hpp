@@ -16,6 +16,58 @@
 
 namespace application::helper
 {
+	//Define some helpers for value conversions.
+	//The code uses some casts for some legitimate
+	//value conversions. However, raw cast statements
+	//are not that great, since there is no indicator
+	//as to why it is being used.
+	//These functions at least state that the cast
+	//has been thought through and are expected.
+
+	//Convert a value type from one type to another.
+	//Using enable_if to block it from being used for
+	//reference or pointer types.
+	//This is fine since it will not block cases like
+	//int *v = /*...*/;
+	//value_convert<long>(*v);
+	template <typename To, typename From>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto value_convert(From v) -> std::enable_if_t<(std::is_fundamental_v<To> || std::is_enum_v<To>) && (std::is_fundamental_v<From> || std::is_enum_v<From>), To>
+	{
+		return static_cast<To>(v);
+	}
+
+	template <typename To, typename From>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto pointer_convert(From *v) -> To *
+	{
+		return static_cast<To *>(v);
+	}
+
+	template <typename DerivedType, typename BaseType>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto down_cast(BaseType *that) -> DerivedType *
+	{
+		static_assert(std::is_base_of_v<BaseType, DerivedType>);
+		return static_cast<DerivedType *>(that);
+	}
+
+	template <typename BaseType, typename DerivedType>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto up_cast(DerivedType *that) -> BaseType *
+	{
+		static_assert(std::is_base_of_v<BaseType, DerivedType>);
+		return static_cast<BaseType *>(that);
+	}
+
 	bool is_windows_10_or_greater();
 	bool is_windows_11_or_greater();
 	uint32_t get_windows_10_build();
@@ -67,7 +119,9 @@ namespace application::helper
 		auto result{ vsnprintf(s.data(), s.size() + 1, format, args) };
 		if (result >= 0)
 		{
-			if (static_cast<unsigned int>(result) > string_buffer_size)
+			//Can just cast/convert to remove the warning since
+			//there is a check for vsnprintf failing.
+			if (value_convert<unsigned int>(result) > string_buffer_size)
 			{
 				s.resize(string_buffer_size);
 				result = vsnprintf(s.data(), s.size() + 1, format, args);
@@ -133,7 +187,9 @@ namespace application::helper
 		auto result{ vsnprintf(s.data(), s.size() + 1, format, args) };
 		if (result >= 0)
 		{
-			if (static_cast<unsigned int>(result) > string_buffer_size)
+			//Can just cast/convert to remove the warning since
+			//there is a check for vsnprintf failing.
+			if (value_convert<unsigned int>(result) > string_buffer_size)
 			{
 				s.resize(string_buffer_size);
 				result = vsnprintf(s.data(), s.size() + 1, format, args);
