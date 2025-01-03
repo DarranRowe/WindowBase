@@ -132,6 +132,8 @@ namespace windowing
 
 		static void init_arranged() noexcept
 		{
+			using application::helper::function_pointer_convert;
+
 			s_user32_handle.reset(LoadLibraryExW(L"User32.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32));
 
 			auto is_window_arranged_ptr{ GetProcAddress(s_user32_handle.get(), "IsWindowArranged") };
@@ -142,7 +144,7 @@ namespace windowing
 			else
 			{
 				s_has_arranged_init = true;
-				s_IsWindowArranged_ptr = reinterpret_cast<BOOL(WINAPI *)(HWND)>(is_window_arranged_ptr);
+				s_IsWindowArranged_ptr = function_pointer_convert<BOOL(WINAPI)(HWND)>(is_window_arranged_ptr);
 				s_has_arranged = true;
 			}
 		}
@@ -687,6 +689,8 @@ namespace windowing
 
 	void window_base::register_power_notification(power_notify_type type) noexcept
 	{
+		using application::helper::handle_cast;
+
 		_ASSERTE(m_window_data != nullptr);
 		HPOWERNOTIFY result{};
 
@@ -697,7 +701,7 @@ namespace windowing
 
 		if (type == power_notify_type::suspend_resume)
 		{
-			result = RegisterSuspendResumeNotification(reinterpret_cast<HANDLE>(get_handle()), DEVICE_NOTIFY_WINDOW_HANDLE);
+			result = RegisterSuspendResumeNotification(handle_cast<HANDLE>(get_handle()), DEVICE_NOTIFY_WINDOW_HANDLE);
 		}
 		else
 		{
@@ -743,7 +747,7 @@ namespace windowing
 				break;
 			}
 
-			result = RegisterPowerSettingNotification(reinterpret_cast<HANDLE>(get_handle()), &power_guid, DEVICE_NOTIFY_WINDOW_HANDLE);
+			result = RegisterPowerSettingNotification(handle_cast<HANDLE>(get_handle()), &power_guid, DEVICE_NOTIFY_WINDOW_HANDLE);
 		}
 
 		if (result != nullptr)

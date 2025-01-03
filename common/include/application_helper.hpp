@@ -68,6 +68,83 @@ namespace application::helper
 		return static_cast<BaseType *>(that);
 	}
 
+	template <typename To, typename From>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto type_convert(From *v) -> To *
+	{
+		return reinterpret_cast<To *>(v);
+	}
+
+	template <typename To, typename From>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto function_pointer_convert(From *v) -> To *
+	{
+		return reinterpret_cast<To *>(v);
+	}
+
+	template <typename T>
+	auto pointer_deref(T *v) -> T &
+	{
+		return *v;
+	}
+
+	//This is one of the most dangerous casts.
+	//Todo, make sure types are at the same
+	//level of indirection.
+	template <typename To, typename From>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto handle_cast(From v) -> To
+	{
+		return reinterpret_cast<To>(v);
+	}
+
+	//This is one of the most dangerous casts.
+	//The name states this deliberately.
+	template <typename To, typename From>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto unsafe_cast(From v) -> To
+	{
+		return reinterpret_cast<To>(v);
+	}
+
+	//This must only be used to convert WPARAM
+	//and LPARAM to a handle type.
+	template <typename To, typename From>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto handle_from_param(From v) -> std::enable_if_t<std::is_integral_v<From>, To>
+	{
+		return reinterpret_cast<To>(v);
+	}
+
+	//This must only be used to convert WPARAM
+	//and LPARAM to a pointer to struct type.
+	template <typename To, typename From>
+#ifdef _MSC_VER
+	[[msvc::intrinsic]]
+#endif
+	auto pointer_from_param(From v) -> std::enable_if_t<std::is_integral_v<From>, To *>
+	{
+		return reinterpret_cast<To *>(v);
+	}
+
+	//This must only be used to convert WPARAM
+	//and LPARAM to a reference to struct type.
+	template <typename To, typename From>
+	auto reference_from_param(From v) -> std::enable_if_t<std::is_integral_v<From>, To &>
+	{
+		return *pointer_from_param<To>(v);
+	}
+
 	bool is_windows_10_or_greater();
 	bool is_windows_11_or_greater();
 	uint32_t get_windows_10_build();

@@ -58,36 +58,6 @@ namespace windowing
 		template <typename T, template <typename> typename Op>
 		inline constexpr bool integral_return_v{ std::is_integral_v<return_type_t<T, Op>> };
 
-		//This will be used to cast the this pointer stored in the window
-		//property to the class type. Functionally it is the same as
-		//prop_cast, but it is useful to seperate them.
-		template <typename DerivedType>
-#ifdef _MSC_VER
-		[[msvc::intrinsic]]
-#endif
-		auto inst_cast(void *that) -> DerivedType *
-		{
-			return static_cast<DerivedType *>(that);
-		}
-
-		//This is for converting LPARAM and WPARAM parameters to
-		//a reference type. A pointer is passed in the message
-		//parameter, so we cast to a pointer and indirect to the
-		//reference.
-		//This function puts all of these casts into one location
-		//and indicates that this is intentional.
-		template <typename R, typename Param>
-		auto ref_param_cast(Param p) -> R &
-		{
-			return *reinterpret_cast<R *>(p);
-		}
-
-		template <typename R, typename Param>
-		auto ptr_param_cast(Param p) -> R *
-		{
-			return reinterpret_cast<R *>(p);
-		}
-
 		//This is for those parameters that are just different
 		//integer types in WPARAM and LPARAM.
 		template <typename R, typename Param>
@@ -1366,8 +1336,9 @@ namespace windowing
 			{
 				static HINSTANCE get_value()
 				{
+					using application::helper::handle_cast;
 					//Return the executable's HINSTANCE.
-					return reinterpret_cast<HINSTANCE>(GetModuleHandleW(nullptr));
+					return handle_cast<HINSTANCE>(GetModuleHandleW(nullptr));
 				}
 			};
 
@@ -2276,13 +2247,14 @@ namespace windowing
 
 		static LRESULT CALLBACK gm_hook(_In_ int code, _In_ WPARAM wparam, _In_ LPARAM lparam)
 		{
-			using details::ref_param_cast;
+			using application::helper::reference_from_param;
+
 			if (code < 0)
 			{
 				return CallNextHookEx(nullptr, code, wparam, lparam);
 			}
 
-			MSG &msg{ ref_param_cast<MSG>(lparam) };
+			MSG &msg{ reference_from_param<MSG>(lparam) };
 			if (msg.hwnd != nullptr)
 			{
 				my_type *that{ my_type::instance_from_handle(msg.hwnd) };
@@ -2316,7 +2288,8 @@ namespace windowing
 
 		static LRESULT CALLBACK mh_hook(_In_ int code, _In_ WPARAM wparam, _In_ LPARAM lparam)
 		{
-			using details::ref_param_cast;
+			using application::helper::reference_from_param;
+			
 			using details::param_cast;
 
 			if (code < 0)
@@ -2324,7 +2297,7 @@ namespace windowing
 				return CallNextHookEx(nullptr, code, wparam, lparam);
 			}
 
-			MOUSEHOOKSTRUCTEX &mh_struct{ ref_param_cast<MOUSEHOOKSTRUCTEX>(lparam) };
+			MOUSEHOOKSTRUCTEX &mh_struct{ reference_from_param<MOUSEHOOKSTRUCTEX>(lparam) };
 			if (mh_struct.hwnd != nullptr)
 			{
 				my_type *that{ my_type::instance_from_handle(mh_struct.hwnd) };

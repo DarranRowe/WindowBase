@@ -35,6 +35,7 @@ namespace application
 
 	std::function<GetCurrentPackagePath2_t> get_gcpp2_ptr()
 	{
+		using application::helper::function_pointer_convert;
 #if NTDDI_VERSION < NTDDI_WIN10_19H1
 		//This function doesn't exist before 19H1 so older Windows 10 SDKs don't have it.
 		//If we build with an older SDK, this function and anything trying to get external
@@ -51,9 +52,7 @@ namespace application
 			return {};
 		}
 
-		using gcpp2_ptr = GetCurrentPackagePath2_t *;
-
-		auto gcpp2_fun_ptr{ reinterpret_cast<gcpp2_ptr>(GetProcAddress(kb_mod, "GetCurrentPackagePath2")) };
+		auto gcpp2_fun_ptr{ function_pointer_convert<GetCurrentPackagePath2_t>(GetProcAddress(kb_mod, "GetCurrentPackagePath2")) };
 		if (gcpp2_fun_ptr == nullptr)
 		{
 			return {};
@@ -67,6 +66,8 @@ namespace application
 
 	std::function<GetCurrentPackageInfo2_t> get_gcpi2_ptr()
 	{
+		using application::helper::function_pointer_convert;
+
 #if NTDDI_VERSION < NTDDI_WIN10_19H1
 		//This function doesn't exist before 19H1 so older Windows 10 SDKs don't have it.
 		//If we build with an older SDK, this function and anything trying to get external
@@ -83,9 +84,7 @@ namespace application
 			return {};
 		}
 
-		using gcpi2_ptr = GetCurrentPackageInfo2_t *;
-
-		auto gcpi2_fun_ptr{ reinterpret_cast<gcpi2_ptr>(GetProcAddress(kb_mod, "GetCurrentPackageInfo2")) };
+		auto gcpi2_fun_ptr{ function_pointer_convert<GetCurrentPackageInfo2_t>(GetProcAddress(kb_mod, "GetCurrentPackageInfo2")) };
 		if (gcpi2_fun_ptr == nullptr)
 		{
 			return {};

@@ -30,7 +30,7 @@ namespace application::helper
 			QueryActCtxW(QUERY_ACTCTX_FLAG_ACTCTX_IS_HMODULE, exe_handle, nullptr, CompatibilityInformationInActivationContext, act_ctx_buffer.get(), buffer_required, &buffer_required);
 
 			{
-				ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION &actctx_ci{ *reinterpret_cast<ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION *>(act_ctx_buffer.get()) };
+				ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION &actctx_ci{ pointer_deref(type_convert<ACTIVATION_CONTEXT_COMPATIBILITY_INFORMATION>(act_ctx_buffer.get())) };
 
 				COMPATIBILITY_CONTEXT_ELEMENT target_id{};
 
@@ -60,7 +60,7 @@ namespace application::helper
 		{
 			OSVERSIONINFOEXW vi{ sizeof(OSVERSIONINFOEXW) };
 
-			GetVersionExW(reinterpret_cast<OSVERSIONINFOW *>(&vi));
+			GetVersionExW(type_convert<OSVERSIONINFOW>(&vi));
 
 			return value_convert<uint32_t>(vi.dwBuildNumber);
 		}
