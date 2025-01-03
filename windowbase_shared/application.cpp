@@ -12,10 +12,9 @@ namespace application
 #endif
 		details::application_impl::make_new_instance()
 #ifdef _DEBUG
-		};
-#else
-		;
+		}
 #endif
+		;
 
 #ifdef _DEBUG
 		_ASSERTE(impl != nullptr);
