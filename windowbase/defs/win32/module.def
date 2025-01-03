@@ -193,5 +193,5 @@ EXPORTS
 	?register_class@window_base@windowing@@KA_NIABV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@0HHP6GJPAUHWND__@@IIJ@ZPAUHINSTANCE__@@PAUHBRUSH__@@PAUHICON__@@55@Z
 	?register_class@window_base@windowing@@KA_NABUtagWNDCLASSEXA@@@Z
 	?register_class@window_base@windowing@@KA_NABUtagWNDCLASSEXW@@@Z
-	?create_window@window_base@windowing@@KAPAUHWND__@@IIABV?$basic_string_view@DU?$char_traits@D@std@@@std@@0ABUtagPOINT@@ABUtagSIZE@@PAU3@PAUHMENU__@@PAX@Z
-	?create_window@window_base@windowing@@KAPAUHWND__@@IIABV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@0ABUtagPOINT@@ABUtagSIZE@@PAU3@PAUHMENU__@@PAX@Z
+	?create_window@window_base@windowing@@KAPAUHWND__@@IIABV?$basic_string_view@DU?$char_traits@D@std@@@std@@0ABUtagPOINT@@ABUtagSIZE@@PAU3@PAUHMENU__@@PAV12@@Z
+	?create_window@window_base@windowing@@KAPAUHWND__@@IIABV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@0ABUtagPOINT@@ABUtagSIZE@@PAU3@PAUHMENU__@@PAV12@@Z

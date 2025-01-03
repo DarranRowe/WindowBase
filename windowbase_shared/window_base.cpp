@@ -402,7 +402,7 @@ namespace windowing
 	}
 	bool window_base::is_window_rtl() const noexcept
 	{
-		LONG_PTR ex_styles{ window_implementation::get_window_ex_style(get_handle(), is_window_unicode()) };
+		DWORD ex_styles{ window_implementation::get_window_ex_style(get_handle(), is_window_unicode()) };
 		return (ex_styles & WS_EX_LAYOUTRTL) == WS_EX_LAYOUTRTL;
 	}
 	bool window_base::is_window_unicode() const noexcept
@@ -1053,18 +1053,16 @@ namespace windowing
 
 		return RegisterClassExW(&wcx) != 0;
 	}
-	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::string_view &class_name, const std::string_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, void *data) noexcept
+	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::string_view &class_name, const std::string_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, window_base *data) noexcept
 	{
-		window_base *that{ static_cast<window_base *>(data) };
-		_ASSERTE(that->has_associated_window() == false);
-		auto result{ CreateWindowExA(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, that->get_instance(), data) };
+		_ASSERTE(data->has_associated_window() == false);
+		auto result{ CreateWindowExA(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, data->get_instance(), static_cast<void *>(data)) };
 		return result;
 	}
-	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::wstring_view &class_name, const std::wstring_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, void *data) noexcept
+	HWND window_base::create_window(uint32_t ex_style, uint32_t style, const std::wstring_view &class_name, const std::wstring_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, window_base *data) noexcept
 	{
-		window_base *that{ static_cast<window_base *>(data) };
-		_ASSERTE(that->has_associated_window() == false);
-		auto result{ CreateWindowExW(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, that->get_instance(), data) };
+		_ASSERTE(data->has_associated_window() == false);
+		auto result{ CreateWindowExW(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, data->get_instance(), static_cast<void *>(data)) };
 		return result;
 	}
 }

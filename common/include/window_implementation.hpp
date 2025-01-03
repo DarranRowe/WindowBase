@@ -50,7 +50,8 @@ namespace windowing
 
 		//Cast to the derived type to make sure that the pointer we pass to CreateWindowExA is the correct pointer.
 		//We can't be sure of the derived class layout, so this is to be sure.
-		auto result{ base_t::create_window(ex_style, style, class_name, title, top_left, dimentions, parent, menu, that) };
+		base_t *base_ptr = static_cast<base_t *>(that);
+		auto result{ base_t::create_window(ex_style, style, class_name, title, top_left, dimentions, parent, menu, base_ptr) };
 
 		return result == nullptr ? false : true;
 	}
@@ -65,7 +66,8 @@ namespace windowing
 
 		//Cast to the derived type to make sure that the pointer we pass to CreateWindowExW is the correct pointer.
 		//We can't be sure of the derived class layout, so this is to be sure.
-		auto result{ base_t::create_window(ex_style, style, class_name, title, top_left, dimentions, parent, menu, that) };
+		base_t *base_ptr = static_cast<base_t *>(that);
+		auto result{ base_t::create_window(ex_style, style, class_name, title, top_left, dimentions, parent, menu, base_ptr) };
 
 		return result == nullptr ? false : true;
 	}
@@ -3405,8 +3407,7 @@ namespace windowing
 	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
 	inline auto window_t<DerivedType, CustomHandler, UnicodeBase>::inst_from_handle(HWND wnd) -> my_tptr
 	{
-		using details::inst_cast;
-		my_tptr ptr{ inst_cast<my_t>(raw_inst_from_handle(wnd)) };
+		my_tptr ptr{ static_cast<my_tptr>(static_cast<window_base *>(raw_inst_from_handle(wnd))) };
 		return ptr;
 	}
 

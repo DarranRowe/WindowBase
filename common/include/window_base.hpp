@@ -177,8 +177,8 @@ namespace windowing
 		static bool register_class(uint32_t, const std::wstring_view &, const std::wstring_view &, int32_t, int32_t, WNDPROC, HINSTANCE, HBRUSH, HCURSOR, HICON, HICON) noexcept;
 		static bool register_class(const WNDCLASSEXA &) noexcept;
 		static bool register_class(const WNDCLASSEXW &) noexcept;
-		static HWND create_window(uint32_t, uint32_t, const std::string_view &, const std::string_view &, const POINT &, const SIZE &, HWND, HMENU, void *) noexcept;
-		static HWND create_window(uint32_t, uint32_t, const std::wstring_view &, const std::wstring_view &, const POINT &, const SIZE &, HWND, HMENU, void *) noexcept;
+		static HWND create_window(uint32_t, uint32_t, const std::string_view &, const std::string_view &, const POINT &, const SIZE &, HWND, HMENU, window_base *) noexcept;
+		static HWND create_window(uint32_t, uint32_t, const std::wstring_view &, const std::wstring_view &, const POINT &, const SIZE &, HWND, HMENU, window_base *) noexcept;
 
 	private:
 		//completely disable copy/move and default constructor
