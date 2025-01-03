@@ -20,13 +20,13 @@
 
 namespace windowing
 {
-	static inline constexpr char prop_instance_a[] = "PROP_INSTANCE";
-	static inline constexpr char prop_message_callback_a[] = "PROP_MESSAGECALLBACK";
-	static inline constexpr char prop_register_callback_a[] = "PROP_REGISTERCALLBACK";
+	static inline constexpr char prop_instance_a[]{ "PROP_INSTANCE" };
+	static inline constexpr char prop_message_callback_a[]{ "PROP_MESSAGECALLBACK" };
+	static inline constexpr char prop_register_callback_a[]{ "PROP_REGISTERCALLBACK" };
 
-	static inline constexpr wchar_t prop_instance_w[] = L"PROP_INSTANCE";
-	static inline constexpr wchar_t prop_message_callback_w[] = L"PROP_MESSAGECALLBACK";
-	static inline constexpr wchar_t prop_register_callback_w[] = L"PROP_REGISTERCALLBACK";
+	static inline constexpr wchar_t prop_instance_w[]{ L"PROP_INSTANCE" };
+	static inline constexpr wchar_t prop_message_callback_w[]{ L"PROP_MESSAGECALLBACK" };
+	static inline constexpr wchar_t prop_register_callback_w[]{ L"PROP_REGISTERCALLBACK" };
 
 	namespace details
 	{
@@ -39,16 +39,16 @@ namespace windowing
 
 		struct window_data
 		{
-			HWND m_handle = nullptr;
-			HINSTANCE m_instance = nullptr;
+			HWND m_handle{};
+			HINSTANCE m_instance{};
 			std::map<power_notify_type, HPOWERNOTIFY> m_power_notify_handles;
 			uint32_t m_thread_id{};
 			uint32_t m_dpi{};
 			float m_scale{};
 
-			bool window_initial_construction_complete = false;
-			bool window_unicode = false;
-			bool window_shown = false;
+			bool window_initial_construction_complete{};
+			bool window_unicode{};
+			bool window_shown{};
 		};
 
 		inline std::unique_ptr<window_data> make_window_data(HINSTANCE inst) noexcept

@@ -58,13 +58,13 @@ namespace application::helper
 
 		//As long as this is > than the sso size
 		//then it is ok.
-		size_t string_buffer_size = 128;
+		size_t string_buffer_size{ 128 };
 		std::string s(string_buffer_size, '\0');
 
 		//The extra +1 because snprintf also writes a null.
 		//The standard does allow writing to the terminator as long
 		//as it is with a default initialised character (CharT()).
-		auto result = vsnprintf(s.data(), s.size() + 1, format, args);
+		auto result{ vsnprintf(s.data(), s.size() + 1, format, args) };
 		if (result >= 0)
 		{
 			if (static_cast<unsigned int>(result) > string_buffer_size)
@@ -94,14 +94,14 @@ namespace application::helper
 		va_list args{};
 		va_start(args, format);
 
-		size_t string_buffer = 128;
+		size_t string_buffer{ 128 };
 		std::wstring s(string_buffer, '\0');
-		bool do_format = true;
+		bool do_format{ true };
 
 		while (do_format)
 		{
 			//The extra +1 because it also writes a null.
-			auto result = vswprintf(s.data(), s.size() + 1, format, args);
+			auto result{ vswprintf(s.data(), s.size() + 1, format, args) };
 			if (result != -1)
 			{
 				s.resize(result);
@@ -120,17 +120,17 @@ namespace application::helper
 	inline std::string format_to_string_s(const char *format, va_list va)
 	{
 		//snprintf returns the how many characters it would write.
-		va_list args = va;
+		va_list args{ va };
 
 		//As long as this is > than the sso size
 		//then it is ok.
-		size_t string_buffer_size = 128;
+		size_t string_buffer_size{ 128 };
 		std::string s(string_buffer_size, '\0');
 
 		//The extra +1 because snprintf also writes a null.
 		//The standard does allow writing to the terminator as long
 		//as it is with a default initialised character (CharT()).
-		auto result = vsnprintf(s.data(), s.size() + 1, format, args);
+		auto result{ vsnprintf(s.data(), s.size() + 1, format, args) };
 		if (result >= 0)
 		{
 			if (static_cast<unsigned int>(result) > string_buffer_size)
@@ -157,16 +157,16 @@ namespace application::helper
 	{
 		//swprintf returns -1 if the buffer isn't large enough.
 		//We call it in a loop and double the buffer each time
-		va_list args = va;
+		va_list args{ va };
 
-		size_t string_buffer = 128;
+		size_t string_buffer{ 128 };
 		std::wstring s(string_buffer, '\0');
-		bool do_format = true;
+		bool do_format{ true };
 
 		while (do_format)
 		{
 			//The extra +1 because it also writes a null.
-			auto result = vswprintf(s.data(), s.size() + 1, format, args);
+			auto result{ vswprintf(s.data(), s.size() + 1, format, args) };
 			if (result != -1)
 			{
 				s.resize(result);
@@ -207,7 +207,7 @@ namespace application::helper
 		{
 			va_list args{};
 			va_start(args, format);
-			std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+			std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 			write_string_to_debugger(fmt_string);
 			va_end(args);
 		}
@@ -220,7 +220,7 @@ namespace application::helper
 		{
 			va_list args{};
 			va_start(args, format);
-			std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+			std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 			append_new_line(fmt_string, true);
 			write_string_to_debugger(fmt_string);
 			va_end(args);
@@ -232,7 +232,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		write_string_to_stream(stream, fmt_string);
 		va_end(args);
 	}
@@ -242,7 +242,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		append_new_line(fmt_string, !is_file_translated(stream));
 		write_string_to_stream(stream, fmt_string);
 		va_end(args);
@@ -253,7 +253,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		write_string_to_stdout(fmt_string);
 		va_end(args);
 	}
@@ -263,7 +263,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		append_new_line(fmt_string, !is_stdout_translated());
 		write_string_to_stdout(fmt_string);
 		va_end(args);
@@ -274,7 +274,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		write_string_to_stderr(fmt_string);
 		va_end(args);
 	}
@@ -284,7 +284,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		append_new_line(fmt_string, !is_stderr_translated());
 		write_string_to_stderr(fmt_string);
 		va_end(args);
@@ -345,7 +345,7 @@ namespace application::helper
 	{
 		if (api_is_debugger_present())
 		{
-			auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+			auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 			write_string_to_debugger(fmt_string);
 		}
 	}
@@ -355,7 +355,7 @@ namespace application::helper
 	{
 		if (api_is_debugger_present())
 		{
-			auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+			auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 			write_string_to_debugger(fmt_string);
 		}
 	}
@@ -365,7 +365,7 @@ namespace application::helper
 	{
 		if (api_is_debugger_present())
 		{
-			auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+			auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 			append_new_line(fmt_string, true);
 			write_string_to_debugger(fmt_string);
 		}
@@ -376,7 +376,7 @@ namespace application::helper
 	{
 		if (api_is_debugger_present())
 		{
-			auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+			auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 			append_new_line(fmt_string, true);
 			write_string_to_debugger(fmt_string);
 		}
@@ -387,7 +387,7 @@ namespace application::helper
 	{
 		if (api_is_debugger_present())
 		{
-			auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+			auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 			write_string_to_debugger(fmt_string);
 		}
 	}
@@ -397,7 +397,7 @@ namespace application::helper
 	{
 		if (api_is_debugger_present())
 		{
-			auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+			auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 			write_string_to_debugger(fmt_string);
 		}
 	}
@@ -407,7 +407,7 @@ namespace application::helper
 	{
 		if (api_is_debugger_present())
 		{
-			auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+			auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 			append_new_line(fmt_string, true);
 			write_string_to_debugger(fmt_string);
 		}
@@ -418,7 +418,7 @@ namespace application::helper
 	{
 		if (api_is_debugger_present())
 		{
-			auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+			auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 			append_new_line(fmt_string, true);
 			write_string_to_debugger(fmt_string);
 		}
@@ -427,21 +427,21 @@ namespace application::helper
 	template <typename... _Types>
 	int write_stream(FILE *stream, std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stream(stream, fmt_string);
 	}
 
 	template <typename... _Types>
 	int write_stream(FILE *stream, const std::locale &_Loc, std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stream(stream, fmt_string);
 	}
 
 	template <typename... _Types>
 	int writeln_stream(FILE *stream, std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_file_translated(stream));
@@ -451,7 +451,7 @@ namespace application::helper
 	template <typename... _Types>
 	int writeln_stream(FILE *stream, const std::locale &_Loc, std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_file_translated(stream));
@@ -461,21 +461,21 @@ namespace application::helper
 	template <typename... _Types>
 	int write_stream(FILE *stream, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stream(stream, fmt_string);
 	}
 
 	template <typename... _Types>
 	int write_stream(FILE *stream, const std::locale &_Loc, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stream(stream, fmt_string);
 	}
 
 	template <typename... _Types>
 	int writeln_stream(FILE *stream, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_file_translated(stream));
@@ -485,7 +485,7 @@ namespace application::helper
 	template <typename... _Types>
 	int writeln_stream(FILE *stream, const std::locale &_Loc, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_file_translated(stream));
@@ -495,21 +495,21 @@ namespace application::helper
 	template <typename... _Types>
 	int write_stdout(std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stdout(fmt_string);
 	}
 
 	template <typename... _Types>
 	int write_stdout(const std::locale &_Loc, std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stdout(fmt_string);
 	}
 
 	template <typename... _Types>
 	int writeln_stdout(std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_stdout_translated());
@@ -519,7 +519,7 @@ namespace application::helper
 	template <typename... _Types>
 	int writeln_stdout(const std::locale &_Loc, std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_stdout_translated());
@@ -529,21 +529,21 @@ namespace application::helper
 	template <typename... _Types>
 	int write_stdout(std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stdout(fmt_string);
 	}
 
 	template <typename... _Types>
 	int write_stdout(const std::locale &_Loc, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stdout(fmt_string);
 	}
 
 	template <typename... _Types>
 	int writeln_stdout(std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_stdout_translated());
@@ -553,7 +553,7 @@ namespace application::helper
 	template <typename... _Types>
 	int writeln_stdout(const std::locale &_Loc, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_stdout_translated());
@@ -563,21 +563,21 @@ namespace application::helper
 	template <typename... _Types>
 	int write_stderr(std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stderr(fmt_string);
 	}
 
 	template <typename... _Types>
 	int write_stderr(const std::locale &_Loc, std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stderr(fmt_string);
 	}
 
 	template <typename... _Types>
 	int writeln_stderr(std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_stderr_translated());
@@ -587,7 +587,7 @@ namespace application::helper
 	template <typename... _Types>
 	int writeln_stderr(const std::locale &_Loc, std::format_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_stderr_translated());
@@ -597,21 +597,21 @@ namespace application::helper
 	template <typename... _Types>
 	int write_stderr(std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stderr(fmt_string);
 	}
 
 	template <typename... _Types>
 	int write_stderr(const std::locale &_Loc, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		return write_string_to_stderr(fmt_string);
 	}
 
 	template <typename... _Types>
 	int writeln_stderr(std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_stderr_translated());
@@ -621,7 +621,7 @@ namespace application::helper
 	template <typename... _Types>
 	int writeln_stderr(const std::locale &_Loc, std::wformat_string<_Types...> _Fmt, _Types &&... _Args)
 	{
-		auto fmt_string = format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...);
+		auto fmt_string{ format_to_string_f(_Loc, _Fmt, std::forward<_Types>(_Args)...) };
 		//If the output stream is in translated mode then the underlying
 		//functions will translate \n to \r\n, so we only want to append \n.
 		append_new_line(fmt_string, !is_stderr_translated());
@@ -636,13 +636,13 @@ namespace application::helper
 
 		//As long as this is > than the sso size
 		//then it is ok.
-		size_t string_buffer_size = 128;
+		size_t string_buffer_size{ 128 };
 		std::string s(string_buffer_size, '\0');
 
 		//The extra +1 because snprintf also writes a null.
 		//The standard does allow writing to the terminator as long
 		//as it is with a default initialised character (CharT()).
-		auto result = vsnprintf(s.data(), s.size() + 1, format, args);
+		auto result{ vsnprintf(s.data(), s.size() + 1, format, args) };
 		if (result > string_buffer_size)
 		{
 			s.resize(string_buffer_size);
@@ -664,14 +664,14 @@ namespace application::helper
 		va_list args{};
 		va_start(args, format);
 
-		size_t string_buffer = 128;
+		size_t string_buffer{ 128 };
 		std::wstring s(string_buffer, '\0');
-		bool do_format = true;
+		bool do_format{ true };
 
 		while (do_format)
 		{
 			//The extra +1 because it also writes a null.
-			auto result = vswprintf(s.data(), s.size() + 1, format, args);
+			auto result{ vswprintf(s.data(), s.size() + 1, format, args) };
 			if (result != -1)
 			{
 				s.resize(result);
@@ -694,7 +694,7 @@ namespace application::helper
 		{
 			va_list args{};
 			va_start(args, format);
-			std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+			std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 			write_string_to_debugger(fmt_string);
 			va_end(args);
 		}
@@ -707,7 +707,7 @@ namespace application::helper
 		{
 			va_list args{};
 			va_start(args, format);
-			std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+			std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 			append_new_line(fmt_string, true);
 			write_string_to_debugger(fmt_string);
 			va_end(args);
@@ -719,7 +719,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		write_string_to_stream(stream, fmt_string);
 		va_end(args);
 	}
@@ -729,7 +729,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		append_new_line(fmt_string, !is_file_translated(stream));
 		write_string_to_stream(stream, fmt_string);
 		va_end(args);
@@ -740,7 +740,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		write_string_to_stdout(fmt_string);
 		va_end(args);
 	}
@@ -750,7 +750,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		append_new_line(fmt_string, !is_stdout_translated());
 		write_string_to_stdout(fmt_string);
 		va_end(args);
@@ -761,7 +761,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		write_string_to_stderr(fmt_string);
 		va_end(args);
 	}
@@ -771,7 +771,7 @@ namespace application::helper
 	{
 		va_list args{};
 		va_start(args, format);
-		std::basic_string<CharT> fmt_string = format_to_string_s(format, args);
+		std::basic_string<CharT> fmt_string{ format_to_string_s(format, args) };
 		append_new_line(fmt_string, !is_stderr_translated());
 		write_string_to_stderr(fmt_string);
 		va_end(args);

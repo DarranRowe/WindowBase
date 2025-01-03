@@ -30,7 +30,7 @@ namespace application::abi
 		using namespace Microsoft::WRL;
 		using namespace std;
 
-		auto thread_id = GetCurrentThreadId();
+		auto thread_id{ GetCurrentThreadId() };
 		ComPtr<IDispatcherQueue> result;
 
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&]()
@@ -38,9 +38,9 @@ namespace application::abi
 				ComPtr<IDispatcherQueueController> dqc;
 				{
 					scoped_lock sl{ details::obtain_dqinfo_mutex()};
-					auto &info = details::obtain_dqinfo();
+					auto &info{ details::obtain_dqinfo() };
 
-					auto it = info.thread_sys_dispatcher_queue.find(thread_id);
+					auto it{ info.thread_sys_dispatcher_queue.find(thread_id) };
 					if (it != info.thread_sys_dispatcher_queue.end())
 					{
 						dqc = (*it).second;
@@ -65,9 +65,9 @@ namespace application::abi
 				ComPtr<IDispatcherQueueController> dqc;
 				{
 					scoped_lock sl{ details::obtain_dqinfo_background_mutex() };
-					auto &bi = details::obtain_dqinfo().background_information;
+					auto &bi{ details::obtain_dqinfo().background_information };
 
-					auto it = bi.background_sys_thread.find(id);
+					auto it{ bi.background_sys_thread.find(id) };
 					if (it != bi.background_sys_thread.end())
 					{
 						dqc = (*it).second;
@@ -88,16 +88,16 @@ namespace application::abi
 		ComPtr<IDispatcherQueue> result;
 
 #ifdef WINAPPSDK_AVAILABLE
-		auto thread_id = GetCurrentThreadId();
+		auto thread_id{ GetCurrentThreadId() };
 
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&]()
 			{
 				ComPtr<IDispatcherQueueController> dqc;
 				{
 					scoped_lock sl{ details::obtain_dqinfo_mutex() };
-					auto &info = details::obtain_dqinfo();
+					auto &info{ details::obtain_dqinfo() };
 
-					auto it = info.thread_app_dispatcher_queue.find(thread_id);
+					auto it{ info.thread_app_dispatcher_queue.find(thread_id) };
 					if (it != info.thread_app_dispatcher_queue.end())
 					{
 						dqc = (*it).second;
@@ -124,9 +124,9 @@ namespace application::abi
 				ComPtr<IDispatcherQueueController> dqc;
 				{
 					scoped_lock sl{ details::obtain_dqinfo_background_mutex() };
-					auto &bi = details::obtain_dqinfo().background_information;
+					auto &bi{ details::obtain_dqinfo().background_information };
 
-					auto it = bi.background_app_thread.find(id);
+					auto it{ bi.background_app_thread.find(id) };
 					if (it != bi.background_app_thread.end())
 					{
 						dqc = (*it).second;

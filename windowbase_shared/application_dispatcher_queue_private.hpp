@@ -11,10 +11,10 @@
 #include <windows.system.h>
 #if (__has_include(<Microsoft.UI.Dispatching.h>)) && (!defined WINAPPSDK_DISABLE_DISPATCHERQUEUE)
 #define WINAPPSDK_AVAILABLE 1
-constexpr bool winappsdk_available = true;
+constexpr bool winappsdk_available{ true };
 #include <Microsoft.UI.Dispatching.h>
 #else
-constexpr bool winappsdk_available = false;
+constexpr bool winappsdk_available{ false };
 #endif
 
 #include <mutex>

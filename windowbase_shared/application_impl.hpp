@@ -40,14 +40,14 @@ namespace application::details
 	struct callback_information
 	{
 		pump_callback_wrapper callback_wrapper;
-		HWND window_handle;
-		uint32_t callback_identifier;
+		HWND window_handle{};
+		uint32_t callback_identifier{};
 	};
 
 	struct thread_pump_information
 	{
-		bool in_message_pump = false;
-		bool is_pump_ansi = false;
+		bool in_message_pump{ false };
+		bool is_pump_ansi{ false };
 		std::atomic_uint32_t thread_refs{ 1 };
 
 		std::shared_mutex callback_mutex{};

@@ -8,9 +8,14 @@ namespace application
 	application::application() noexcept
 	{
 #ifdef _DEBUG
-		auto impl =
+		auto impl{
 #endif
-		details::application_impl::make_new_instance();
+		details::application_impl::make_new_instance()
+#ifdef _DEBUG
+		};
+#else
+		;
+#endif
 
 #ifdef _DEBUG
 		_ASSERTE(impl != nullptr);
@@ -33,7 +38,7 @@ namespace application
 	application::application(const application &) noexcept
 	{
 #ifdef _DEBUG
-		auto impl = details::application_impl::get_current_instance();
+		auto impl{ details::application_impl::get_current_instance() };
 		_ASSERTE(impl != nullptr);
 #endif
 
@@ -43,7 +48,7 @@ namespace application
 	application::application(application &&) noexcept
 	{
 #ifdef _DEBUG
-		auto impl = details::application_impl::get_current_instance();
+		auto impl{ details::application_impl::get_current_instance() };
 		_ASSERTE(impl != nullptr);
 #endif
 
@@ -62,7 +67,7 @@ namespace application
 
 	std::optional<application> application::try_get_current_instance()
 	{
-		auto current_impl = details::application_impl::unsafe_get_current_instance();
+		auto current_impl{ details::application_impl::unsafe_get_current_instance() };
 
 		if (current_impl == nullptr)
 		{
@@ -84,7 +89,7 @@ namespace application
 
 	std::wstring application::get_explicit_app_user_model_id()
 	{
-		auto aumid = details::application_impl::get_aumid();
+		auto aumid{ details::application_impl::get_aumid() };
 		_ASSERTE(aumid != std::nullopt);
 		if (!aumid.has_value())
 		{
@@ -96,13 +101,13 @@ namespace application
 
 	bool application::process_has_explicit_app_user_model_id()
 	{
-		auto aumid = details::application_impl::get_aumid();
+		auto aumid{ details::application_impl::get_aumid() };
 		return aumid.has_value();
 	}
 
 	uint32_t application::get_application_thread_id() const
 	{
-		auto impl = details::application_impl::get_current_instance();
+		auto impl{ details::application_impl::get_current_instance() };
 
 		return impl->get_main_thread_id();
 	}
@@ -114,7 +119,7 @@ namespace application
 
 	bool application::is_main_thread() const
 	{
-		auto impl = details::application_impl::get_current_instance();
+		auto impl{ details::application_impl::get_current_instance() };
 
 		return impl->is_current_thread_main_thread();
 	}
@@ -126,7 +131,7 @@ namespace application
 
 	bool application::did_initialisation_fail() const
 	{
-		auto impl = details::application_impl::get_current_instance();
+		auto impl{ details::application_impl::get_current_instance() };
 
 		if (impl == nullptr)
 		{
@@ -138,7 +143,7 @@ namespace application
 
 	init_failure_information application::get_failure_information() const
 	{
-		auto impl = details::application_impl::get_current_instance();
+		auto impl{ details::application_impl::get_current_instance() };
 
 		if (impl == nullptr)
 		{

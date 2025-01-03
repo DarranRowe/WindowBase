@@ -45,6 +45,6 @@ namespace application::details
 		
 		std::mutex m_mta_cookies_lock{};
 		std::vector<CO_MTA_USAGE_COOKIE> m_mta_cookies;
-		HRESULT m_failure_code = S_OK;
+		HRESULT m_failure_code{ S_OK };
 	};
 }

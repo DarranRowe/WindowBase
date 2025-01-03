@@ -7,9 +7,7 @@ namespace application::details
 {
 	void apartment_impl::init_com(COINIT init_type)
 	{
-		HRESULT hr = S_OK;
-
-		hr = CoInitializeEx(nullptr, init_type);
+		HRESULT hr{ CoInitializeEx(nullptr, init_type) };
 		if (SUCCEEDED(hr))
 		{
 			m_com_type = com_type::com;
@@ -23,8 +21,7 @@ namespace application::details
 
 	void apartment_impl::init_winrt(RO_INIT_TYPE init_type)
 	{
-		HRESULT hr = S_OK;
-		hr = RoInitialize(init_type);
+		HRESULT hr{ RoInitialize(init_type) };
 		if (SUCCEEDED(hr))
 		{
 			m_com_type = com_type::winrt;
@@ -39,8 +36,7 @@ namespace application::details
 	void apartment_impl::init_ole()
 	{
 		//OLE only has sta.
-		HRESULT hr = S_OK;
-		hr = OleInitialize(nullptr);
+		HRESULT hr{ OleInitialize(nullptr) };
 		if (SUCCEEDED(hr))
 		{
 			m_com_type = com_type::ole;
@@ -81,7 +77,7 @@ namespace application::details
 	{
 		CO_MTA_USAGE_COOKIE usage_cookie{};
 
-		HRESULT hr = CoIncrementMTAUsage(&usage_cookie);
+		HRESULT hr{ CoIncrementMTAUsage(&usage_cookie) };
 
 		if(SUCCEEDED(hr))
 		{
@@ -100,7 +96,7 @@ namespace application::details
 
 		{
 			std::scoped_lock lock(m_mta_cookies_lock);
-			auto vsize = m_mta_cookies.size();
+			auto vsize{ m_mta_cookies.size() };
 			usage_cookie = m_mta_cookies.at(vsize - 1);
 			m_mta_cookies.resize(vsize - 1);
 		}

@@ -26,7 +26,7 @@ namespace application::details
 		}
 		_ASSERTE(g_app_inst != nullptr);
 		std::scoped_lock lock{ g_app_inst_mutex };
-		auto still_alive = g_app_inst->release();
+		auto still_alive{ g_app_inst->release() };
 		if (!still_alive)
 		{
 			g_app_inst = nullptr;
@@ -115,7 +115,7 @@ namespace application::details
 
 		//The return value of this is whether the
 		//implementation is considered alive.
-		auto refs = --m_refs;
+		auto refs{ --m_refs };
 		if (refs == 0)
 		{
 			delete this;
@@ -127,7 +127,7 @@ namespace application::details
 
 	bool application_impl::is_thread_ui_thread(uint32_t tid) noexcept
 	{
-		auto current_tid = get_current_thread_id();
+		auto current_tid{ get_current_thread_id() };
 
 		//We need to check this.
 		//GetGUIThreadInfo will convert a thread to a GUI thread
@@ -143,10 +143,10 @@ namespace application::details
 
 	bool application_impl::is_thread_in_message_pump(uint32_t tid) noexcept
 	{
-		auto &tdm = get_data_map();
-		std::shared_lock sl(tdm.lookup_mutex);
+		auto &tdm{ get_data_map() };
+		std::shared_lock sl{ tdm.lookup_mutex };
 
-		auto it = tdm.lookup_map.find(tid);
+		auto it{ tdm.lookup_map.find(tid) };
 		if (it != std::end(tdm.lookup_map))
 		{
 			return (*it).second->in_message_pump;
@@ -167,7 +167,7 @@ namespace application::details
 		//E_FAIL means no AUMID.
 
 		wil::unique_cotaskmem_string aumid;
-		auto result = GetCurrentProcessExplicitAppUserModelID(aumid.addressof());
+		auto result{ GetCurrentProcessExplicitAppUserModelID(aumid.addressof()) };
 		if (FAILED(result))
 		{
 			helper::write_debugger(LR"(GetCurrentProcessExplicitAppUserModelID failed.
@@ -196,13 +196,13 @@ This potentially means the AUMID wasn't set for the process.
 
 	uint32_t application_impl::add_callback(pump_callback_wrapper callback, HWND window, uint32_t identifier, uint32_t tid)
 	{
-		std::unique_ptr<callback_information> ci = std::make_unique<callback_information>(callback_information{ std::move(callback), window, identifier });
+		std::unique_ptr<callback_information> ci{ std::make_unique<callback_information>(callback_information{ std::move(callback), window, identifier }) };
 
-		auto &tpi = get_pump_info_for_thread(tid);
+		auto &tpi{ get_pump_info_for_thread(tid) };
 		uint32_t cookie{};
 
 		{
-			std::unique_lock sl(tpi.callback_mutex);
+			std::unique_lock sl{ tpi.callback_mutex };
 			cookie = tpi.callback_cookie++;
 
 			tpi.callback_info.emplace(std::pair(cookie, std::move(ci)));
@@ -213,16 +213,16 @@ This potentially means the AUMID wasn't set for the process.
 
 	void application_impl::clear_callbacks(uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
-		std::unique_lock sl(tpi.callback_mutex);
+		auto &tpi{ get_pump_info_for_thread(tid) };
+		std::unique_lock sl{ tpi.callback_mutex };
 		tpi.callback_info.clear();
 	}
 
 	void application_impl::remove_callback(uint32_t cookie, uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
-		std::unique_lock sl(tpi.callback_mutex);
-		auto it = tpi.callback_info.find(cookie);
+		auto &tpi{ get_pump_info_for_thread(tid) };
+		std::unique_lock sl{ tpi.callback_mutex };
+		auto it{ tpi.callback_info.find(cookie) };
 		if (it != tpi.callback_info.end())
 		{
 			tpi.callback_info.erase(it);
@@ -231,12 +231,12 @@ This potentially means the AUMID wasn't set for the process.
 
 	void application_impl::add_work_callback(work_callback_wrapper callback, uint32_t tid)
 	{
-		auto wi = std::make_unique<work_callback_wrapper>(std::move(callback));
+		auto wi{ std::make_unique<work_callback_wrapper>(std::move(callback)) };
 
-		auto &tpi = get_pump_info_for_thread(tid);
+		auto &tpi{ get_pump_info_for_thread(tid) };
 
 		{
-			std::unique_lock sl(tpi.callback_mutex);
+			std::unique_lock sl{ tpi.callback_mutex };
 
 			tpi.callback_work_information.reset(wi.release());
 		}
@@ -244,10 +244,10 @@ This potentially means the AUMID wasn't set for the process.
 
 	void application_impl::remove_work_callback(uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
+		auto &tpi{ get_pump_info_for_thread(tid) };
 
 		{
-			std::unique_lock sl(tpi.callback_mutex);
+			std::unique_lock sl{ tpi.callback_mutex };
 
 			tpi.callback_work_information.reset();
 		}
@@ -255,7 +255,7 @@ This potentially means the AUMID wasn't set for the process.
 
 	void application_impl::set_message_pump_to_ansi(bool use_ansi, uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
+		auto &tpi{ get_pump_info_for_thread(tid) };
 
 		//We don't use any extra locking here.
 		//Accessing the structure across threads is not possible.
@@ -264,14 +264,14 @@ This potentially means the AUMID wasn't set for the process.
 
 	bool application_impl::is_message_pump_ansi(uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
+		auto &tpi{ get_pump_info_for_thread(tid) };
 
 		return tpi.is_pump_ansi;
 	}
 
 	int application_impl::run_ansi_message_pump(uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
+		auto &tpi{ get_pump_info_for_thread(tid) };
 
 		tpi.in_message_pump = true;
 
@@ -279,18 +279,18 @@ This potentially means the AUMID wasn't set for the process.
 
 		while (GetMessageA(&msg, nullptr, 0, 0))
 		{
-			bool dispatch_message = true;
+			bool dispatch_message{ true };
 
 			{
 				std::shared_lock sl{ tpi.callback_mutex };
 
 				for (auto &pci : tpi.callback_info)
 				{
-					callback_information &ci = *pci.second.get();
+					callback_information &ci{ *pci.second.get() };
 					if (ci.window_handle == nullptr)
 					{
 						//This is a simple callback.
-						auto sc_result = ci.callback_wrapper(msg);
+						auto sc_result{ ci.callback_wrapper(msg) };
 						//We only want to change this flag when the result is false.
 						//Changing it when true runs the risk of running DispatchMessage
 						//if one callback returns false and then the following one returns true
@@ -304,8 +304,8 @@ This potentially means the AUMID wasn't set for the process.
 						//This is a window callback.
 						if (windowing::window_base::has_window_message_callback(ci.window_handle, ci.callback_identifier))
 						{
-							auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
-							auto wc_result = mc.invoke(msg);
+							auto &mc{ windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier) };
+							auto wc_result{ mc.invoke(msg) };
 							dispatch_message = wc_result == true ? dispatch_message : wc_result;
 						}
 					}
@@ -318,7 +318,7 @@ This potentially means the AUMID wasn't set for the process.
 			}
 		}
 
-		int result = static_cast<int>(msg.wParam);
+		int result{ static_cast<int>(msg.wParam) };
 
 		tpi.in_message_pump = false;
 
@@ -327,7 +327,7 @@ This potentially means the AUMID wasn't set for the process.
 
 	int application_impl::run_unicode_message_pump(uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
+		auto &tpi{ get_pump_info_for_thread(tid) };
 
 		tpi.in_message_pump = true;
 
@@ -335,18 +335,18 @@ This potentially means the AUMID wasn't set for the process.
 
 		while (GetMessageW(&msg, nullptr, 0, 0))
 		{
-			bool dispatch_message = true;
+			bool dispatch_message{ true };
 
 			{
 				std::shared_lock sl{ tpi.callback_mutex };
 
 				for (auto &pci : tpi.callback_info)
 				{
-					callback_information &ci = *pci.second.get();
+					callback_information &ci{ *pci.second.get() };
 					if (ci.window_handle == nullptr)
 					{
 						//This is a simple callback.
-						auto sc_result = ci.callback_wrapper(msg);
+						auto sc_result{ ci.callback_wrapper(msg) };
 						//We only want to change this flag when the result is false.
 						//Changing it when true runs the risk of running DispatchMessage
 						//if one callback returns false and then the following one returns true
@@ -360,8 +360,8 @@ This potentially means the AUMID wasn't set for the process.
 						//This is a window callback.
 						if (windowing::window_base::has_window_message_callback(ci.window_handle, ci.callback_identifier))
 						{
-							auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
-							auto wc_result = mc.invoke(msg);
+							auto &mc{ windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier) };
+							auto wc_result{ mc.invoke(msg) };
 							dispatch_message = wc_result == true ? dispatch_message : wc_result;
 						}
 					}
@@ -374,7 +374,7 @@ This potentially means the AUMID wasn't set for the process.
 			}
 		}
 
-		int result = static_cast<int>(msg.wParam);
+		int result{ static_cast<int>(msg.wParam) };
 
 		tpi.in_message_pump = false;
 
@@ -383,8 +383,8 @@ This potentially means the AUMID wasn't set for the process.
 
 	int application_impl::run_ansi_game_message_pump(uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
-		bool continue_loop = true;
+		auto &tpi{ get_pump_info_for_thread(tid) };
+		bool continue_loop{ true };
 
 		tpi.in_message_pump = true;
 		MSG msg{};
@@ -395,18 +395,18 @@ This potentially means the AUMID wasn't set for the process.
 			{
 				if (msg.message != WM_QUIT)
 				{
-					bool dispatch_message = true;
+					bool dispatch_message{ true };
 
 					{
 						std::shared_lock sl{ tpi.callback_mutex };
 
 						for (auto &pci : tpi.callback_info)
 						{
-							callback_information &ci = *pci.second.get();
+							callback_information &ci{ *pci.second.get() };
 							if (ci.window_handle == nullptr)
 							{
 								//This is a simple callback.
-								auto sc_result = ci.callback_wrapper(msg);
+								auto sc_result{ ci.callback_wrapper(msg) };
 								//We only want to change this flag when the result is false.
 								//Changing it when true runs the risk of running DispatchMessage
 								//if one callback returns false and then the following one returns true
@@ -420,8 +420,8 @@ This potentially means the AUMID wasn't set for the process.
 								//This is a window callback.
 								if (windowing::window_base::has_window_message_callback(ci.window_handle, ci.callback_identifier))
 								{
-									auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
-									auto wc_result = mc.invoke(msg);
+									auto &mc{ windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier) };
+									auto wc_result{ mc.invoke(msg) };
 									dispatch_message = wc_result == true ? dispatch_message : wc_result;
 								}
 							}
@@ -444,14 +444,14 @@ This potentially means the AUMID wasn't set for the process.
 				
 				_ASSERTE(tpi.callback_work_information);
 
-				work_callback_wrapper &ci = *tpi.callback_work_information.get();
+				work_callback_wrapper &ci{ *tpi.callback_work_information.get() };
 				
-				auto result = ci();
+				auto result{ ci() };
 				continue_loop = result;
 			}
 		}
 
-		int result = static_cast<int>(msg.wParam);
+		int result{ static_cast<int>(msg.wParam) };
 
 		tpi.in_message_pump = false;
 
@@ -460,8 +460,8 @@ This potentially means the AUMID wasn't set for the process.
 
 	int application_impl::run_unicode_game_message_pump(uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
-		bool continue_loop = true;
+		auto &tpi{ get_pump_info_for_thread(tid) };
+		bool continue_loop{ true };
 
 		tpi.in_message_pump = true;
 		MSG msg{};
@@ -472,18 +472,18 @@ This potentially means the AUMID wasn't set for the process.
 			{
 				if (msg.message != WM_QUIT)
 				{
-					bool dispatch_message = true;
+					bool dispatch_message{ true };
 
 					{
 						std::shared_lock sl{ tpi.callback_mutex };
 
 						for (auto &pci : tpi.callback_info)
 						{
-							callback_information &ci = *pci.second.get();
+							callback_information &ci{ *pci.second.get() };
 							if (ci.window_handle == nullptr)
 							{
 								//This is a simple callback.
-								auto sc_result = ci.callback_wrapper(msg);
+								auto sc_result{ ci.callback_wrapper(msg) };
 								//We only want to change this flag when the result is false.
 								//Changing it when true runs the risk of running DispatchMessage
 								//if one callback returns false and then the following one returns true
@@ -497,8 +497,8 @@ This potentially means the AUMID wasn't set for the process.
 								//This is a window callback.
 								if (windowing::window_base::has_window_message_callback(ci.window_handle, ci.callback_identifier))
 								{
-									auto &mc = windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier);
-									auto wc_result = mc.invoke(msg);
+									auto &mc{ windowing::window_base::get_window_message_callback(ci.window_handle, ci.callback_identifier) };
+									auto wc_result{ mc.invoke(msg) };
 									dispatch_message = wc_result == true ? dispatch_message : wc_result;
 								}
 							}
@@ -520,14 +520,14 @@ This potentially means the AUMID wasn't set for the process.
 				std::shared_lock sl{ tpi.callback_mutex };
 
 				_ASSERTE(tpi.callback_work_information);
-				work_callback_wrapper &ci = *tpi.callback_work_information.get();
+				work_callback_wrapper &ci{ *tpi.callback_work_information.get() };
 
-				auto result = ci();
+				auto result{ ci() };
 				continue_loop = result;
 			}
 		}
 
-		int result = static_cast<int>(msg.wParam);
+		int result{ static_cast<int>(msg.wParam) };
 
 		tpi.in_message_pump = false;
 
@@ -536,7 +536,7 @@ This potentially means the AUMID wasn't set for the process.
 
 	void application_impl::clear_ansi_message_queue(uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
+		auto &tpi{ get_pump_info_for_thread(tid) };
 
 		tpi.in_message_pump = true;
 
@@ -552,7 +552,7 @@ This potentially means the AUMID wasn't set for the process.
 
 	void application_impl::clear_unicode_message_queue(uint32_t tid)
 	{
-		auto &tpi = get_pump_info_for_thread(tid);
+		auto &tpi{ get_pump_info_for_thread(tid) };
 
 		tpi.in_message_pump = true;
 
@@ -580,16 +580,16 @@ This potentially means the AUMID wasn't set for the process.
 
 	void application_impl::init_data_for_thread(uint32_t tid)
 	{
-		auto &tdm = get_data_map();
+		auto &tdm{ get_data_map() };
 
 		std::pair<std::map<uint32_t, std::unique_ptr<thread_pump_information>>::iterator, bool> emplace_result{};
 
 		{
-			std::unique_lock sl(tdm.lookup_mutex);
-			auto find_result = tdm.lookup_map.find(tid);
+			std::unique_lock sl{ tdm.lookup_mutex };
+			auto find_result{ tdm.lookup_map.find(tid) };
 			if (find_result != tdm.lookup_map.end())
 			{
-				auto &mytpi = *(*find_result).second.get();
+				auto &mytpi{ *(*find_result).second.get() };
 				mytpi.thread_refs += 1;
 			}
 			else
@@ -607,16 +607,16 @@ This potentially means the AUMID wasn't set for the process.
 
 	void application_impl::remove_data_for_thread(uint32_t tid)
 	{
-		auto &tdm = get_data_map();
+		auto &tdm{ get_data_map() };
 
-		std::unique_lock sl(tdm.lookup_mutex);
-		auto find_result = tdm.lookup_map.find(tid);
-		auto &mytpi = *(*find_result).second.get();
-		auto refs = --mytpi.thread_refs;
+		std::unique_lock sl{ tdm.lookup_mutex };
+		auto find_result{ tdm.lookup_map.find(tid) };
+		auto &mytpi{ *(*find_result).second.get() };
+		auto refs{ --mytpi.thread_refs };
 
 		if (refs == 0)
 		{
-			auto erase_result = tdm.lookup_map.erase(tid);
+			auto erase_result{ tdm.lookup_map.erase(tid) };
 			if (erase_result != 1)
 			{
 				helper::writeln_debugger(L"Erasing thread data failed for thread {}.", tid);
@@ -627,12 +627,12 @@ This potentially means the AUMID wasn't set for the process.
 
 	thread_pump_information &application_impl::get_pump_info_for_thread(uint32_t tid)
 	{
-		auto &tdm = get_data_map();
+		auto &tdm{ get_data_map() };
 
 		{
-			std::shared_lock sl(tdm.lookup_mutex);
+			std::shared_lock sl{ tdm.lookup_mutex };
 
-			auto it = tdm.lookup_map.find(tid);
+			auto it{ tdm.lookup_map.find(tid) };
 			_ASSERTE(it != tdm.lookup_map.end());
 			if (it == tdm.lookup_map.end())
 			{

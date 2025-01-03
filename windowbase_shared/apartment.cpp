@@ -8,9 +8,7 @@ namespace application
 	{
 		APTTYPE apt_type{};
 		APTTYPEQUALIFIER apt_type_qual{};
-		HRESULT hr = S_OK;
-
-		hr = CoGetApartmentType(&apt_type, &apt_type_qual);
+		HRESULT hr{ CoGetApartmentType(&apt_type, &apt_type_qual) };
 
 		if (hr == CO_E_NOTINITIALIZED)
 		{
@@ -140,9 +138,9 @@ namespace application
 
 	bool apartment::is_aparmtent_init()
 	{
-		auto result = query_apt_type();
+		auto [type, qualifier]{ query_apt_type() };
 
-		if (result.first == APTTYPE_CURRENT || result.second == APTTYPEQUALIFIER_IMPLICIT_MTA || result.second == APTTYPEQUALIFIER_NA_ON_IMPLICIT_MTA)
+		if (type == APTTYPE_CURRENT || qualifier == APTTYPEQUALIFIER_IMPLICIT_MTA || qualifier == APTTYPEQUALIFIER_NA_ON_IMPLICIT_MTA)
 		{
 			return false;
 		}
@@ -152,9 +150,9 @@ namespace application
 
 	bool apartment::is_sta_apartment()
 	{
-		auto result = query_apt_type();
+		auto [type, qualifier] { query_apt_type() };
 
-		if (result.first == APTTYPE_STA || result.first == APTTYPE_MAINSTA)
+		if (type == APTTYPE_STA || type == APTTYPE_MAINSTA)
 		{
 			return true;
 		}
@@ -164,9 +162,9 @@ namespace application
 
 	bool apartment::is_nta_apartment()
 	{
-		auto result = query_apt_type();
+		auto [type, qualifier] { query_apt_type() };
 
-		if (result.first == APTTYPE_NA)
+		if (type == APTTYPE_NA)
 		{
 			return true;
 		}
@@ -176,9 +174,9 @@ namespace application
 
 	bool apartment::is_implicit_mta()
 	{
-		auto result = query_apt_type();
+		auto [type, qualifier] { query_apt_type() };
 
-		if (result.second == APTTYPEQUALIFIER_IMPLICIT_MTA || result.second == APTTYPEQUALIFIER_NA_ON_IMPLICIT_MTA)
+		if (qualifier == APTTYPEQUALIFIER_IMPLICIT_MTA || qualifier == APTTYPEQUALIFIER_NA_ON_IMPLICIT_MTA)
 		{
 			return true;
 		}

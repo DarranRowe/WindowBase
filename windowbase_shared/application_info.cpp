@@ -45,7 +45,7 @@ namespace application
 		//Since Kernel32.dll depends on KernelBase.dll, so it should always be loaded.
 		//If this somehow fails, then we are in a special place. So we just return nothing.
 
-		HMODULE kb_mod = GetModuleHandleW(L"KernelBase.dll");
+		HMODULE kb_mod{ GetModuleHandleW(L"KernelBase.dll") };
 		if (kb_mod == nullptr)
 		{
 			return {};
@@ -53,13 +53,13 @@ namespace application
 
 		using gcpp2_ptr = GetCurrentPackagePath2_t *;
 
-		auto gcpp2_fun_ptr = reinterpret_cast<gcpp2_ptr>(GetProcAddress(kb_mod, "GetCurrentPackagePath2"));
+		auto gcpp2_fun_ptr{ reinterpret_cast<gcpp2_ptr>(GetProcAddress(kb_mod, "GetCurrentPackagePath2")) };
 		if (gcpp2_fun_ptr == nullptr)
 		{
 			return {};
 		}
 
-		std::function<GetCurrentPackagePath2_t> result = [gcpp2_fun_ptr](auto p1, auto p2, auto p3) { return gcpp2_fun_ptr(p1, p2, p3); };
+		std::function<GetCurrentPackagePath2_t> result{ [gcpp2_fun_ptr](auto p1, auto p2, auto p3) { return gcpp2_fun_ptr(p1, p2, p3); } };
 
 		return result;
 #endif
@@ -77,7 +77,7 @@ namespace application
 		//Since Kernel32.dll depends on KernelBase.dll, so it should always be loaded.
 		//If this somehow fails, then we are in a special place. So we just return nothing.
 
-		HMODULE kb_mod = GetModuleHandleW(L"KernelBase.dll");
+		HMODULE kb_mod{ GetModuleHandleW(L"KernelBase.dll") };
 		if (kb_mod == nullptr)
 		{
 			return {};
@@ -85,13 +85,13 @@ namespace application
 
 		using gcpi2_ptr = GetCurrentPackageInfo2_t *;
 
-		auto gcpi2_fun_ptr = reinterpret_cast<gcpi2_ptr>(GetProcAddress(kb_mod, "GetCurrentPackageInfo2"));
+		auto gcpi2_fun_ptr{ reinterpret_cast<gcpi2_ptr>(GetProcAddress(kb_mod, "GetCurrentPackageInfo2")) };
 		if (gcpi2_fun_ptr == nullptr)
 		{
 			return {};
 		}
 
-		std::function<GetCurrentPackageInfo2_t> result = [gcpi2_fun_ptr](auto p1, auto p2, auto p3, auto p4, auto p5) {return gcpi2_fun_ptr(p1, p2, p3, p4, p5); };
+		std::function<GetCurrentPackageInfo2_t> result{ [gcpi2_fun_ptr](auto p1, auto p2, auto p3, auto p4, auto p5) {return gcpi2_fun_ptr(p1, p2, p3, p4, p5); } };
 
 		return result;
 #endif
@@ -99,9 +99,9 @@ namespace application
 
 	std::unique_ptr<BYTE[]> get_package_id()
 	{
-		UINT32 buffer_size = 0;
+		UINT32 buffer_size{};
 		std::unique_ptr<BYTE[]> package_id_result;
-		auto gcpi_result = GetCurrentPackageId(&buffer_size, nullptr);
+		auto gcpi_result{ GetCurrentPackageId(&buffer_size, nullptr) };
 
 		if (gcpi_result != APPMODEL_ERROR_NO_PACKAGE)
 		{
@@ -123,7 +123,7 @@ namespace application
 
 	bool is_application_packaged()
 	{
-		auto package_id_buffer = get_package_id();
+		auto package_id_buffer{ get_package_id() };
 
 		if (package_id_buffer)
 		{
@@ -146,13 +146,13 @@ namespace application
 		//VC uses wide characters because the filesystem is UTF-16. This means assigning to it would convert
 		//if we used GetModuleFileNameA. Using the UTF-16 version also reduces the chance of mangling things
 		//if the locale isn't set properly.
-		bool full_path_copied = false;
+		bool full_path_copied{ false };
 		std::wstring app_path = std::wstring(MAX_PATH, L'\0');
-		uint32_t path_size = MAX_PATH;
+		uint32_t path_size{ MAX_PATH };
 
 		while (!full_path_copied)
 		{
-			auto module_length = GetModuleFileNameW(nullptr, app_path.data(), path_size);
+			auto module_length{ GetModuleFileNameW(nullptr, app_path.data(), path_size) };
 			if (module_length == 0)
 			{
 				FAIL_FAST_WIN32(GetLastError());
@@ -179,8 +179,8 @@ namespace application
 	{
 		if (is_application_packaged())
 		{
-			UINT32 package_path_length = 0;
-			auto gcpp_result = GetCurrentPackagePath(&package_path_length, nullptr);
+			UINT32 package_path_length{ 0 };
+			auto gcpp_result{ GetCurrentPackagePath(&package_path_length, nullptr) };
 			std::filesystem::path package_path;
 
 			if (gcpp_result == ERROR_INSUFFICIENT_BUFFER)
@@ -202,7 +202,7 @@ namespace application
 		}
 
 		//Empty path used to indicate that the application has no package path.
-		return std::filesystem::path();
+		return std::filesystem::path{};
 	}
 
 	std::filesystem::path application_external_content_path()
@@ -211,12 +211,12 @@ namespace application
 		//This is detected as an empty path, which we use
 		//to indicate that the external content path isn't
 		//set for the package.
-		auto result = std::filesystem::path();
+		auto result = std::filesystem::path{};
 #if NTDDI_VERSION < NTDDI_WIN10_VB
 		//Compiling this with a Windows SDK older than 2004
 		//should outright default to returning an empty path.
 #else
-		auto gcpp2_ptr = get_gcpp2_ptr();
+		auto gcpp2_ptr{ get_gcpp2_ptr() };
 
 		if (is_application_packaged())
 		{
@@ -232,9 +232,9 @@ namespace application
 				{
 					//PackagePathType_xxxExternal only exists in the 2004
 					//and newers SDKs.
-					auto package_path_type = PackagePathType_EffectiveExternal;
-					UINT32 package_path_length = 0;
-					auto gcpp_result = gcpp2_ptr(package_path_type, &package_path_length, nullptr);
+					auto package_path_type{ PackagePathType_EffectiveExternal };
+					UINT32 package_path_length{ 0 };
+					auto gcpp_result{ gcpp2_ptr(package_path_type, &package_path_length, nullptr) };
 
 					if (gcpp_result == ERROR_INSUFFICIENT_BUFFER)
 					{
@@ -264,7 +264,7 @@ namespace application
 	{
 		std::wstring result{};
 		UINT32 full_name_length{};
-		auto gcpfn_result = GetCurrentPackageFullName(&full_name_length, nullptr);
+		auto gcpfn_result{ GetCurrentPackageFullName(&full_name_length, nullptr) };
 
 		if (gcpfn_result == ERROR_INSUFFICIENT_BUFFER)
 		{
@@ -285,7 +285,7 @@ namespace application
 	{
 		std::wstring result{};
 		UINT32 full_name_length{};
-		auto gcpfn_result = GetCurrentPackageFamilyName(&full_name_length, nullptr);
+		auto gcpfn_result{ GetCurrentPackageFamilyName(&full_name_length, nullptr) };
 
 		if (gcpfn_result == ERROR_INSUFFICIENT_BUFFER)
 		{
@@ -315,13 +315,12 @@ namespace application
 		}
 
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage> current_package;
-		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage8> current_package8;
-		auto s = wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics, ABI::Windows::ApplicationModel::Package>();
+		auto s{ wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics, ABI::Windows::ApplicationModel::Package>() };
 		FAIL_FAST_IF_FAILED(s->get_Current(current_package.ReleaseAndGetAddressOf()));
 
-		auto ip8result = wrl_helpers::try_as<ABI::Windows::ApplicationModel::IPackage8>(current_package);
+		auto ip8result{ wrl_helpers::try_as<ABI::Windows::ApplicationModel::IPackage8>(current_package) };
 		FAIL_FAST_IF_FAILED(ip8result.second);
-		current_package8 = ip8result.first;
+		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage8> current_package8{ ip8result.first };
 
 		Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::ApplicationModel::Core::AppListEntry *>> applistentries;
 
@@ -334,19 +333,18 @@ namespace application
 		}
 
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::Core::IAppListEntry> applistentry;
-		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::Core::IAppListEntry2> applistentry2;
 		FAIL_FAST_IF_FAILED(applistentries->GetAt(0, applistentry.ReleaseAndGetAddressOf()));
-		auto iale2result = wrl_helpers::try_as<ABI::Windows::ApplicationModel::Core::IAppListEntry2>(applistentry);
+		auto iale2result{ wrl_helpers::try_as<ABI::Windows::ApplicationModel::Core::IAppListEntry2>(applistentry) };
 		FAIL_FAST_IF_FAILED(iale2result.second);
-		applistentry2 = iale2result.first;
+		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::Core::IAppListEntry2> applistentry2{ iale2result.first };
 
 		Microsoft::WRL::Wrappers::HString aumid;
 		FAIL_FAST_IF_FAILED(applistentry2->get_AppUserModelId(aumid.ReleaseAndGetAddressOf()));
 
 		unsigned int raw_buffer_length{};
-		auto raw_buffer = aumid.GetRawBuffer(&raw_buffer_length);
+		auto raw_buffer{ aumid.GetRawBuffer(&raw_buffer_length) };
 
-		std::wstring aumid_result = raw_buffer;
+		std::wstring aumid_result{ raw_buffer };
 
 		return aumid_result;
 	}
@@ -359,13 +357,12 @@ namespace application
 		}
 
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage> current_package;
-		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage8> current_package8;
 		auto s = wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics, ABI::Windows::ApplicationModel::Package>();
 		FAIL_FAST_IF_FAILED(s->get_Current(current_package.ReleaseAndGetAddressOf()));
 
 		auto ip8result = wrl_helpers::try_as<ABI::Windows::ApplicationModel::IPackage8>(current_package);
 		FAIL_FAST_IF_FAILED(ip8result.second);
-		current_package8 = ip8result.first;
+		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage8> current_package8{ ip8result.first };
 
 		Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::ApplicationModel::Core::AppListEntry *>> applistentries;
 
@@ -378,19 +375,18 @@ namespace application
 		}
 
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::Core::IAppListEntry> applistentry;
-		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::Core::IAppListEntry2> applistentry2;
 		FAIL_FAST_IF_FAILED(applistentries->GetAt(app, applistentry.ReleaseAndGetAddressOf()));
 		auto iale2result = wrl_helpers::try_as<ABI::Windows::ApplicationModel::Core::IAppListEntry2>(applistentry);
 		FAIL_FAST_IF_FAILED(iale2result.second);
-		applistentry2 = iale2result.first;
+		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::Core::IAppListEntry2> applistentry2{ iale2result.first };
 
 		Microsoft::WRL::Wrappers::HString aumid;
 		FAIL_FAST_IF_FAILED(applistentry2->get_AppUserModelId(aumid.ReleaseAndGetAddressOf()));
 
 		unsigned int raw_buffer_length{};
-		auto raw_buffer = aumid.GetRawBuffer(&raw_buffer_length);
+		auto raw_buffer{ aumid.GetRawBuffer(&raw_buffer_length) };
 
-		std::wstring aumid_result = raw_buffer;
+		std::wstring aumid_result{ raw_buffer };
 
 		return aumid_result;
 	}
@@ -403,13 +399,12 @@ namespace application
 		}
 
 		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage> current_package;
-		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage8> current_package8;
 		auto s = wrl_helpers::get_activation_factory<ABI::Windows::ApplicationModel::IPackageStatics, ABI::Windows::ApplicationModel::Package>();
 		FAIL_FAST_IF_FAILED(s->get_Current(current_package.ReleaseAndGetAddressOf()));
 
 		auto ip8result = wrl_helpers::try_as<ABI::Windows::ApplicationModel::IPackage8>(current_package);
 		FAIL_FAST_IF_FAILED(ip8result.second);
-		current_package8 = ip8result.first;
+		Microsoft::WRL::ComPtr<ABI::Windows::ApplicationModel::IPackage8> current_package8{ ip8result.first };
 
 		Microsoft::WRL::ComPtr<ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::ApplicationModel::Core::AppListEntry *>> applistentries;
 

@@ -65,12 +65,12 @@ namespace application
 		void shutdown_all_sys_queues()
 		{
 			{
-				std::scoped_lock sl(dispatcher_queue_info_mutex_thread_lock);
+				std::scoped_lock sl{ dispatcher_queue_info_mutex_thread_lock };
 				s_dispatcher_queue_info.thread_sys_dispatcher_queue.clear();
 			}
 
 			{
-				std::scoped_lock sl(dispatcher_queue_info_mutex_b_lock);
+				std::scoped_lock sl{ dispatcher_queue_info_mutex_b_lock };
 				s_dispatcher_queue_info.background_information.background_sys_thread.clear();
 			}
 		}
@@ -78,12 +78,12 @@ namespace application
 		{
 #if defined WINAPPSDK_AVAILABLE
 			{
-				std::scoped_lock sl(dispatcher_queue_info_mutex_thread_lock);
+				std::scoped_lock sl{ dispatcher_queue_info_mutex_thread_lock };
 				s_dispatcher_queue_info.thread_app_dispatcher_queue.clear();
 			}
 
 			{
-				std::scoped_lock sl(dispatcher_queue_info_mutex_b_lock);
+				std::scoped_lock sl{ dispatcher_queue_info_mutex_b_lock };
 				s_dispatcher_queue_info.background_information.background_app_thread.clear();
 			}
 #endif
@@ -93,9 +93,7 @@ namespace application
 		{
 			if constexpr (winappsdk_available)
 			{
-				wil::unique_hmodule win_app_runtime_handle;
-
-				win_app_runtime_handle.reset(LoadLibraryW(L"Microsoft.WindowsAppRuntime.dll"));
+				wil::unique_hmodule win_app_runtime_handle{ LoadLibraryW(L"Microsoft.WindowsAppRuntime.dll") };
 
 				return win_app_runtime_handle != nullptr;
 			}
@@ -107,10 +105,10 @@ namespace application
 		bool wappsdk_dq_activatable()
 		{
 #if defined WINAPPSDK_AVAILABLE
-			bool result = true;
+			bool result{ true };
 			try
 			{
-				auto rf = wrl_helpers::get_activation_factory<ABI::Microsoft::UI::Dispatching::IDispatcherQueueControllerStatics, ABI::Microsoft::UI::Dispatching::DispatcherQueueController>();
+				auto rf{ wrl_helpers::get_activation_factory<ABI::Microsoft::UI::Dispatching::IDispatcherQueueControllerStatics, ABI::Microsoft::UI::Dispatching::DispatcherQueueController>() };
 			}
 			catch (wil::ResultException &)
 			{
@@ -130,7 +128,7 @@ namespace application
 
 		bool decref_sys_queue()
 		{
-			auto refs = --system_queue_refs;
+			auto refs{ --system_queue_refs };
 			return refs == 0 ? false : true;
 		}
 
@@ -141,7 +139,7 @@ namespace application
 
 		bool decref_was_queue()
 		{
-			auto refs = --was_queue_refs;
+			auto refs{ --was_queue_refs };
 			return refs == 0 ? false : true;
 		}
 	}
@@ -177,7 +175,7 @@ namespace application
 
 	application_system_dispatcher_queue::~application_system_dispatcher_queue() noexcept
 	{
-		auto still_alive = details::decref_sys_queue();
+		auto still_alive{ details::decref_sys_queue() };
 		if(!still_alive)
 		{
 			details::shutdown_all_sys_queues();
@@ -187,12 +185,12 @@ namespace application
 
 	bool application_system_dispatcher_queue::thread_has_dispatcher_queue() const noexcept
 	{
-		auto thread_id = GetCurrentThreadId();
+		auto thread_id{ GetCurrentThreadId() };
 
 		{
-			std::scoped_lock sl = std::scoped_lock(details::obtain_dqinfo_mutex());
-			auto &info = details::obtain_dqinfo();
-			auto tit = info.thread_sys_dispatcher_queue.find(thread_id);
+			std::scoped_lock sl{ std::scoped_lock(details::obtain_dqinfo_mutex()) };
+			auto &info{ details::obtain_dqinfo() };
+			auto tit{ info.thread_sys_dispatcher_queue.find(thread_id) };
 
 			if (tit != info.thread_sys_dispatcher_queue.end())
 			{
@@ -207,11 +205,11 @@ namespace application
 	{
 		using namespace ABI::Windows::System;
 		using namespace Microsoft::WRL;
-		bool return_result = false;
+		bool return_result{ false };
 
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				auto dq_statics = wrl_helpers::get_activation_factory<IDispatcherQueueStatics, DispatcherQueue>();
+				auto dq_statics{ wrl_helpers::get_activation_factory<IDispatcherQueueStatics, DispatcherQueue>() };
 				ComPtr<IDispatcherQueue> tdq;
 				THROW_IF_FAILED(dq_statics->GetForCurrentThread(tdq.ReleaseAndGetAddressOf()));
 
@@ -231,9 +229,9 @@ namespace application
 
 		using namespace std;
 
-		bool return_result = false;
+		bool return_result{ false };
 
-		auto thread_id = GetCurrentThreadId();
+		auto thread_id{ GetCurrentThreadId() };
 
 		if (!is_current_thread_ui())
 		{
@@ -257,7 +255,7 @@ namespace application
 
 				{
 					scoped_lock sl{ details::obtain_dqinfo_mutex() };
-					auto &info = details::obtain_dqinfo();
+					auto &info{ details::obtain_dqinfo() };
 
 					info.thread_sys_dispatcher_queue.emplace(make_pair(thread_id, move(disp_queue_ctrl)));
 				}
@@ -274,7 +272,7 @@ namespace application
 		using namespace Microsoft::WRL;
 
 		using namespace std;
-		int32_t disp_queue_id = -1;
+		int32_t disp_queue_id{ -1 };
 
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
@@ -284,10 +282,10 @@ namespace application
 
 				{
 					scoped_lock sl{ details::obtain_dqinfo_background_mutex() };
-					auto &bi = details::obtain_background_dqinfo();
+					auto &bi{ details::obtain_background_dqinfo() };
 
 					_ASSERTE(bi.background_id >= -1);
-					auto id_cache = bi.background_id++;
+					auto id_cache{ bi.background_id++ };
 					bi.background_sys_thread.emplace(id_cache, move(dqc));
 					disp_queue_id = id_cache;
 				}
@@ -302,7 +300,7 @@ namespace application
 		using namespace ABI::Windows::System;
 		using namespace Microsoft::WRL;
 
-		auto id = GetCurrentThreadId();
+		auto id{ GetCurrentThreadId() };
 		if (!is_current_thread_ui())
 		{
 			return;
@@ -313,8 +311,8 @@ namespace application
 				ComPtr<IDispatcherQueueController> dqc;
 				{
 					std::scoped_lock sl{ details::obtain_dqinfo_mutex()};
-					auto &info = details::obtain_dqinfo();
-					auto it = info.thread_sys_dispatcher_queue.find(id);
+					auto &info{ details::obtain_dqinfo() };
+					auto it{ info.thread_sys_dispatcher_queue.find(id) };
 					if (it != info.thread_sys_dispatcher_queue.end())
 					{
 						dqc = (*it).second;
@@ -352,10 +350,10 @@ namespace application
 			{
 				ComPtr<IDispatcherQueueController> dqc;
 				{
-					std::scoped_lock sl(details::obtain_dqinfo_background_mutex());
+					std::scoped_lock sl{ details::obtain_dqinfo_background_mutex() };
 
-					auto &bi = details::obtain_background_dqinfo();
-					auto it = bi.background_sys_thread.find(id);
+					auto &bi{ details::obtain_background_dqinfo() };
+					auto it{ bi.background_sys_thread.find(id) };
 					if (it != bi.background_sys_thread.end())
 					{
 						dqc = (*it).second;
@@ -391,7 +389,7 @@ namespace application
 			helper::writeln_debugger(L"Make sure that the Windows App SDK ABI headers have been placed in the correct location.");
 		}
 		_ASSERTE(winappsdk_available == true);
-		bool loadable_runtime = details::runtime_loadable();
+		bool loadable_runtime{ details::runtime_loadable() };
 		if (!loadable_runtime)
 		{
 			helper::writeln_debugger(L"Windows App SDK was not loadable.");
@@ -419,7 +417,7 @@ namespace application
 	}
 	application_winappsdk_dispatcher_queue::~application_winappsdk_dispatcher_queue() noexcept
 	{
-		auto still_alive = details::decref_was_queue();
+		auto still_alive{ details::decref_was_queue() };
 
 		if constexpr (winappsdk_available)
 		{
@@ -444,12 +442,12 @@ namespace application
 	bool application_winappsdk_dispatcher_queue::thread_has_dispatcher_queue() const noexcept
 	{
 #if defined WINAPPSDK_AVAILABLE
-		auto thread_id = GetCurrentThreadId();
+		auto thread_id{ GetCurrentThreadId() };
 
 		{
-			std::scoped_lock sl = std::scoped_lock(details::obtain_dqinfo_mutex());
-			auto &info = details::obtain_dqinfo();
-			auto tit = info.thread_app_dispatcher_queue.find(thread_id);
+			std::scoped_lock sl{ details::obtain_dqinfo_mutex() };
+			auto &info{ details::obtain_dqinfo() };
+			auto tit{ info.thread_app_dispatcher_queue.find(thread_id) };
 
 			if (tit != info.thread_app_dispatcher_queue.end())
 			{
@@ -463,7 +461,7 @@ namespace application
 
 	bool application_winappsdk_dispatcher_queue::thread_has_uncontrolled_dispatcher_queue() const noexcept
 	{
-		bool return_result = false;
+		bool return_result{ false };
 
 #if defined WINAPPSDK_AVAILABLE
 		using namespace ABI::Microsoft::UI::Dispatching;
@@ -471,7 +469,7 @@ namespace application
 		
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
-				auto dq_statics = wrl_helpers::get_activation_factory<IDispatcherQueueStatics, DispatcherQueue>();
+				auto dq_statics{ wrl_helpers::get_activation_factory<IDispatcherQueueStatics, DispatcherQueue>() };
 				ComPtr<IDispatcherQueue> tdq;
 				THROW_IF_FAILED(dq_statics->GetForCurrentThread(tdq.ReleaseAndGetAddressOf()));
 
@@ -488,7 +486,7 @@ namespace application
 
 	bool application_winappsdk_dispatcher_queue::create_dispatcher_queue_on_thread() noexcept
 	{
-		bool return_result = false;
+		bool return_result{ false };
 
 #if defined WINAPPSDK_AVAILABLE
 		using namespace ABI::Microsoft::UI::Dispatching;
@@ -496,7 +494,7 @@ namespace application
 
 		using namespace std;
 
-		auto thread_id = GetCurrentThreadId();
+		auto thread_id{ GetCurrentThreadId() };
 
 		if (!is_current_thread_ui())
 		{
@@ -516,13 +514,13 @@ namespace application
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
 				ComPtr<IDispatcherQueueController> disp_queue_ctrl;
-				auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics, DispatcherQueueController>();
+				auto dqcs{ wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics, DispatcherQueueController>() };
 
 				THROW_IF_FAILED(dqcs->CreateOnCurrentThread(disp_queue_ctrl.ReleaseAndGetAddressOf()));
 
 				{
 					scoped_lock sl{ details::obtain_dqinfo_mutex() };
-					auto &info = details::obtain_dqinfo();
+					auto &info{ details::obtain_dqinfo() };
 					info.thread_app_dispatcher_queue.emplace(make_pair(thread_id, move(disp_queue_ctrl)));
 				}
 
@@ -535,7 +533,7 @@ namespace application
 
 	int32_t application_winappsdk_dispatcher_queue::create_background_dispatcher_queue() noexcept
 	{
-		int32_t disp_queue_id = -1;
+		int32_t disp_queue_id{ -1 };
 
 #if defined WINAPPSDK_AVAILABLE
 		using namespace ABI::Microsoft::UI::Dispatching;
@@ -546,16 +544,16 @@ namespace application
 		wil::FailFastException(WI_DIAGNOSTICS_INFO, [&, this]()
 			{
 				ComPtr<IDispatcherQueueController> dqc;
-				auto dqcs = wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics, DispatcherQueueController>();
+				auto dqcs{ wrl_helpers::get_activation_factory<IDispatcherQueueControllerStatics, DispatcherQueueController>() };
 
 				THROW_IF_FAILED(dqcs->CreateOnCurrentThread(dqc.ReleaseAndGetAddressOf()));
 
 				{
 					scoped_lock sl{ details::obtain_dqinfo_background_mutex() };
-					auto &bi = details::obtain_background_dqinfo();
+					auto &bi{ details::obtain_background_dqinfo() };
 
 					_ASSERTE(bi.background_id >= -1);
-					auto id_cache = bi.background_id++;
+					auto id_cache{ bi.background_id++ };
 					bi.background_app_thread.emplace(id_cache, move(dqc));
 					disp_queue_id = id_cache;
 				}
@@ -572,7 +570,7 @@ namespace application
 		using namespace ABI::Microsoft::UI::Dispatching;
 		using namespace Microsoft::WRL;
 
-		auto id = GetCurrentThreadId();
+		auto id{ GetCurrentThreadId() };
 		if (!is_current_thread_ui())
 		{
 			return;
@@ -583,8 +581,8 @@ namespace application
 				ComPtr<IDispatcherQueueController> dqc;
 				{
 					std::scoped_lock sl{ details::obtain_dqinfo_mutex() };
-					auto &info = details::obtain_dqinfo();
-					auto it = info.thread_app_dispatcher_queue.find(id);
+					auto &info{ details::obtain_dqinfo() };
+					auto it{ info.thread_app_dispatcher_queue.find(id) };
 					if (it != info.thread_app_dispatcher_queue.end())
 					{
 						dqc = (*it).second;
@@ -625,8 +623,8 @@ namespace application
 				ComPtr<IDispatcherQueueController> dqc;
 				{
 					std::scoped_lock sl{ details::obtain_dqinfo_background_mutex() };
-					auto &bi = details::obtain_background_dqinfo();
-					auto it = bi.background_app_thread.find(id);
+					auto &bi{ details::obtain_background_dqinfo() };
+					auto it{ bi.background_app_thread.find(id) };
 					if (it != bi.background_app_thread.end())
 					{
 						dqc = (*it).second;
