@@ -3,8 +3,25 @@
   <ItemGroup>
     <None Include="vcpkg.json" />
     <None Include="..\common\wil\natvis\wil.natstepfilter" />
+    <None Include="defs\module-arm64.def">
+      <Filter>ModueDefinitions</Filter>
+    </None>
+    <None Include="defs\module-arm64ec.def">
+      <Filter>ModueDefinitions</Filter>
+    </None>
+    <None Include="defs\module-win32.def">
+      <Filter>ModueDefinitions</Filter>
+    </None>
+    <None Include="defs\module-x64.def">
+      <Filter>ModueDefinitions</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="..\common\wil\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ModueDefinitions">
+      <UniqueIdentifier>{dd87b845-8b49-4ce1-80d1-3426368a09ff}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

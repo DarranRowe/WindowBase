@@ -6,6 +6,10 @@ EXPORTS
 	?register_class@windowing@window_base@@$$hYAGAEBUtagWNDCLASSEXA@@@Z
 	?register_class@windowing@window_base@@$$hYAGAEBUtagWNDCLASSEXW@@@Z
 
+	?WndSetWindowsHookEx@window_traits_a@windowing@window_base@@$$hSAPEAUHHOOK__@@HP6A_JH_K_J@ZPEAUHINSTANCE__@@K@Z
+	?WndDefWindowProc@window_traits_a@windowing@window_base@@$$hSA_JPEAUHWND__@@I_K_J@Z
+	?WndSetWindowsHookEx@window_traits_w@windowing@window_base@@$$hSAPEAUHHOOK__@@HP6A_JH_K_J@ZPEAUHINSTANCE__@@K@Z
+	?WndDefWindowProc@window_traits_w@windowing@window_base@@$$hSA_JPEAUHWND__@@I_K_J@Z
 	?is_windowbase_window@window_base_a@windowing@window_base@@$$hSA_NPEAUHWND__@@@Z
 	?get_handle@window_base_a@windowing@window_base@@$$hQEBAPEAUHWND__@@XZ
 	?get_instance@window_base_a@windowing@window_base@@$$hQEBAPEAUHINSTANCE__@@XZ

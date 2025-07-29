@@ -342,7 +342,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugX|Win32'">
@@ -361,7 +361,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -382,7 +382,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseX|Win32'">
@@ -403,7 +403,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -422,7 +422,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugX|x64'">
@@ -441,7 +441,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
@@ -460,7 +460,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugX|ARM64'">
@@ -479,7 +479,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64EC'">
@@ -498,7 +498,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugX|ARM64EC'">
@@ -517,7 +517,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -538,7 +538,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseX|x64'">
@@ -559,7 +559,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
@@ -580,7 +580,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseX|ARM64'">
@@ -601,7 +601,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64EC'">
@@ -622,7 +622,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseX|ARM64EC'">
@@ -643,11 +643,15 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)defs\$(PlatformName)\module.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(ProjectDir)defs\module-$(PlatformName).def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\common\wil\natvis\wil.natstepfilter" />
+    <None Include="defs\module-arm64.def" />
+    <None Include="defs\module-arm64ec.def" />
+    <None Include="defs\module-win32.def" />
+    <None Include="defs\module-x64.def" />
     <None Include="vcpkg.json" />
   </ItemGroup>
   <ItemGroup>
