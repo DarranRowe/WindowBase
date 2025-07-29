@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{2c51aa12-bfc6-40c6-88c3-5c882f3f7590}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\apartment.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_singleton.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_defs.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_dispatcher_queue.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_dispatcher_queue_abi.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_dispatcher_queue_projection.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_helper.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_info.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_thread.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\common_defs.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\output_helpers.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\utility.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\window.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\window_base.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\window_class.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\window_implementation.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)apartment_impl.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_private.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)application_impl.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)interface_traits.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)window_base_private.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)wrl_helpers.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)apartment.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)apartment_impl.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_singleton.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_abi.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_projection.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_helper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_impl.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_info.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_thread.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)output_helpers.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)window_base.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)window_class.cpp" />
+  </ItemGroup>
+</Project>

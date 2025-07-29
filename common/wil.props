@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <WilIncludeBaseDir>$(MSBuildThisFileDirectory)wil\</WilIncludeBaseDir>
+    <WilIncludeDir>$(WilIncludeBaseDir)include\</WilIncludeDir>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IncludePath>$(WilIncludeDir);$(IncludePath)</IncludePath>
+    <ExternalIncludePath>$(WilIncludeDir);$(ExternalIncludePath)</ExternalIncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile />
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="WilIncludeBaseDir">
+      <Value>$(WilIncludeBaseDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+    <BuildMacro Include="WilIncludeDir">
+      <Value>$(WilIncludeDir)</Value>
+      <EnvironmentVariable>true</EnvironmentVariable>
+    </BuildMacro>
+  </ItemGroup>
+</Project>

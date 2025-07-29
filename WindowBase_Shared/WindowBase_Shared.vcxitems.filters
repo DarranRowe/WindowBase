@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="windowbase">
+      <UniqueIdentifier>{8407f37f-65ad-4af3-b06d-f93ea89c17ac}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\utility.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\window_base.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)window_base_private.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\window_class.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\window.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\window_implementation.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\output_helpers.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_singleton.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_defs.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_helper.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_info.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_thread.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)application_impl.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)interface_traits.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)wrl_helpers.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)apartment_impl.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\apartment.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_dispatcher_queue.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_dispatcher_queue_abi.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_dispatcher_queue_projection.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_private.hpp" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\common_defs.hpp">
+      <Filter>windowbase</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)window_base.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)window_class.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)output_helpers.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_singleton.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_helper.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_impl.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_info.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_thread.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)apartment.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)apartment_impl.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_abi.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_projection.cpp" />
+  </ItemGroup>
+</Project>
