@@ -14,10 +14,12 @@
 #include <string>
 #include <string_view>
 
+#ifndef _WINDOWS_
 #define WIN32_LEAN_AND_MEAN
 #define OEMRESOURCE
 #define NOMINMAX
 #include <Windows.h>
+#endif
 
 #include "utility.hpp"
 #include "common_defs.hpp"

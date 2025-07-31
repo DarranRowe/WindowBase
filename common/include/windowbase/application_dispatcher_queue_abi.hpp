@@ -4,10 +4,12 @@
 #error C++ Compiler Required
 #endif
 
+#ifndef _WINDOWS_
 #define WIN32_LEAN_AND_MEAN
 #define OEMRESOURCE
 #define NOMINMAX
 #include <Windows.h>
+#endif
 #include <wrl.h>
 
 #include <cinttypes>

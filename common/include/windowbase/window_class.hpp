@@ -6,10 +6,12 @@
 
 #include <string_view>
 
+#ifndef _WINDOWS_
 #define WIN32_LEAN_AND_MEAN
 #define OEMRESOURCE
 #define NOMINMAX
 #include <Windows.h>
+#endif
 
 namespace window_base::windowing
 {

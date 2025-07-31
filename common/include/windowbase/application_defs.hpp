@@ -8,10 +8,12 @@
 
 #include "common_defs.hpp"
 
+#ifndef _WINDOWS_
 #define WIN32_LEAN_AND_MEAN
 #define OEMRESOURCE
 #define NOMINMAX
 #include <Windows.h>
+#endif
 
 namespace window_base::application
 {
