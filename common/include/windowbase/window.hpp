@@ -12,12 +12,7 @@
 #include <Dbt.h>
 
 #include "utility.hpp"
-
-//#include "application.hpp"
-
-//#include "application_helper.hpp"
-
-#include <wil/result.h>
+#include "output_helpers.hpp"
 
 //The implementation header checks for this to know
 //that this header has been included. It contains
@@ -2144,8 +2139,12 @@ namespace window_base::windowing
 					m_mouse_in_client = true;
 					m_first_mouse_message = true;
 					auto result{ track_mouse(wnd, false) };
-					_ASSERTE(result == TRUE);
-					FAIL_FAST_IF_WIN32_BOOL_FALSE(result);
+					_ASSERTE(result != FALSE);
+					if (!result)
+					{
+						output_helpers::debug::format_debugwriteln(L"TrackMouseEvent failed");
+						__fastfail(ERROR_FATAL_APP_EXIT);
+					}
 				}
 			}
 
@@ -2157,8 +2156,12 @@ namespace window_base::windowing
 					m_mouse_in_nclient = true;
 					m_first_mouse_message = true;
 					auto result{ track_mouse(wnd, true) };
-					_ASSERTE(result == TRUE);
-					FAIL_FAST_IF_WIN32_BOOL_FALSE(result);
+					_ASSERTE(result != FALSE);
+					if (!result)
+					{
+						output_helpers::debug::format_debugwriteln(L"TrackMouseEvent failed");
+						__fastfail(ERROR_FATAL_APP_EXIT);
+					}
 				}
 			}
 		}
@@ -2169,8 +2172,12 @@ namespace window_base::windowing
 			//we need to re-enable it.
 			_ASSERTE((m_mouse_in_window == true) && (m_mouse_in_client == true));
 			auto result{ track_mouse(wnd, false) };
-			_ASSERTE(result == TRUE);
-			FAIL_FAST_IF_WIN32_BOOL_FALSE(result);
+			_ASSERTE(result != FALSE);
+			if (!result)
+			{
+				output_helpers::debug::format_debugwriteln(L"TrackMouseEvent failed");
+				__fastfail(ERROR_FATAL_APP_EXIT);
+			}
 		}
 		void handle_ncmouse_hover(HWND wnd)
 		{
@@ -2179,8 +2186,12 @@ namespace window_base::windowing
 			//we need to re-enable it.
 			_ASSERTE((m_mouse_in_window == true) && (m_mouse_in_nclient == true));
 			auto result{ track_mouse(wnd, true) };
-			_ASSERTE(result == TRUE);
-			FAIL_FAST_IF_WIN32_BOOL_FALSE(result);
+			_ASSERTE(result != FALSE);
+			if (!result)
+			{
+				output_helpers::debug::format_debugwriteln(L"TrackMouseEvent failed");
+				__fastfail(ERROR_FATAL_APP_EXIT);
+			}
 		}
 
 		void handle_mouse_leave(HWND)
