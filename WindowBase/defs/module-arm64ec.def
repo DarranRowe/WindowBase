@@ -159,6 +159,7 @@ EXPORTS
 	??0application_singleton@application@window_base@@$$hQEAA@$$QEAV012@@Z
 	??4application_singleton@application@window_base@@$$hQEAAAEAV012@AEBV012@@Z
 	??4application_singleton@application@window_base@@$$hQEAAAEAV012@$$QEAV012@@Z
+	?post_exit_message_to_thread@application_singleton@application@window_base@@$$hSAXIH@Z
 	?try_get_current_instance@application_singleton@application@window_base@@$$hSA?AV?$optional@Vapplication_singleton@application@window_base@@@std@@XZ
 	?make_thread_gui@application_singleton@application@window_base@@$$hSAXXZ
 	?set_explicit_app_user_model_id@application_singleton@application@window_base@@$$hSAXAEBV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@Z

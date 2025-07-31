@@ -35,6 +35,8 @@ namespace window_base::application
 		application_singleton &operator=(const application_singleton &) noexcept;
 		application_singleton &operator=(application_singleton &&) noexcept;
 
+		static void post_exit_message_to_thread(uint32_t, int32_t);
+
 		static std::optional<application_singleton> try_get_current_instance();
 		static void make_thread_gui() noexcept;
 

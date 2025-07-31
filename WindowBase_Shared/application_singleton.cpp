@@ -101,6 +101,12 @@ namespace window_base::application
 		return details::application_impl::get_process_dpi_awareness();
 	}
 
+	void application_singleton::post_exit_message_to_thread(uint32_t tid, int32_t exit_code)
+	{
+		using utility::conversion::value_convert;
+		PostThreadMessageW(tid, WM_QUIT, value_convert<WPARAM>(exit_code), 0);
+	}
+
 	uint32_t application_singleton::get_application_thread_id() const
 	{
 		auto impl{ details::application_impl::get_current_instance() };
