@@ -22,6 +22,9 @@ namespace window_base::application
 		dpi_hosting_behaviour get_dpi_hosting_behaviour() noexcept;
 		uint32_t set_cursor_creation_scaling(uint32_t) noexcept;
 
+		uint32_t get_thread_id() const;
+		bool is_current_thread() const;
+
 		void set_message_pump_to_ansi();
 		void set_message_pump_to_unicode();
 		bool is_message_pump_ansi() const;

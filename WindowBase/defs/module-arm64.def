@@ -137,6 +137,8 @@ EXPORTS
 	?set_dpi_hosting_behaviour@application_thread@application@window_base@@QEAA?AW4dpi_hosting_behaviour@3@W443@@Z
 	?get_dpi_hosting_behaviour@application_thread@application@window_base@@QEAA?AW4dpi_hosting_behaviour@3@XZ
 	?set_cursor_creation_scaling@application_thread@application@window_base@@QEAAII@Z
+	?get_thread_id@application_thread@application@window_base@@QEBAIXZ
+	?is_current_thread@application_thread@application@window_base@@QEBA_NXZ
 	?set_message_pump_to_ansi@application_thread@application@window_base@@QEAAXXZ
 	?set_message_pump_to_unicode@application_thread@application@window_base@@QEAAXXZ
 	?is_message_pump_ansi@application_thread@application@window_base@@QEBA_NXZ

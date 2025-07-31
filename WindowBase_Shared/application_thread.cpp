@@ -56,6 +56,18 @@ namespace window_base::application
 		return *this;
 	}
 
+	uint32_t application_thread::get_thread_id() const
+	{
+		return m_tid;
+	}
+
+	bool application_thread::is_current_thread() const
+	{
+		auto current_tid{GetCurrentThreadId()};
+
+		return (current_tid == m_tid);
+	}
+
 	dpi_awareness application_thread::set_dpi_awareness(dpi_awareness awareness) noexcept
 	{
 		using details::application_impl;
