@@ -79,6 +79,9 @@ namespace window_base::application::details
 		if (g_app_inst != nullptr)
 		{
 			format_debugwriteln(L"Instance not null in make_new_instance.");
+			//Since this returns the current instance, the reference count must be
+			//incremented.
+			g_app_inst->add_ref();
 			return g_app_inst;
 		}
 
