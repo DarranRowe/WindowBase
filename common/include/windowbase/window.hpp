@@ -1392,7 +1392,7 @@ namespace window_base::windowing
 			template <typename T, bool = details::detect_v<T, class_definition_types::menu_name_t>>
 			struct menu_name_value
 			{
-				//T::window_type must be defined.
+				//T::window_t must be defined.
 				//This will be defined as the most derived type.
 				//traits is public, so the definition can be obtained
 				//through the window type name.
@@ -1410,7 +1410,7 @@ namespace window_base::windowing
 			template <typename T>
 			struct menu_name_value<T, true>
 			{
-				//T::window_type must be defined.
+				//T::window_t must be defined.
 				//This will be defined as the most derived type.
 				//traits is public, so the definition can be obtained
 				//through the window type name.
