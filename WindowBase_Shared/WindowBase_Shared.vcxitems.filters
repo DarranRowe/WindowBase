@@ -47,16 +47,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\apartment.hpp">
       <Filter>windowbase</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_dispatcher_queue.hpp">
-      <Filter>windowbase</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_dispatcher_queue_abi.hpp">
-      <Filter>windowbase</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\application_dispatcher_queue_projection.hpp">
-      <Filter>windowbase</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_private.hpp" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\common\include\windowbase\common_defs.hpp">
       <Filter>windowbase</Filter>
     </ClInclude>
@@ -72,8 +62,5 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)application_thread.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)apartment.cpp" />
     <ClCompile Include="$(MSBuildThisFileDirectory)apartment_impl.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_abi.cpp" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)application_dispatcher_queue_projection.cpp" />
   </ItemGroup>
 </Project>

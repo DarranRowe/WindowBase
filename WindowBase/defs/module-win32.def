@@ -195,38 +195,6 @@ EXPORTS
 	?is_build_win10_range@helper@application@window_base@@YA_NI@Z
 	?is_build_known_win11_range@helper@application@window_base@@YA_NI@Z
 
-	?get_thread_dispatcher_queue_abi@application_system_dispatcher_queue_access@projection@application@window_base@@CAPAXXZ
-	?get_background_dispatcher_queue_abi@application_system_dispatcher_queue_access@projection@application@window_base@@CAPAXH@Z
-	?get_thread_dispatcher_queue_abi@application_winappsdk_dispatcher_queue_access@projection@application@window_base@@CAPAXXZ
-	?get_background_dispatcher_queue_abi@application_winappsdk_dispatcher_queue_access@projection@application@window_base@@CAPAXH@Z
-
-	?get_thread_dispatcher_queue@application_system_dispatcher_queue_access@abi@application@window_base@@SA?AV?$ComPtr@UIDispatcherQueue@System@Windows@ABI@@@WRL@Microsoft@@XZ
-	?get_background_dispatcher_queue@application_system_dispatcher_queue_access@abi@application@window_base@@SA?AV?$ComPtr@UIDispatcherQueue@System@Windows@ABI@@@WRL@Microsoft@@H@Z
-	?get_thread_dispatcher_queue@application_winappsdk_dispatcher_queue_access@abi@application@window_base@@SA?AV?$ComPtr@UIDispatcherQueue@Dispatching@UI@Microsoft@ABI@@@WRL@Microsoft@@XZ
-	?get_background_dispatcher_queue@application_winappsdk_dispatcher_queue_access@abi@application@window_base@@SA?AV?$ComPtr@UIDispatcherQueue@Dispatching@UI@Microsoft@ABI@@@WRL@Microsoft@@H@Z
-
-	??0application_system_dispatcher_queue@application@window_base@@QAE@XZ
-	??0application_system_dispatcher_queue@application@window_base@@QAE@ABV012@@Z
-	??0application_system_dispatcher_queue@application@window_base@@QAE@$$QAV012@@Z
-	??1application_system_dispatcher_queue@application@window_base@@QAE@XZ
-	?thread_has_dispatcher_queue@application_system_dispatcher_queue@application@window_base@@QBE_NXZ
-	?thread_has_uncontrolled_dispatcher_queue@application_system_dispatcher_queue@application@window_base@@QBE_NXZ
-	?create_dispatcher_queue_on_thread@application_system_dispatcher_queue@application@window_base@@QAE_NXZ
-	?create_background_dispatcher_queue@application_system_dispatcher_queue@application@window_base@@QAEHXZ
-	?destroy_thread_dispatcher_queue@application_system_dispatcher_queue@application@window_base@@QAEXXZ
-	?destroy_background_dispatcher_queue@application_system_dispatcher_queue@application@window_base@@QAEXH@Z
-	??0application_winappsdk_dispatcher_queue@application@window_base@@QAE@XZ
-	??0application_winappsdk_dispatcher_queue@application@window_base@@QAE@ABV012@@Z
-	??0application_winappsdk_dispatcher_queue@application@window_base@@QAE@$$QAV012@@Z
-	??1application_winappsdk_dispatcher_queue@application@window_base@@QAE@XZ
-	?dispatcher_queue_available@application_winappsdk_dispatcher_queue@application@window_base@@SA_NXZ
-	?thread_has_dispatcher_queue@application_winappsdk_dispatcher_queue@application@window_base@@QBE_NXZ
-	?thread_has_uncontrolled_dispatcher_queue@application_winappsdk_dispatcher_queue@application@window_base@@QBE_NXZ
-	?create_dispatcher_queue_on_thread@application_winappsdk_dispatcher_queue@application@window_base@@QAE_NXZ
-	?create_background_dispatcher_queue@application_winappsdk_dispatcher_queue@application@window_base@@QAEHXZ
-	?destroy_thread_dispatcher_queue@application_winappsdk_dispatcher_queue@application@window_base@@QAEXXZ
-	?destroy_background_dispatcher_queue@application_winappsdk_dispatcher_queue@application@window_base@@QAEXH@Z
-
 	??0apartment@application@window_base@@QAE@Uwinrt_t@12@@Z
 	??0apartment@application@window_base@@QAE@Uwinrt_t@12@Usta_t@12@@Z
 	??0apartment@application@window_base@@QAE@Ucom_t@12@@Z
