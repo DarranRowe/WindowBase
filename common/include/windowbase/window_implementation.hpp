@@ -27,8 +27,8 @@ namespace window_base::windowing
 				typename my_traits_t::cbt_createwnd_t &params{ reference_from_param<typename my_traits_t::cbt_createwnd_t>(lparam) };
 
 				void *instance{ params.lpcs->lpCreateParams };
-				//The pointer passed in to CreateWindowEx is a pointer to window_base. Since this doesn't have to have the
-				//same address as the most derived type, the create params is first converted to a window_base * and then
+				//The pointer passed in to CreateWindowEx is a pointer to window_base_a/window_base_w. Since this doesn't have to have the
+				//same address as the most derived type, the create params is first converted to a window_base_a/window_base_w * and then
 				//to a DerivedType *.
 				my_tptr that{ down_cast<my_t>(pointer_convert<my_base_t>(instance)) };
 				that->set_window_info(wnd, GetCurrentThreadId(), instance);
