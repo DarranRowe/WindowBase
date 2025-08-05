@@ -8,15 +8,15 @@
 
 namespace window_base::windowing
 {
-	static inline constexpr char prop_instance_a[]{ "PROP_INSTANCE" };
-	static inline constexpr char prop_message_callback_a[]{ "PROP_MESSAGECALLBACK" };
-	static inline constexpr char prop_register_callback_a[]{ "PROP_REGISTERCALLBACK" };
-	static inline constexpr char prop_identity_a[]{ "PROP_IDENTITY" };
+	static inline constexpr const char prop_instance_a[]{ "PROP_INSTANCE" };
+	static inline constexpr const char prop_message_callback_a[]{ "PROP_MESSAGECALLBACK" };
+	static inline constexpr const char prop_register_callback_a[]{ "PROP_REGISTERCALLBACK" };
+	static inline constexpr const char prop_identity_a[]{ "PROP_IDENTITY" };
 
-	static inline constexpr wchar_t prop_instance_w[]{ L"PROP_INSTANCE" };
-	static inline constexpr wchar_t prop_message_callback_w[]{ L"PROP_MESSAGECALLBACK" };
-	static inline constexpr wchar_t prop_register_callback_w[]{ L"PROP_REGISTERCALLBACK" };
-	static inline constexpr wchar_t prop_identity_w[]{ L"PROP_IDENTITY" };
+	static inline constexpr const wchar_t prop_instance_w[]{ L"PROP_INSTANCE" };
+	static inline constexpr const wchar_t prop_message_callback_w[]{ L"PROP_MESSAGECALLBACK" };
+	static inline constexpr const wchar_t prop_register_callback_w[]{ L"PROP_REGISTERCALLBACK" };
+	static inline constexpr const wchar_t prop_identity_w[]{ L"PROP_IDENTITY" };
 	
 	static inline constexpr int32_t identity_version = 1;
 
@@ -30,29 +30,63 @@ namespace window_base::windowing
 			identity
 		};
 
+		enum class window_data_type
+		{
+			unspecified,
+			ansi,
+			unicode
+		};
+
 		struct window_data
 		{
-			HWND m_handle{};
-			HINSTANCE m_instance{};
-			std::map<power_notify_type, HPOWERNOTIFY> m_power_notify_handles;
-			uint32_t m_thread_id{};
-			uint32_t m_dpi{};
-			float m_scale{};
+			window_data_type data_type{};
+			HWND window_handle{};
+			HINSTANCE module_instance{};
+			std::map<power_notify_type, HPOWERNOTIFY> power_notify_handles;
+			uint32_t thread_id{};
+			uint32_t window_dpi{};
+			float window_scale{};
 
 			bool window_initial_construction_complete{};
 			bool window_shown{};
 		};
 
-		inline std::unique_ptr<window_data> make_window_data(HINSTANCE inst) noexcept
+		struct window_data_a : public window_data
 		{
-			std::unique_ptr<window_data> ptr;
+
+		};
+
+		struct window_data_w : public window_data
+		{
+
+		};
+
+		inline std::unique_ptr<window_data_a> make_window_data_a(HINSTANCE inst) noexcept
+		{
+			std::unique_ptr<window_data_a> ptr;
 
 			//It is okay if this fails.
 			//The next access will be in window_base::set_window_info.
-			ptr.reset(new(std::nothrow) window_data);
+			ptr.reset(new(std::nothrow) window_data_a);
 			if (ptr)
 			{
-				ptr->m_instance = inst;
+				ptr->data_type = window_data_type::ansi;
+				ptr->module_instance = inst;
+			}
+			return ptr;
+		}
+
+		inline std::unique_ptr<window_data_w> make_window_data_w(HINSTANCE inst) noexcept
+		{
+			std::unique_ptr<window_data_w> ptr;
+
+			//It is okay if this fails.
+			//The next access will be in window_base::set_window_info.
+			ptr.reset(new(std::nothrow) window_data_w);
+			if (ptr)
+			{
+				ptr->data_type = window_data_type::unicode;
+				ptr->module_instance = inst;
 			}
 			return ptr;
 		}

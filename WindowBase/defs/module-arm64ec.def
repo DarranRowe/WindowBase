@@ -8,119 +8,76 @@ EXPORTS
 
 	?WndSetWindowsHookEx@window_traits_a@windowing@window_base@@$$hSAPEAUHHOOK__@@HP6A_JH_K_J@ZPEAUHINSTANCE__@@K@Z
 	?WndDefWindowProc@window_traits_a@windowing@window_base@@$$hSA_JPEAUHWND__@@I_K_J@Z
+	?WndGetWindowLongPtr@window_traits_a@windowing@window_base@@$$hSA_JPEAUHWND__@@H@Z
+	?WndSetWindowLongPtr@window_traits_a@windowing@window_base@@$$hSA_JPEAUHWND__@@H_J@Z
 	?WndSetWindowsHookEx@window_traits_w@windowing@window_base@@$$hSAPEAUHHOOK__@@HP6A_JH_K_J@ZPEAUHINSTANCE__@@K@Z
 	?WndDefWindowProc@window_traits_w@windowing@window_base@@$$hSA_JPEAUHWND__@@I_K_J@Z
-	?is_windowbase_window@window_base_a@windowing@window_base@@$$hSA_NPEAUHWND__@@@Z
-	?get_handle@window_base_a@windowing@window_base@@$$hQEBAPEAUHWND__@@XZ
-	?get_instance@window_base_a@windowing@window_base@@$$hQEBAPEAUHINSTANCE__@@XZ
-	?get_thread_id@window_base_a@windowing@window_base@@$$hQEBAIXZ
-	?get_dpi@window_base_a@windowing@window_base@@$$hQEBAIXZ
-	?get_scale@window_base_a@windowing@window_base@@$$hQEBAMXZ
-	?get_dpi_awareness@window_base_a@windowing@window_base@@$$hQEBA?AW4dpi_awareness@3@XZ
-	?get_dpi_hosting_behaviour@window_base_a@windowing@window_base@@$$hQEBA?AW4dpi_hosting_behaviour@3@XZ
-	?is_window_rtl@window_base_a@windowing@window_base@@$$hQEBA_NXZ
-	?is_window_unicode@window_base_a@windowing@window_base@@$$hQEBA_NXZ
-	?is_active@window_base_a@windowing@window_base@@$$hQEBA_NXZ
-	?is_visible@window_base_a@windowing@window_base@@$$hQEBA_NXZ
-	?is_enabled@window_base_a@windowing@window_base@@$$hQEBA_NXZ
-	?is_minimised@window_base_a@windowing@window_base@@$$hQEBA_NXZ
-	?is_maximised@window_base_a@windowing@window_base@@$$hQEBA_NXZ
-	?is_arranged@window_base_a@windowing@window_base@@$$hQEBA_NXZ
-	?show_window_cmd@window_base_a@windowing@window_base@@$$hQEAA_NH@Z
-	?show_window_default@window_base_a@windowing@window_base@@$$hQEAA_NXZ
-	?show_window@window_base_a@windowing@window_base@@$$hQEAA_N_N@Z
-	?show_window_minimised@window_base_a@windowing@window_base@@$$hQEAA_N_N@Z
-	?show_window_maximised@window_base_a@windowing@window_base@@$$hQEAA_NXZ
-	?minimise_window@window_base_a@windowing@window_base@@$$hQEAA_NXZ
-	?maximise_window@window_base_a@windowing@window_base@@$$hQEAA_NXZ
-	?restore_window@window_base_a@windowing@window_base@@$$hQEAA_NXZ
-	?hide_window@window_base_a@windowing@window_base@@$$hQEAA_NXZ
-	?enable_window@window_base_a@windowing@window_base@@$$hQEAA_NXZ
-	?disable_window@window_base_a@windowing@window_base@@$$hQEAA_NXZ
-	?update_window@window_base_a@windowing@window_base@@$$hQEAAXXZ
-	?redraw_window@window_base_a@windowing@window_base@@$$hQEAAXV?$optional@UtagRECT@@@std@@PEAUHRGN__@@W4redraw_window_flags@23@@Z
-	?get_parent@window_base_a@windowing@window_base@@$$hQEBAPEAUHWND__@@XZ
-	?get_size@window_base_a@windowing@window_base@@$$hQEBA?AUtagSIZE@@XZ
-	?get_client_size@window_base_a@windowing@window_base@@$$hQEBA?AUtagSIZE@@XZ
-	?get_position@window_base_a@windowing@window_base@@$$hQEBA?AUtagPOINT@@XZ
-	?set_size@window_base_a@windowing@window_base@@$$hQEAAXAEBUtagSIZE@@@Z
-	?set_client_size@window_base_a@windowing@window_base@@$$hQEAAXAEBUtagSIZE@@@Z
-	?set_position@window_base_a@windowing@window_base@@$$hQEAAXAEBUtagPOINT@@@Z
-	?set_size_position@window_base_a@windowing@window_base@@$$hQEAAXAEBUtagPOINT@@AEBUtagSIZE@@@Z
-	?set_z_order_top@window_base_a@windowing@window_base@@$$hQEAAXXZ
-	?set_z_order_bottom@window_base_a@windowing@window_base@@$$hQEAAXXZ
-	?set_z_order_after@window_base_a@windowing@window_base@@$$hQEAAXPEAUHWND__@@@Z
+	?WndGetWindowLongPtr@window_traits_w@windowing@window_base@@$$hSA_JPEAUHWND__@@H@Z
+	?WndSetWindowLongPtr@window_traits_w@windowing@window_base@@$$hSA_JPEAUHWND__@@H_J@Z
+	?is_windowbase_window@window_base_common@windowing@window_base@@$$hSA_NPEAUHWND__@@@Z
+	?get_handle@window_base_common@windowing@window_base@@$$hQEBAPEAUHWND__@@XZ
+	?get_instance@window_base_common@windowing@window_base@@$$hQEBAPEAUHINSTANCE__@@XZ
+	?get_thread_id@window_base_common@windowing@window_base@@$$hQEBAIXZ
+	?get_dpi@window_base_common@windowing@window_base@@$$hQEBAIXZ
+	?get_scale@window_base_common@windowing@window_base@@$$hQEBAMXZ
+	?get_dpi_awareness@window_base_common@windowing@window_base@@$$hQEBA?AW4dpi_awareness@3@XZ
+	?get_dpi_hosting_behaviour@window_base_common@windowing@window_base@@$$hQEBA?AW4dpi_hosting_behaviour@3@XZ
+	?is_window_rtl@window_base_common@windowing@window_base@@$$hQEBA_NXZ
+	?is_window_unicode@window_base_common@windowing@window_base@@$$hQEBA_NXZ
+	?is_active@window_base_common@windowing@window_base@@$$hQEBA_NXZ
+	?is_visible@window_base_common@windowing@window_base@@$$hQEBA_NXZ
+	?is_enabled@window_base_common@windowing@window_base@@$$hQEBA_NXZ
+	?is_minimised@window_base_common@windowing@window_base@@$$hQEBA_NXZ
+	?is_maximised@window_base_common@windowing@window_base@@$$hQEBA_NXZ
+	?is_arranged@window_base_common@windowing@window_base@@$$hQEBA_NXZ
+	?show_window_cmd@window_base_common@windowing@window_base@@$$hQEAA_NH@Z
+	?show_window_default@window_base_common@windowing@window_base@@$$hQEAA_NXZ
+	?show_window@window_base_common@windowing@window_base@@$$hQEAA_N_N@Z
+	?show_window_minimised@window_base_common@windowing@window_base@@$$hQEAA_N_N@Z
+	?show_window_maximised@window_base_common@windowing@window_base@@$$hQEAA_NXZ
+	?minimise_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
+	?maximise_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
+	?restore_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
+	?hide_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
+	?enable_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
+	?disable_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
+	?update_window@window_base_common@windowing@window_base@@$$hQEAAXXZ
+	?redraw_window@window_base_common@windowing@window_base@@$$hQEAAXV?$optional@UtagRECT@@@std@@PEAUHRGN__@@W4redraw_window_flags@23@@Z
+	?get_parent@window_base_common@windowing@window_base@@$$hQEBAPEAUHWND__@@XZ
+	?get_size@window_base_common@windowing@window_base@@$$hQEBA?AUtagSIZE@@XZ
+	?get_client_size@window_base_common@windowing@window_base@@$$hQEBA?AUtagSIZE@@XZ
+	?get_position@window_base_common@windowing@window_base@@$$hQEBA?AUtagPOINT@@XZ
+	?set_size@window_base_common@windowing@window_base@@$$hQEAAXAEBUtagSIZE@@@Z
+	?set_client_size@window_base_common@windowing@window_base@@$$hQEAAXAEBUtagSIZE@@@Z
+	?set_position@window_base_common@windowing@window_base@@$$hQEAAXAEBUtagPOINT@@@Z
+	?set_size_position@window_base_common@windowing@window_base@@$$hQEAAXAEBUtagPOINT@@AEBUtagSIZE@@@Z
+	?set_z_order_top@window_base_common@windowing@window_base@@$$hQEAAXXZ
+	?set_z_order_bottom@window_base_common@windowing@window_base@@$$hQEAAXXZ
+	?set_z_order_after@window_base_common@windowing@window_base@@$$hQEAAXPEAUHWND__@@@Z
+	?register_power_notification@window_base_common@windowing@window_base@@$$hQEAAXW4power_notify_type@23@@Z
+	?unregister_power_notification@window_base_common@windowing@window_base@@$$hQEAAXW4power_notify_type@23@@Z
+	?get_register_interface@window_base_common@windowing@window_base@@$$hQEBAAEAUregister_callback@23@XZ
+	?notify_window_close@window_base_common@windowing@window_base@@$$hIEAAXXZ
+	?set_dpi@window_base_common@windowing@window_base@@$$hIEAAXI@Z
+	?has_associated_window@window_base_common@windowing@window_base@@$$hIEBA_NXZ
+	?raw_inst_from_handle@window_base_common@windowing@window_base@@$$hKAPEAXPEAUHWND__@@@Z
 	?set_window_aumid_from_process_aumid@window_base_a@windowing@window_base@@$$hQEAAXXZ
 	?set_window_aumid@window_base_a@windowing@window_base@@$$hQEAAXAEBV?$basic_string_view@DU?$char_traits@D@std@@@std@@@Z
 	?get_window_aumid@window_base_a@windowing@window_base@@$$hQEBA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ
 	?window_has_aumid@window_base_a@windowing@window_base@@$$hQEBA_NXZ
-	?register_power_notification@window_base_a@windowing@window_base@@$$hQEAAXW4power_notify_type@23@@Z
-	?unregister_power_notification@window_base_a@windowing@window_base@@$$hQEAAXW4power_notify_type@23@@Z
-	?get_register_interface@window_base_a@windowing@window_base@@$$hQEBAAEAUregister_callback@23@XZ
 	??0window_base_a@windowing@window_base@@$$hIEAA@PEAUHINSTANCE__@@@Z
 	??1window_base_a@windowing@window_base@@$$hIEAA@XZ
-	?notify_window_close@window_base_a@windowing@window_base@@$$hIEAAXXZ
 	?set_window_info@window_base_a@windowing@window_base@@$$hIEAAXPEAUHWND__@@IPEAX@Z
 	?cleanup_window_info@window_base_a@windowing@window_base@@$$hIEAAXXZ
-	?set_dpi@window_base_a@windowing@window_base@@$$hIEAAXI@Z
-	?has_associated_window@window_base_a@windowing@window_base@@$$hIEBA_NXZ
-	?raw_inst_from_handle@window_base_a@windowing@window_base@@$$hKAPEAXPEAUHWND__@@@Z
 	?create_window@window_base_a@windowing@window_base@@$$hKAPEAUHWND__@@IIAEBV?$basic_string_view@DU?$char_traits@D@std@@@std@@0AEBUtagPOINT@@AEBUtagSIZE@@PEAU4@PEAUHMENU__@@PEAV123@@Z
-	?is_windowbase_window@window_base_w@windowing@window_base@@$$hSA_NPEAUHWND__@@@Z
-	?get_handle@window_base_w@windowing@window_base@@$$hQEBAPEAUHWND__@@XZ
-	?get_instance@window_base_w@windowing@window_base@@$$hQEBAPEAUHINSTANCE__@@XZ
-	?get_thread_id@window_base_w@windowing@window_base@@$$hQEBAIXZ
-	?get_dpi@window_base_w@windowing@window_base@@$$hQEBAIXZ
-	?get_scale@window_base_w@windowing@window_base@@$$hQEBAMXZ
-	?get_dpi_awareness@window_base_w@windowing@window_base@@$$hQEBA?AW4dpi_awareness@3@XZ
-	?get_dpi_hosting_behaviour@window_base_w@windowing@window_base@@$$hQEBA?AW4dpi_hosting_behaviour@3@XZ
-	?is_window_rtl@window_base_w@windowing@window_base@@$$hQEBA_NXZ
-	?is_window_unicode@window_base_w@windowing@window_base@@$$hQEBA_NXZ
-	?is_active@window_base_w@windowing@window_base@@$$hQEBA_NXZ
-	?is_visible@window_base_w@windowing@window_base@@$$hQEBA_NXZ
-	?is_enabled@window_base_w@windowing@window_base@@$$hQEBA_NXZ
-	?is_minimised@window_base_w@windowing@window_base@@$$hQEBA_NXZ
-	?is_maximised@window_base_w@windowing@window_base@@$$hQEBA_NXZ
-	?is_arranged@window_base_w@windowing@window_base@@$$hQEBA_NXZ
-	?show_window_cmd@window_base_w@windowing@window_base@@$$hQEAA_NH@Z
-	?show_window_default@window_base_w@windowing@window_base@@$$hQEAA_NXZ
-	?show_window@window_base_w@windowing@window_base@@$$hQEAA_N_N@Z
-	?show_window_minimised@window_base_w@windowing@window_base@@$$hQEAA_N_N@Z
-	?show_window_maximised@window_base_w@windowing@window_base@@$$hQEAA_NXZ
-	?minimise_window@window_base_w@windowing@window_base@@$$hQEAA_NXZ
-	?maximise_window@window_base_w@windowing@window_base@@$$hQEAA_NXZ
-	?restore_window@window_base_w@windowing@window_base@@$$hQEAA_NXZ
-	?hide_window@window_base_w@windowing@window_base@@$$hQEAA_NXZ
-	?enable_window@window_base_w@windowing@window_base@@$$hQEAA_NXZ
-	?disable_window@window_base_w@windowing@window_base@@$$hQEAA_NXZ
-	?update_window@window_base_w@windowing@window_base@@$$hQEAAXXZ
-	?redraw_window@window_base_w@windowing@window_base@@$$hQEAAXV?$optional@UtagRECT@@@std@@PEAUHRGN__@@W4redraw_window_flags@23@@Z
-	?get_parent@window_base_w@windowing@window_base@@$$hQEBAPEAUHWND__@@XZ
-	?get_size@window_base_w@windowing@window_base@@$$hQEBA?AUtagSIZE@@XZ
-	?get_client_size@window_base_w@windowing@window_base@@$$hQEBA?AUtagSIZE@@XZ
-	?get_position@window_base_w@windowing@window_base@@$$hQEBA?AUtagPOINT@@XZ
-	?set_size@window_base_w@windowing@window_base@@$$hQEAAXAEBUtagSIZE@@@Z
-	?set_client_size@window_base_w@windowing@window_base@@$$hQEAAXAEBUtagSIZE@@@Z
-	?set_position@window_base_w@windowing@window_base@@$$hQEAAXAEBUtagPOINT@@@Z
-	?set_size_position@window_base_w@windowing@window_base@@$$hQEAAXAEBUtagPOINT@@AEBUtagSIZE@@@Z
-	?set_z_order_top@window_base_w@windowing@window_base@@$$hQEAAXXZ
-	?set_z_order_bottom@window_base_w@windowing@window_base@@$$hQEAAXXZ
-	?set_z_order_after@window_base_w@windowing@window_base@@$$hQEAAXPEAUHWND__@@@Z
 	?set_window_aumid_from_process_aumid@window_base_w@windowing@window_base@@$$hQEAAXXZ
 	?set_window_aumid@window_base_w@windowing@window_base@@$$hQEAAXAEBV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@@Z
 	?get_window_aumid@window_base_w@windowing@window_base@@$$hQEBA?AV?$basic_string@_WU?$char_traits@_W@std@@V?$allocator@_W@2@@std@@XZ
 	?window_has_aumid@window_base_w@windowing@window_base@@$$hQEBA_NXZ
-	?register_power_notification@window_base_w@windowing@window_base@@$$hQEAAXW4power_notify_type@23@@Z
-	?unregister_power_notification@window_base_w@windowing@window_base@@$$hQEAAXW4power_notify_type@23@@Z
-	?get_register_interface@window_base_w@windowing@window_base@@$$hQEBAAEAUregister_callback@23@XZ
 	??0window_base_w@windowing@window_base@@$$hIEAA@PEAUHINSTANCE__@@@Z
 	??1window_base_w@windowing@window_base@@$$hIEAA@XZ
-	?notify_window_close@window_base_w@windowing@window_base@@$$hIEAAXXZ
 	?set_window_info@window_base_w@windowing@window_base@@$$hIEAAXPEAUHWND__@@IPEAX@Z
 	?cleanup_window_info@window_base_w@windowing@window_base@@$$hIEAAXXZ
-	?set_dpi@window_base_w@windowing@window_base@@$$hIEAAXI@Z
-	?has_associated_window@window_base_w@windowing@window_base@@$$hIEBA_NXZ
-	?raw_inst_from_handle@window_base_w@windowing@window_base@@$$hKAPEAXPEAUHWND__@@@Z
 	?create_window@window_base_w@windowing@window_base@@$$hKAPEAUHWND__@@IIAEBV?$basic_string_view@_WU?$char_traits@_W@std@@@std@@0AEBUtagPOINT@@AEBUtagSIZE@@PEAU4@PEAUHMENU__@@PEAV123@@Z
 
 	?is_debugger_present@debug@output_helpers@window_base@@$$hYA_NXZ

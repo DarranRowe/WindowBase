@@ -29,6 +29,8 @@ namespace window_base::windowing
 	namespace details
 	{
 		struct window_data;
+		struct window_data_a;
+		struct window_data_w;
 	}
 
 	enum class power_notify_type
@@ -80,6 +82,8 @@ namespace window_base::windowing
 
 		static HHOOK WndSetWindowsHookEx(int, HOOKPROC, HINSTANCE, DWORD);
 		static LRESULT WndDefWindowProc(HWND, UINT, WPARAM, LPARAM);
+		static LONG_PTR WndGetWindowLongPtr(HWND, int);
+		static LONG_PTR WndSetWindowLongPtr(HWND, int, LONG_PTR);
 	};
 
 	//Public API
@@ -94,6 +98,8 @@ namespace window_base::windowing
 
 		static HHOOK WndSetWindowsHookEx(int, HOOKPROC, HINSTANCE, DWORD);
 		static LRESULT WndDefWindowProc(HWND, UINT, WPARAM, LPARAM);
+		static LONG_PTR WndGetWindowLongPtr(HWND, int);
+		static LONG_PTR WndSetWindowLongPtr(HWND, int, LONG_PTR);
 	};
 
 	using close_callback_type = void(HWND, uint32_t);
@@ -106,8 +112,8 @@ namespace window_base::windowing
 	};
 
 	//Public API
-	//Modification of this class requires adding the functions to the export list.
-	class window_base_a
+	//Modification of this class requires modifying the module definition file.
+	class window_base_common
 	{
 	public:
 		static bool is_windowbase_window(HWND) noexcept;
@@ -157,16 +163,52 @@ namespace window_base::windowing
 		void set_z_order_bottom() noexcept;
 		void set_z_order_after(HWND) noexcept;
 
+		void register_power_notification(power_notify_type) noexcept;
+		void unregister_power_notification(power_notify_type) noexcept;
+
+		register_callback &get_register_interface() const noexcept;
+	protected:
+		window_base_common() noexcept = default;
+		~window_base_common() noexcept = default;
+
+		void set_data(details::window_data *) noexcept;
+		void notify_window_close() noexcept;
+
+		void set_dpi(uint32_t) noexcept;
+
+		bool has_associated_window() const noexcept;
+
+		static void *raw_inst_from_handle(HWND handle);
+
+	private:
+		//completely disable copy/move this class cannot be
+		//copied, and while it is technically movable that is
+		//problematic
+		//the window will be wrapped by a class that does this
+		window_base_common(const window_base_common &) = delete;
+		window_base_common(window_base_common &&) = delete;
+
+		window_base_common &operator=(const window_base_common &) = delete;
+		window_base_common &operator=(window_base_common &&) = delete;
+
+		//The derived class owns this.
+		//This pointer is a non owning pointer
+		//to the common base of the data.
+		details::window_data *m_window_data;
+	};
+
+	//Public API
+	//Modification of this class requires modifying the module definition file.
+	class window_base_a : public window_base_common
+	{
+	public:
+		using base_t = window_base_common;
+
 		void set_window_aumid_from_process_aumid() noexcept;
 		void set_window_aumid(const std::string_view &) noexcept;
 
 		std::string get_window_aumid() const noexcept;
 		bool window_has_aumid() const noexcept;
-
-		void register_power_notification(power_notify_type) noexcept;
-		void unregister_power_notification(power_notify_type) noexcept;
-
-		register_callback &get_register_interface() const noexcept;
 
 	protected:
 		explicit window_base_a(HINSTANCE) noexcept;
@@ -175,14 +217,8 @@ namespace window_base::windowing
 		//class to be destroyed through the most derived type
 		~window_base_a() noexcept;
 
-		void notify_window_close() noexcept;
 		void set_window_info(HWND, uint32_t, void *) noexcept;
 		void cleanup_window_info() noexcept;
-		void set_dpi(uint32_t) noexcept;
-
-		bool has_associated_window() const noexcept;
-
-		static void *raw_inst_from_handle(HWND handle);
 
 		static HWND create_window(uint32_t, uint32_t, const std::string_view &, const std::string_view &, const POINT &, const SIZE &, HWND, HMENU, window_base_a *) noexcept;
 
@@ -198,71 +234,21 @@ namespace window_base::windowing
 		window_base_a &operator=(const window_base_a &) = delete;
 		window_base_a &operator=(window_base_a &&) = delete;
 
-		std::unique_ptr<details::window_data> m_window_data;
+		std::unique_ptr<details::window_data_a> m_window_data;
 	};
 
 	//Public API
-	//Modification of this class requires adding the functions to the export list.
-	class window_base_w
+	//Modification of this class requires modifying the module definition file.
+	class window_base_w : public window_base_common
 	{
 	public:
-		static bool is_windowbase_window(HWND) noexcept;
-
-		HWND get_handle() const noexcept;
-		HINSTANCE get_instance() const noexcept;
-		uint32_t get_thread_id() const noexcept;
-		uint32_t get_dpi() const noexcept;
-		float get_scale() const noexcept;
-		dpi_awareness get_dpi_awareness() const noexcept;
-		dpi_hosting_behaviour get_dpi_hosting_behaviour() const noexcept;
-		bool is_window_rtl() const noexcept;
-		bool is_window_unicode() const noexcept;
-
-		bool is_active() const noexcept;
-		bool is_visible() const noexcept;
-		bool is_enabled() const noexcept;
-		bool is_minimised() const noexcept;
-		bool is_maximised() const noexcept;
-		bool is_arranged() const noexcept;
-
-		bool show_window_cmd(int) noexcept;
-		bool show_window_default() noexcept;
-		bool show_window(bool) noexcept;
-		bool show_window_minimised(bool) noexcept;
-		bool show_window_maximised() noexcept;
-		bool minimise_window() noexcept;
-		bool maximise_window() noexcept;
-		bool restore_window() noexcept;
-		bool hide_window() noexcept;
-		bool enable_window() noexcept;
-		bool disable_window() noexcept;
-
-		void update_window() noexcept;
-		void redraw_window(std::optional<RECT>, HRGN, redraw_window_flags) noexcept;
-
-		HWND get_parent() const noexcept;
-		SIZE get_size() const noexcept;
-		SIZE get_client_size() const noexcept;
-		POINT get_position() const noexcept;
-
-		void set_size(const SIZE &) noexcept;
-		void set_client_size(const SIZE &) noexcept;
-		void set_position(const POINT &) noexcept;
-		void set_size_position(const POINT &, const SIZE &) noexcept;
-		void set_z_order_top() noexcept;
-		void set_z_order_bottom() noexcept;
-		void set_z_order_after(HWND) noexcept;
+		using base_t = window_base_common;
 
 		void set_window_aumid_from_process_aumid() noexcept;
 		void set_window_aumid(const std::wstring_view &) noexcept;
 
 		std::wstring get_window_aumid() const noexcept;
 		bool window_has_aumid() const noexcept;
-
-		void register_power_notification(power_notify_type) noexcept;
-		void unregister_power_notification(power_notify_type) noexcept;
-
-		register_callback &get_register_interface() const noexcept;
 
 	protected:
 		explicit window_base_w(HINSTANCE) noexcept;
@@ -271,14 +257,8 @@ namespace window_base::windowing
 		//class to be destroyed through the most derived type
 		~window_base_w() noexcept;
 
-		void notify_window_close() noexcept;
 		void set_window_info(HWND, uint32_t, void *) noexcept;
 		void cleanup_window_info() noexcept;
-		void set_dpi(uint32_t) noexcept;
-
-		bool has_associated_window() const noexcept;
-
-		static void *raw_inst_from_handle(HWND handle);
 
 		static HWND create_window(uint32_t, uint32_t, const std::wstring_view &, const std::wstring_view &, const POINT &, const SIZE &, HWND, HMENU, window_base_w *) noexcept;
 
@@ -294,6 +274,6 @@ namespace window_base::windowing
 		window_base_w &operator=(const window_base_w &) = delete;
 		window_base_w &operator=(window_base_w &&) = delete;
 
-		std::unique_ptr<details::window_data> m_window_data;
+		std::unique_ptr<details::window_data_w> m_window_data;
 	};
 }

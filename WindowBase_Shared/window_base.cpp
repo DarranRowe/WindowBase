@@ -24,6 +24,7 @@ namespace window_base::windowing
 	using details::get_register_callback_container_w;
 
 	using utility::conversion::pointer_convert;
+	using utility::conversion::value_convert;
 	
 	namespace details
 	{
@@ -304,49 +305,25 @@ namespace window_base::windowing
 
 		static DWORD get_window_style_a(HWND wnd)
 		{
-			DWORD result{};
-
-#ifdef _WIN64
-			result = static_cast<DWORD>(GetWindowLongPtrA(wnd, GWL_STYLE));
-#else
-			result = static_cast<DWORD>(GetWindowLongA(wnd, GWL_STYLE));
-#endif
+			DWORD result{ value_convert<DWORD>(window_traits_a::WndGetWindowLongPtr(wnd, GWL_STYLE)) };
 			return result;
 		}
 
 		static DWORD get_window_style_w(HWND wnd)
 		{
-			DWORD result{};
-
-#ifdef _WIN64
-			result = static_cast<DWORD>(GetWindowLongPtrW(wnd, GWL_STYLE));
-#else
-			result = static_cast<DWORD>(GetWindowLongW(wnd, GWL_STYLE));
-#endif
+			DWORD result{ value_convert<DWORD>(window_traits_w::WndGetWindowLongPtr(wnd, GWL_STYLE)) };
 			return result;
 		}
 
 		static DWORD get_window_ex_style_a(HWND wnd)
 		{
-			DWORD result{};
-
-#ifdef _WIN64
-			result = static_cast<DWORD>(GetWindowLongPtrA(wnd, GWL_EXSTYLE));
-#else
-			result = static_cast<DWORD>(GetWindowLongA(wnd, GWL_EXSTYLE));
-#endif
+			DWORD result{ value_convert<DWORD>(window_traits_a::WndGetWindowLongPtr(wnd, GWL_EXSTYLE)) };
 			return result;
 		}
 
 		static DWORD get_window_ex_style_w(HWND wnd)
 		{
-			DWORD result{};
-
-#ifdef _WIN64
-			result = static_cast<DWORD>(GetWindowLongPtrW(wnd, GWL_EXSTYLE));
-#else
-			result = static_cast<DWORD>(GetWindowLongW(wnd, GWL_EXSTYLE));
-#endif
+			DWORD result{ value_convert<DWORD>(window_traits_w::WndGetWindowLongPtr(wnd, GWL_EXSTYLE)) };
 			return result;
 		}
 	}
@@ -670,6 +647,24 @@ namespace window_base::windowing
 		return SetWindowsHookExA(id, proc, modinst, tid);
 	}
 
+	LONG_PTR window_traits_a::WndGetWindowLongPtr(HWND wnd, int index)
+	{
+#ifdef _WIN64
+		return GetWindowLongPtrA(wnd, index);
+#else
+		return GetWindowLongA(wnd, index);
+#endif
+	}
+
+	LONG_PTR window_traits_a::WndSetWindowLongPtr(HWND wnd, int index, LONG_PTR new_value)
+	{
+#ifdef _WIN64
+		return SetWindowLongPtrA(wnd, index, new_value);
+#else
+		return SetWindowLongA(wnd, index, new_value);
+#endif
+	}
+
 	LRESULT window_traits_w::WndDefWindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		return DefWindowProcW(wnd, msg, wparam, lparam);
@@ -678,6 +673,24 @@ namespace window_base::windowing
 	HHOOK window_traits_w::WndSetWindowsHookEx(int id, HOOKPROC proc, HINSTANCE modinst, DWORD tid)
 	{
 		return SetWindowsHookExW(id, proc, modinst, tid);
+	}
+
+	LONG_PTR window_traits_w::WndGetWindowLongPtr(HWND wnd, int index)
+	{
+#ifdef _WIN64
+		return GetWindowLongPtrW(wnd, index);
+#else
+		return GetWindowLongW(wnd, index);
+#endif
+	}
+
+	LONG_PTR window_traits_w::WndSetWindowLongPtr(HWND wnd, int index, LONG_PTR new_value)
+	{
+#ifdef _WIN64
+		return SetWindowLongPtrW(wnd, index, new_value);
+#else
+		return SetWindowLongW(wnd, index, new_value);
+#endif
 	}
 
 	uint32_t close_callback_container::register_close_callback(std::function<close_callback_type> &f) noexcept
@@ -702,223 +715,199 @@ namespace window_base::windowing
 		}
 	}
 
-	//These following functions work based upon the window handle.
-	//ToDo: The check for whether the window is Unicode is due to the fact that it is possible
-	//at some point, Windows just cached the string pointer  for the property identifier. This
-	//guarantees that we use the same pointer to obtain the property. Investigate whether
-	//this is actually true.
-	bool window_base_a::is_windowbase_window(HWND wnd) noexcept
+	//A lot of the implementation either works based upon the window handle,
+	//or a common subsection of the data. To reduce how much is implemented,
+	//this functionality is placed in a common base class.
+	bool window_base_common::is_windowbase_window(HWND wnd) noexcept
 	{
 		return common_impl::is_windowbase_window(wnd);
 	}
 
-	HWND window_base_a::get_handle() const noexcept
+	void window_base_common::set_data(details::window_data *data) noexcept
+	{
+		_ASSERTE(m_window_data == nullptr);
+		m_window_data = data;
+	}
+
+	HWND window_base_common::get_handle() const noexcept
 	{
 		//make sure that the handle has been initialised
 		_ASSERTE(m_window_data != nullptr);
-		_ASSERTE(m_window_data->m_handle != nullptr);
-		return m_window_data->m_handle;
+		_ASSERTE(m_window_data->window_handle != nullptr);
+		return m_window_data->window_handle;
 	}
-	HINSTANCE window_base_a::get_instance() const noexcept
+	HINSTANCE window_base_common::get_instance() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
-		return m_window_data->m_instance;
+		return m_window_data->module_instance;
 	}
-	uint32_t window_base_a::get_thread_id() const noexcept
+	uint32_t window_base_common::get_thread_id() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
-		return m_window_data->m_thread_id;
+		return m_window_data->thread_id;
 	}
-	uint32_t window_base_a::get_dpi() const noexcept
+	uint32_t window_base_common::get_dpi() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
-		return m_window_data->m_dpi;
+		return m_window_data->window_dpi;
 	}
-	float window_base_a::get_scale() const noexcept
+	float window_base_common::get_scale() const noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
-		return m_window_data->m_scale;
+		return m_window_data->window_scale;
 	}
-	dpi_awareness window_base_a::get_dpi_awareness() const noexcept
+	dpi_awareness window_base_common::get_dpi_awareness() const noexcept
 	{
 		return common_impl::get_dpi_awareness(get_handle());
 	}
-	dpi_hosting_behaviour window_base_a::get_dpi_hosting_behaviour() const noexcept
+	dpi_hosting_behaviour window_base_common::get_dpi_hosting_behaviour() const noexcept
 	{
 		return common_impl::get_dpi_hosting_behaviour(get_handle());
 	}
-	bool window_base_a::is_window_rtl() const noexcept
+	bool window_base_common::is_window_rtl() const noexcept
 	{
 		return common_impl::is_window_rtl(get_handle(), is_window_unicode());
 	}
-	bool window_base_a::is_window_unicode() const noexcept
+	bool window_base_common::is_window_unicode() const noexcept
 	{
-		return false;
+		_ASSERTE(m_window_data != nullptr);
+		_ASSERTE(m_window_data->data_type != details::window_data_type::unspecified);
+		return m_window_data->data_type == details::window_data_type::ansi ? false : true;
 	}
 
-	bool window_base_a::is_active() const noexcept
+	bool window_base_common::is_active() const noexcept
 	{
 		return common_impl::is_active(get_handle());
 	}
-	bool window_base_a::is_visible() const noexcept
+	bool window_base_common::is_visible() const noexcept
 	{
 		return common_impl::is_visible(get_handle());
 	}
-	bool window_base_a::is_enabled() const noexcept
+	bool window_base_common::is_enabled() const noexcept
 	{
 		return common_impl::is_enabled(get_handle());
 	}
-	bool window_base_a::is_minimised() const noexcept
+	bool window_base_common::is_minimised() const noexcept
 	{
 		return common_impl::is_minimised(get_handle());
 	}
-	bool window_base_a::is_maximised() const noexcept
+	bool window_base_common::is_maximised() const noexcept
 	{
 		return common_impl::is_maximised(get_handle());
 	}
-	bool window_base_a::is_arranged() const noexcept
+	bool window_base_common::is_arranged() const noexcept
 	{
 		return common_impl::is_arranged(get_handle());
 	}
 
-	bool window_base_a::show_window_cmd(int show_cmd) noexcept
+	bool window_base_common::show_window_cmd(int show_cmd) noexcept
 	{
 		return common_impl::show_window_cmd(get_handle(), show_cmd);
 	}
-	bool window_base_a::show_window_default() noexcept
+	bool window_base_common::show_window_default() noexcept
 	{
 		return common_impl::show_window_default(get_handle());
 	}
-	bool window_base_a::show_window(bool activate) noexcept
+	bool window_base_common::show_window(bool activate) noexcept
 	{
 		return common_impl::show_window(get_handle(), activate);
 	}
-	bool window_base_a::show_window_minimised(bool activate) noexcept
+	bool window_base_common::show_window_minimised(bool activate) noexcept
 	{
 		return common_impl::show_window_minimised(get_handle(), activate);
 	}
-	bool window_base_a::show_window_maximised() noexcept
+	bool window_base_common::show_window_maximised() noexcept
 	{
 		return common_impl::show_window_maximised(get_handle());
 	}
-	bool window_base_a::minimise_window() noexcept
+	bool window_base_common::minimise_window() noexcept
 	{
 		return common_impl::minimise_window(get_handle());
 	}
-	bool window_base_a::maximise_window() noexcept
+	bool window_base_common::maximise_window() noexcept
 	{
 		return common_impl::maximise_window(get_handle());
 	}
-	bool window_base_a::restore_window() noexcept
+	bool window_base_common::restore_window() noexcept
 	{
 		return common_impl::restore_window(get_handle());
 	}
-	bool window_base_a::hide_window() noexcept
+	bool window_base_common::hide_window() noexcept
 	{
 		return common_impl::hide_window(get_handle());
 	}
-	bool window_base_a::enable_window() noexcept
+	bool window_base_common::enable_window() noexcept
 	{
 		return common_impl::enable_window(get_handle());
 	}
-	bool window_base_a::disable_window() noexcept
+	bool window_base_common::disable_window() noexcept
 	{
 		return common_impl::disable_window(get_handle());
 	}
 
-	void window_base_a::update_window() noexcept
+	void window_base_common::update_window() noexcept
 	{
 		common_impl::update_window(get_handle());
 	}
-	void window_base_a::redraw_window(std::optional<RECT> rect, HRGN rgn, redraw_window_flags flags) noexcept
+	void window_base_common::redraw_window(std::optional<RECT> rect, HRGN rgn, redraw_window_flags flags) noexcept
 	{
 		common_impl::redraw_window(get_handle(), rect, rgn, flags);
 	}
 
-	HWND window_base_a::get_parent() const noexcept
+	HWND window_base_common::get_parent() const noexcept
 	{
 		return common_impl::get_parent(get_handle());
 	}
-	SIZE window_base_a::get_size() const noexcept
+	SIZE window_base_common::get_size() const noexcept
 	{
 		return common_impl::get_size(get_handle());
 	}
-	SIZE window_base_a::get_client_size() const noexcept
+	SIZE window_base_common::get_client_size() const noexcept
 	{
 		return common_impl::get_client_size(get_handle());
 	}
-	POINT window_base_a::get_position() const noexcept
+	POINT window_base_common::get_position() const noexcept
 	{
 		return common_impl::get_position(get_handle());
 	}
 
-	void window_base_a::set_size(const SIZE &new_size) noexcept
+	void window_base_common::set_size(const SIZE &new_size) noexcept
 	{
 		common_impl::set_size(get_handle(), new_size);
 	}
-	void window_base_a::set_client_size(const SIZE &client_size) noexcept
+	void window_base_common::set_client_size(const SIZE &client_size) noexcept
 	{
 		common_impl::set_client_size(get_handle(), get_dpi(), is_window_unicode(), client_size);
 	}
-	void window_base_a::set_position(const POINT &position) noexcept
+	void window_base_common::set_position(const POINT &position) noexcept
 	{
 		common_impl::set_position(get_handle(), position);
 	}
-	void window_base_a::set_size_position(const POINT &position, const SIZE &size) noexcept
+	void window_base_common::set_size_position(const POINT &position, const SIZE &size) noexcept
 	{
 		common_impl::set_size_position(get_handle(), position, size);
 	}
-	void window_base_a::set_z_order_top() noexcept
+	void window_base_common::set_z_order_top() noexcept
 	{
 		common_impl::set_z_order_top(get_handle());
 	}
-	void window_base_a::set_z_order_bottom() noexcept
+	void window_base_common::set_z_order_bottom() noexcept
 	{
 		common_impl::set_z_order_bottom(get_handle());
 	}
-	void window_base_a::set_z_order_after(HWND wnd) noexcept
+	void window_base_common::set_z_order_after(HWND wnd) noexcept
 	{
 		common_impl::set_z_order_after(get_handle(), wnd);
 	}
 
-	void window_base_a::set_window_aumid_from_process_aumid() noexcept
-	{
-		/*
-		if (application::application::process_has_explicit_app_user_model_id())
-		{
-			auto eaumid{ application::application::get_explicit_app_user_model_id() };
-			window_implementation::set_window_aumid(get_handle(), eaumid);
-		}
-		*/
-	}
-	void window_base_a::set_window_aumid(const std::string_view &aumid) noexcept
-	{
-		std::string aumid_cache{ aumid };
-		window_implementation::set_window_aumid(get_handle(), aumid_cache);
-	}
-	std::string window_base_a::get_window_aumid() const noexcept
-	{
-		return window_implementation::get_window_aumid_a(get_handle()).second;
-	}
-	bool window_base_a::window_has_aumid() const noexcept
-	{
-		auto [hr, aumid] { window_implementation::get_window_aumid_w(get_handle()) };
-
-		//Obtaining the aumid from the property store returns S_OK even if
-		//the window has no aumid. We base the result of this function on
-		//whether the string is empty or not.
-
-		return !aumid.empty() ? true : false;
-	}
-
-	void window_base_a::register_power_notification(power_notify_type type) noexcept
+	void window_base_common::register_power_notification(power_notify_type type) noexcept
 	{
 		using utility::conversion::handle_cast;
 
 		_ASSERTE(m_window_data != nullptr);
 		HPOWERNOTIFY result{};
 
-		if (m_window_data->m_power_notify_handles.find(type) != std::end(m_window_data->m_power_notify_handles))
+		if (m_window_data->power_notify_handles.find(type) != std::end(m_window_data->power_notify_handles))
 		{
 			return;
 		}
@@ -976,17 +965,17 @@ namespace window_base::windowing
 
 		if (result != nullptr)
 		{
-			m_window_data->m_power_notify_handles.emplace(std::make_pair(type, result));
+			m_window_data->power_notify_handles.emplace(std::make_pair(type, result));
 		}
 	}
-	void window_base_a::unregister_power_notification(power_notify_type type) noexcept
+	void window_base_common::unregister_power_notification(power_notify_type type) noexcept
 	{
 		_ASSERTE(m_window_data != nullptr);
-		auto it{ m_window_data->m_power_notify_handles.find(type) };
-		if (it != std::end(m_window_data->m_power_notify_handles))
+		auto it{ m_window_data->power_notify_handles.find(type) };
+		if (it != std::end(m_window_data->power_notify_handles))
 		{
 			auto cache{ (*it).second };
-			m_window_data->m_power_notify_handles.erase(it);
+			m_window_data->power_notify_handles.erase(it);
 
 			if (type == power_notify_type::suspend_resume)
 			{
@@ -999,29 +988,84 @@ namespace window_base::windowing
 		}
 	}
 
-	register_callback &window_base_a::get_register_interface() const noexcept
+	register_callback &window_base_common::get_register_interface() const noexcept
 	{
-		close_callback_container *rcc{ get_register_callback_container_a(get_handle()) };
+		close_callback_container *rcc{ is_window_unicode() == false ? get_register_callback_container_a(get_handle()) : get_register_callback_container_w(get_handle()) };
 		_ASSERTE(rcc != nullptr);
 		return *rcc;
 	}
 
-	window_base_a::window_base_a(HINSTANCE inst) noexcept : m_window_data(details::make_window_data(inst))
+	void window_base_common::notify_window_close() noexcept
 	{
+		close_callback_container *rcc{ is_window_unicode() == false ? get_register_callback_container_a(get_handle()) : get_register_callback_container_w(get_handle()) };
+		if (rcc != nullptr)
+		{
+			rcc->notify_close(get_handle());
+		}
+	}
+
+	void window_base_common::set_dpi(uint32_t dpi) noexcept
+	{
+		_ASSERTE(m_window_data != nullptr);
+		m_window_data->window_dpi = dpi;
+		m_window_data->window_scale = dpi / 96.f;
+	}
+	bool window_base_common::has_associated_window() const noexcept
+	{
+		_ASSERTE(m_window_data != nullptr);
+		return (m_window_data->window_handle != nullptr);
+	}
+
+	void *window_base_common::raw_inst_from_handle(HWND handle)
+	{
+		using details::prop_type;
+		using details::get_property_a;
+		using details::get_property_w;
+
+		auto window_unicode{ IsWindowUnicode(handle) != FALSE };
+		auto value{ !window_unicode ? get_property_a(handle, prop_type::instance) : get_property_w(handle, prop_type::instance) };
+		return value;
+	}
+	
+	void window_base_a::set_window_aumid_from_process_aumid() noexcept
+	{
+		/*
+		if (application::application::process_has_explicit_app_user_model_id())
+		{
+			auto eaumid{ application::application::get_explicit_app_user_model_id() };
+			window_implementation::set_window_aumid(get_handle(), eaumid);
+		}
+		*/
+	}
+	void window_base_a::set_window_aumid(const std::string_view &aumid) noexcept
+	{
+		std::string aumid_cache{ aumid };
+		window_implementation::set_window_aumid(get_handle(), aumid_cache);
+	}
+	std::string window_base_a::get_window_aumid() const noexcept
+	{
+		return window_implementation::get_window_aumid_a(get_handle()).second;
+	}
+	bool window_base_a::window_has_aumid() const noexcept
+	{
+		auto [hr, aumid] { window_implementation::get_window_aumid_w(get_handle()) };
+
+		//Obtaining the aumid from the property store returns S_OK even if
+		//the window has no aumid. We base the result of this function on
+		//whether the string is empty or not.
+
+		return !aumid.empty() ? true : false;
+	}
+
+	window_base_a::window_base_a(HINSTANCE inst) noexcept : m_window_data(details::make_window_data_a(inst))
+	{
+		set_data(m_window_data.get());
 	}
 
 	window_base_a::~window_base_a() noexcept
 	{
 	}
 
-	void window_base_a::notify_window_close() noexcept
-	{
-		close_callback_container *rcc{ get_register_callback_container_a(get_handle()) };
-		if (rcc != nullptr)
-		{
-			rcc->notify_close(get_handle());
-		}
-	}
 	void window_base_a::set_window_info(HWND handle, uint32_t thread_id, void *instance) noexcept
 	{
 		using utility::conversion::pointer_convert;
@@ -1031,8 +1075,8 @@ namespace window_base::windowing
 		_ASSERTE(m_window_data != nullptr);
 		_ASSERTE(m_window_data->window_initial_construction_complete == false);
 
-		m_window_data->m_handle = handle;
-		m_window_data->m_thread_id = thread_id;
+		m_window_data->window_handle = handle;
+		m_window_data->thread_id = thread_id;
 
 		//IMPORTANT:
 		//This is removing the constness purely because this must cast to void*.
@@ -1059,32 +1103,12 @@ namespace window_base::windowing
 
 		_ASSERTE(m_window_data != nullptr);
 		_ASSERTE(m_window_data->window_initial_construction_complete == true);
-		auto handle = m_window_data->m_handle;
+		auto handle = m_window_data->window_handle;
 
 		std::unique_ptr<close_callback_container> register_container{ pointer_convert<close_callback_container>(get_property_a(handle, prop_type::register_callback)) };
 		remove_property_a(handle, prop_type::register_callback);
 		remove_property_a(handle, prop_type::instance);
 		remove_property_a(handle, prop_type::identity);
-	}
-	void window_base_a::set_dpi(uint32_t dpi) noexcept
-	{
-		_ASSERTE(m_window_data != nullptr);
-		m_window_data->m_dpi = dpi;
-		m_window_data->m_scale = dpi / 96.f;
-	}
-	bool window_base_a::has_associated_window() const noexcept
-	{
-		_ASSERTE(m_window_data != nullptr);
-		return (m_window_data->m_handle != nullptr);
-	}
-
-	void *window_base_a::raw_inst_from_handle(HWND handle)
-	{
-		using details::prop_type;
-		using details::get_property_a;
-
-		auto value{ get_property_a(handle, prop_type::instance) };
-		return value;
 	}
 
 	HWND window_base_a::create_window(uint32_t ex_style, uint32_t style, const std::string_view &class_name, const std::string_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, window_base_a *data) noexcept
@@ -1094,185 +1118,6 @@ namespace window_base::windowing
 		_ASSERTE(data->has_associated_window() == false);
 		auto result{ CreateWindowExA(ex_style, class_name.data(), title.data(), style, top_left.x, top_left.y, size.cx, size.cy, parent, menu, data->get_instance(), pointer_convert<void>(data)) };
 		return result;
-	}
-
-	//These following functions work based upon the window handle.
-	//ToDo: The check for whether the window is Unicode is due to the fact that it is possible
-	//at some point, Windows just cached the string pointer  for the property identifier. This
-	//guarantees that we use the same pointer to obtain the property. Investigate whether
-	//this is actually true.
-	bool window_base_w::is_windowbase_window(HWND wnd) noexcept
-	{
-		return common_impl::is_windowbase_window(wnd);
-	}
-
-	HWND window_base_w::get_handle() const noexcept
-	{
-		//make sure that the handle has been initialised
-		_ASSERTE(m_window_data != nullptr);
-		_ASSERTE(m_window_data->m_handle != nullptr);
-		return m_window_data->m_handle;
-	}
-	HINSTANCE window_base_w::get_instance() const noexcept
-	{
-		_ASSERTE(m_window_data != nullptr);
-		return m_window_data->m_instance;
-	}
-	uint32_t window_base_w::get_thread_id() const noexcept
-	{
-		_ASSERTE(m_window_data != nullptr);
-		return m_window_data->m_thread_id;
-	}
-	uint32_t window_base_w::get_dpi() const noexcept
-	{
-		_ASSERTE(m_window_data != nullptr);
-		return m_window_data->m_dpi;
-	}
-	float window_base_w::get_scale() const noexcept
-	{
-		_ASSERTE(m_window_data != nullptr);
-		return m_window_data->m_scale;
-	}
-	dpi_awareness window_base_w::get_dpi_awareness() const noexcept
-	{
-		return common_impl::get_dpi_awareness(get_handle());
-	}
-	dpi_hosting_behaviour window_base_w::get_dpi_hosting_behaviour() const noexcept
-	{
-		return common_impl::get_dpi_hosting_behaviour(get_handle());
-	}
-	bool window_base_w::is_window_rtl() const noexcept
-	{
-		return common_impl::is_window_rtl(get_handle(), is_window_unicode());
-	}
-	bool window_base_w::is_window_unicode() const noexcept
-	{
-		return true;
-	}
-
-	bool window_base_w::is_active() const noexcept
-	{
-		return common_impl::is_active(get_handle());
-	}
-	bool window_base_w::is_visible() const noexcept
-	{
-		return common_impl::is_visible(get_handle());
-	}
-	bool window_base_w::is_enabled() const noexcept
-	{
-		return common_impl::is_enabled(get_handle());
-	}
-	bool window_base_w::is_minimised() const noexcept
-	{
-		return common_impl::is_minimised(get_handle());
-	}
-	bool window_base_w::is_maximised() const noexcept
-	{
-		return common_impl::is_maximised(get_handle());
-	}
-	bool window_base_w::is_arranged() const noexcept
-	{
-		return common_impl::is_arranged(get_handle());
-	}
-
-	bool window_base_w::show_window_cmd(int show_cmd) noexcept
-	{
-		return common_impl::show_window_cmd(get_handle(), show_cmd);
-	}
-	bool window_base_w::show_window_default() noexcept
-	{
-		return common_impl::show_window_default(get_handle());
-	}
-	bool window_base_w::show_window(bool activate) noexcept
-	{
-		return common_impl::show_window(get_handle(), activate);
-	}
-	bool window_base_w::show_window_minimised(bool activate) noexcept
-	{
-		return common_impl::show_window_minimised(get_handle(), activate);
-	}
-	bool window_base_w::show_window_maximised() noexcept
-	{
-		return common_impl::show_window_maximised(get_handle());
-	}
-	bool window_base_w::minimise_window() noexcept
-	{
-		return common_impl::minimise_window(get_handle());
-	}
-	bool window_base_w::maximise_window() noexcept
-	{
-		return common_impl::maximise_window(get_handle());
-	}
-	bool window_base_w::restore_window() noexcept
-	{
-		return common_impl::restore_window(get_handle());
-	}
-	bool window_base_w::hide_window() noexcept
-	{
-		return common_impl::hide_window(get_handle());
-	}
-	bool window_base_w::enable_window() noexcept
-	{
-		return common_impl::enable_window(get_handle());
-	}
-	bool window_base_w::disable_window() noexcept
-	{
-		return common_impl::disable_window(get_handle());
-	}
-
-	void window_base_w::update_window() noexcept
-	{
-		common_impl::update_window(get_handle());
-	}
-	void window_base_w::redraw_window(std::optional<RECT> rect, HRGN rgn, redraw_window_flags flags) noexcept
-	{
-		common_impl::redraw_window(get_handle(), rect, rgn, flags);
-	}
-
-	HWND window_base_w::get_parent() const noexcept
-	{
-		return common_impl::get_parent(get_handle());
-	}
-	SIZE window_base_w::get_size() const noexcept
-	{
-		return common_impl::get_size(get_handle());
-	}
-	SIZE window_base_w::get_client_size() const noexcept
-	{
-		return common_impl::get_client_size(get_handle());
-	}
-	POINT window_base_w::get_position() const noexcept
-	{
-		return common_impl::get_position(get_handle());
-	}
-
-	void window_base_w::set_size(const SIZE &new_size) noexcept
-	{
-		common_impl::set_size(get_handle(), new_size);
-	}
-	void window_base_w::set_client_size(const SIZE &client_size) noexcept
-	{
-		common_impl::set_client_size(get_handle(), get_dpi(), is_window_unicode(), client_size);
-	}
-	void window_base_w::set_position(const POINT &position) noexcept
-	{
-		common_impl::set_position(get_handle(), position);
-	}
-	void window_base_w::set_size_position(const POINT &position, const SIZE &size) noexcept
-	{
-		common_impl::set_size_position(get_handle(), position, size);
-	}
-	void window_base_w::set_z_order_top() noexcept
-	{
-		common_impl::set_z_order_top(get_handle());
-	}
-	void window_base_w::set_z_order_bottom() noexcept
-	{
-		common_impl::set_z_order_bottom(get_handle());
-	}
-	void window_base_w::set_z_order_after(HWND wnd) noexcept
-	{
-		common_impl::set_z_order_after(get_handle(), wnd);
 	}
 
 	void window_base_w::set_window_aumid_from_process_aumid() noexcept
@@ -1305,117 +1150,15 @@ namespace window_base::windowing
 		return !aumid.empty() ? true : false;
 	}
 
-	void window_base_w::register_power_notification(power_notify_type type) noexcept
+	window_base_w::window_base_w(HINSTANCE inst) noexcept : m_window_data(details::make_window_data_w(inst))
 	{
-		using utility::conversion::handle_cast;
-
-		_ASSERTE(m_window_data != nullptr);
-		HPOWERNOTIFY result{};
-
-		if (m_window_data->m_power_notify_handles.find(type) != std::end(m_window_data->m_power_notify_handles))
-		{
-			return;
-		}
-
-		if (type == power_notify_type::suspend_resume)
-		{
-			result = RegisterSuspendResumeNotification(handle_cast<HANDLE>(get_handle()), DEVICE_NOTIFY_WINDOW_HANDLE);
-		}
-		else
-		{
-			GUID power_guid{};
-
-			switch (type)
-			{
-			case power_notify_type::acdc_powersource:
-				power_guid = GUID_ACDC_POWER_SOURCE;
-				break;
-			case power_notify_type::battery_percentage_remaining:
-				power_guid = GUID_BATTERY_PERCENTAGE_REMAINING;
-				break;
-			case power_notify_type::idle_background_task:
-				power_guid = GUID_IDLE_BACKGROUND_TASK;
-				break;
-			case power_notify_type::monitor_power_on:
-				power_guid = GUID_MONITOR_POWER_ON;
-				break;
-			case power_notify_type::power_saving_status:
-				power_guid = GUID_POWER_SAVING_STATUS;
-				break;
-			case power_notify_type::powerscheme_personality:
-				power_guid = GUID_POWERSCHEME_PERSONALITY;
-				break;
-			case power_notify_type::lidswitch_state_change:
-				power_guid = GUID_LIDSWITCH_STATE_CHANGE;
-				break;
-			case power_notify_type::system_awaymode:
-				power_guid = GUID_SYSTEM_AWAYMODE;
-				break;
-			case power_notify_type::console_display_state:
-				power_guid = GUID_CONSOLE_DISPLAY_STATE;
-				break;
-			case power_notify_type::global_user_presence:
-				power_guid = GUID_GLOBAL_USER_PRESENCE;
-				break;
-			case power_notify_type::session_display_status:
-				power_guid = GUID_SESSION_DISPLAY_STATUS;
-				break;
-			case power_notify_type::session_user_presence:
-				power_guid = GUID_SESSION_USER_PRESENCE;
-				break;
-			}
-
-			result = RegisterPowerSettingNotification(handle_cast<HANDLE>(get_handle()), &power_guid, DEVICE_NOTIFY_WINDOW_HANDLE);
-		}
-
-		if (result != nullptr)
-		{
-			m_window_data->m_power_notify_handles.emplace(std::make_pair(type, result));
-		}
-	}
-	void window_base_w::unregister_power_notification(power_notify_type type) noexcept
-	{
-		_ASSERTE(m_window_data != nullptr);
-		auto it{ m_window_data->m_power_notify_handles.find(type) };
-		if (it != std::end(m_window_data->m_power_notify_handles))
-		{
-			auto cache{ (*it).second };
-			m_window_data->m_power_notify_handles.erase(it);
-
-			if (type == power_notify_type::suspend_resume)
-			{
-				UnregisterSuspendResumeNotification(cache);
-			}
-			else
-			{
-				UnregisterPowerSettingNotification(cache);
-			}
-		}
-	}
-
-	register_callback &window_base_w::get_register_interface() const noexcept
-	{
-		close_callback_container *rcc{ get_register_callback_container_w(get_handle()) };
-		_ASSERTE(rcc != nullptr);
-		return *rcc;
-	}
-
-	window_base_w::window_base_w(HINSTANCE inst) noexcept : m_window_data(details::make_window_data(inst))
-	{
+		set_data(m_window_data.get());
 	}
 
 	window_base_w::~window_base_w() noexcept
 	{
 	}
 
-	void window_base_w::notify_window_close() noexcept
-	{
-		close_callback_container *rcc{ get_register_callback_container_w(get_handle()) };
-		if (rcc != nullptr)
-		{
-			rcc->notify_close(get_handle());
-		}
-	}
 	void window_base_w::set_window_info(HWND handle, uint32_t thread_id, void *instance) noexcept
 	{
 		using utility::conversion::pointer_convert;
@@ -1425,8 +1168,8 @@ namespace window_base::windowing
 		_ASSERTE(m_window_data != nullptr);
 		_ASSERTE(m_window_data->window_initial_construction_complete == false);
 
-		m_window_data->m_handle = handle;
-		m_window_data->m_thread_id = thread_id;
+		m_window_data->window_handle = handle;
+		m_window_data->thread_id = thread_id;
 
 		//IMPORTANT:
 		//This is removing the constness purely because this must cast to void*.
@@ -1453,32 +1196,12 @@ namespace window_base::windowing
 
 		_ASSERTE(m_window_data != nullptr);
 		_ASSERTE(m_window_data->window_initial_construction_complete == true);
-		auto handle = m_window_data->m_handle;
+		auto handle = m_window_data->window_handle;
 
 		std::unique_ptr<close_callback_container> register_container{ pointer_convert<close_callback_container>(get_property_w(handle, prop_type::register_callback)) };
 		remove_property_w(handle, prop_type::register_callback);
 		remove_property_w(handle, prop_type::instance);
 		remove_property_w(handle, prop_type::identity);
-	}
-	void window_base_w::set_dpi(uint32_t dpi) noexcept
-	{
-		_ASSERTE(m_window_data != nullptr);
-		m_window_data->m_dpi = dpi;
-		m_window_data->m_scale = dpi / 96.f;
-	}
-	bool window_base_w::has_associated_window() const noexcept
-	{
-		_ASSERTE(m_window_data != nullptr);
-		return (m_window_data->m_handle != nullptr);
-	}
-
-	void *window_base_w::raw_inst_from_handle(HWND handle)
-	{
-		using details::prop_type;
-		using details::get_property_w;
-
-		auto value{ get_property_w(handle, prop_type::instance) };
-		return value;
 	}
 
 	HWND window_base_w::create_window(uint32_t ex_style, uint32_t style, const std::wstring_view &class_name, const std::wstring_view &title, const POINT &top_left, const SIZE &size, HWND parent, HMENU menu, window_base_w *data) noexcept
