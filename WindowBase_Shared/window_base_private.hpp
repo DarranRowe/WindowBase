@@ -12,12 +12,16 @@ namespace window_base::windowing
 	static inline constexpr const char prop_message_callback_a[]{ "PROP_MESSAGECALLBACK" };
 	static inline constexpr const char prop_register_callback_a[]{ "PROP_REGISTERCALLBACK" };
 	static inline constexpr const char prop_identity_a[]{ "PROP_IDENTITY" };
+	static inline constexpr const char prop_destroying_win_a[]{ "PROP_DESTROYINGWIN" };
+	static inline constexpr const char prop_destroying_class_a[]{ "PROP_DESTROYINGCLASS" };
 
 	static inline constexpr const wchar_t prop_instance_w[]{ L"PROP_INSTANCE" };
 	static inline constexpr const wchar_t prop_message_callback_w[]{ L"PROP_MESSAGECALLBACK" };
 	static inline constexpr const wchar_t prop_register_callback_w[]{ L"PROP_REGISTERCALLBACK" };
 	static inline constexpr const wchar_t prop_identity_w[]{ L"PROP_IDENTITY" };
-	
+	static inline constexpr const wchar_t prop_destroying_win_w[]{ L"PROP_DESTROYINGWIN" };
+	static inline constexpr const wchar_t prop_destroying_class_w[]{ L"PROP_DESTROYINGCLASS" };
+
 	static inline constexpr int32_t identity_version = 1;
 
 	namespace details
@@ -27,7 +31,9 @@ namespace window_base::windowing
 			instance,
 			register_callback,
 			message_callback,
-			identity
+			identity,
+			destroying_win, //The window is destroying, initiated by a call to DestroyWindow
+			destroying_class //The window is destroying, initiated by the class being destroyed
 		};
 
 		enum class window_data_type
@@ -109,6 +115,12 @@ namespace window_base::windowing
 			case prop_type::identity:
 				sv = std::string_view(prop_identity_a, ARRAYSIZE(prop_identity_a) - 1);
 				break;
+			case prop_type::destroying_win:
+				sv = std::string_view(prop_destroying_win_a, ARRAYSIZE(prop_destroying_win_a) - 1);
+				break;
+			case prop_type::destroying_class:
+				sv = std::string_view(prop_destroying_class_a, ARRAYSIZE(prop_destroying_class_a) - 1);
+				break;
 			}
 
 			return sv;
@@ -131,6 +143,12 @@ namespace window_base::windowing
 				break;
 			case prop_type::identity:
 				sv = std::wstring_view(prop_identity_w, ARRAYSIZE(prop_identity_w) - 1);
+				break;
+			case prop_type::destroying_win:
+				sv = std::wstring_view(prop_destroying_win_w, ARRAYSIZE(prop_destroying_win_w) - 1);
+				break;
+			case prop_type::destroying_class:
+				sv = std::wstring_view(prop_destroying_class_w, ARRAYSIZE(prop_destroying_class_w) - 1);
 				break;
 			}
 

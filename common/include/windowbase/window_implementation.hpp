@@ -3434,12 +3434,27 @@ namespace window_base::windowing
 	template<typename DerivedType, bool CustomHandler, bool UnicodeBase>
 	inline void window_t<DerivedType, CustomHandler, UnicodeBase>::handle_ncdestroy(HWND wnd)
 	{
-		//Remove the class pointer from the window and then we delete the class
 		auto that{ my_type::inst_from_handle(wnd) };
+		std::unique_ptr<DerivedType> that_ptr;
+
+		//Check to see if the window is being destroyed by the class.
+		//If the window is already being destroyed then we don't delete the class pointer.
+
+		bool window_destroying = that->is_window_destroying();
+
+		if (!window_destroying)
+		{
+			//Mark the window as being destroyed.
+			//This will cause the destructor to not attempt to clean up the window.
+			that->set_destroying_window();
+			//Attach the instance to the smart pointer to release the window memory
+			//when the function exits.
+			that_ptr.reset(that);
+		}
+
 		that->notify_window_close();
 		that->untrack_mouse();
 		that->cleanup_window_info();
-		delete that;
 
 		window_post_quit_policy<DerivedType>::post_quit_message(0);
 	}

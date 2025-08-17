@@ -60,6 +60,9 @@ EXPORTS
 	?notify_window_close@window_base_common@windowing@window_base@@$$hIEAAXXZ
 	?set_dpi@window_base_common@windowing@window_base@@$$hIEAAXI@Z
 	?has_associated_window@window_base_common@windowing@window_base@@$$hIEBA_NXZ
+	?is_window_destroying@window_base_common@windowing@window_base@@$$hIEBA_NXZ
+	?set_destroying_window@window_base_common@windowing@window_base@@$$hIEBA_NXZ
+	?set_destroying_class@window_base_common@windowing@window_base@@$$hIEBA_NXZ
 	?raw_inst_from_handle@window_base_common@windowing@window_base@@$$hKAPEAXPEAUHWND__@@@Z
 	?set_window_aumid_from_process_aumid@window_base_a@windowing@window_base@@$$hQEAAXXZ
 	?set_window_aumid@window_base_a@windowing@window_base@@$$hQEAAXAEBV?$basic_string_view@DU?$char_traits@D@std@@@std@@@Z

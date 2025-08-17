@@ -1016,6 +1016,57 @@ namespace window_base::windowing
 		return (m_window_data->window_handle != nullptr);
 	}
 
+	bool window_base_common::is_window_destroying() const noexcept
+	{
+		_ASSERTE(m_window_data->data_type != details::window_data_type::unspecified);
+
+		bool unicode = m_window_data->data_type == details::window_data_type::ansi ? false : true;
+		//The properties indicate that a null return from GetProp indicates that the property is not found.
+		//This is why we always set a value. So we detect if the property has been set by get_prop returning
+		//a valid value rather than null.
+
+		auto result = !unicode ? details::get_property_a(get_handle(), details::prop_type::destroying_win) : details::get_property_w(get_handle(), details::prop_type::destroying_win);
+
+		if (result != nullptr)
+		{
+			return true;
+		}
+
+		result = !unicode ? details::get_property_a(get_handle(), details::prop_type::destroying_class) : details::get_property_w(get_handle(), details::prop_type::destroying_class);
+
+		return result != nullptr;
+	}
+
+	bool window_base_common::set_destroying_window() const noexcept
+	{
+		_ASSERTE(m_window_data->data_type != details::window_data_type::unspecified);
+
+		bool unicode = m_window_data->data_type == details::window_data_type::ansi ? false : true;
+
+		_ASSERTE(is_window_destroying() == false);
+
+		//The data being set doesn't matter.
+		//All that matters is that it is a non null value.
+		auto result = !unicode ? details::set_property_a(get_handle(), details::prop_type::destroying_win, const_cast<int32_t *>(&identity_version)) : details::set_property_a(get_handle(), details::prop_type::destroying_win, const_cast<int32_t *>(&identity_version));
+
+		return result;
+	}
+
+	bool window_base_common::set_destroying_class() const noexcept
+	{
+		_ASSERTE(m_window_data->data_type != details::window_data_type::unspecified);
+
+		bool unicode = m_window_data->data_type == details::window_data_type::ansi ? false : true;
+
+		_ASSERTE(is_window_destroying() == false);
+
+		//The data being set doesn't matter.
+		//All that matters is that it is a non null value.
+		auto result = !unicode ? details::set_property_a(get_handle(), details::prop_type::destroying_class, const_cast<int32_t *>(&identity_version)) : details::set_property_a(get_handle(), details::prop_type::destroying_class, const_cast<int32_t *>(&identity_version));
+
+		return result;
+	}
+
 	void *window_base_common::raw_inst_from_handle(HWND handle)
 	{
 		using details::prop_type;
@@ -1064,6 +1115,15 @@ namespace window_base::windowing
 
 	window_base_a::~window_base_a() noexcept
 	{
+		//If the window hasn't been marked as destroying, this means that
+		//this is happening as a direct call to delete on the pointer.
+		//This means that we mark the window as being deleted, and then
+		//destroy the window.
+		if (!is_window_destroying())
+		{
+			details::set_property_a(get_handle(), details::prop_type::destroying_class, const_cast<int32_t *>(&identity_version));
+			DestroyWindow(get_handle());
+		}
 	}
 
 	void window_base_a::set_window_info(HWND handle, uint32_t thread_id, void *instance) noexcept
@@ -1157,6 +1217,15 @@ namespace window_base::windowing
 
 	window_base_w::~window_base_w() noexcept
 	{
+		//If the window hasn't been marked as destroying, this means that
+		//this is happening as a direct call to delete on the pointer.
+		//This means that we mark the window as being deleted, and then
+		//destroy the window.
+		if (!is_window_destroying())
+		{
+			details::set_property_w(get_handle(), details::prop_type::destroying_class, const_cast<int32_t *>(&identity_version));
+			DestroyWindow(get_handle());
+		}
 	}
 
 	void window_base_w::set_window_info(HWND handle, uint32_t thread_id, void *instance) noexcept

@@ -177,6 +177,9 @@ namespace window_base::windowing
 		void set_dpi(uint32_t) noexcept;
 
 		bool has_associated_window() const noexcept;
+		bool is_window_destroying() const noexcept;
+		bool set_destroying_window() const noexcept;
+		bool set_destroying_class() const noexcept;
 
 		static void *raw_inst_from_handle(HWND handle);
 
