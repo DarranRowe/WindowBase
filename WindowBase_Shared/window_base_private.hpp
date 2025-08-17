@@ -98,16 +98,16 @@ namespace window_base::windowing
 			switch (type)
 			{
 			case prop_type::instance:
-				sv = std::string_view(prop_instance_a, ARRAYSIZE(prop_instance_a));
+				sv = std::string_view(prop_instance_a, ARRAYSIZE(prop_instance_a) - 1);
 				break;
 			case prop_type::register_callback:
-				sv = std::string_view(prop_register_callback_a, ARRAYSIZE(prop_register_callback_a));
+				sv = std::string_view(prop_register_callback_a, ARRAYSIZE(prop_register_callback_a) - 1);
 				break;
 			case prop_type::message_callback:
-				sv = std::string_view(prop_message_callback_a, ARRAYSIZE(prop_message_callback_a));
+				sv = std::string_view(prop_message_callback_a, ARRAYSIZE(prop_message_callback_a) - 1);
 				break;
 			case prop_type::identity:
-				sv = std::string_view(prop_identity_a, ARRAYSIZE(prop_identity_a));
+				sv = std::string_view(prop_identity_a, ARRAYSIZE(prop_identity_a) - 1);
 				break;
 			}
 
@@ -121,16 +121,16 @@ namespace window_base::windowing
 			switch (type)
 			{
 			case prop_type::instance:
-				sv = std::wstring_view(prop_instance_w, ARRAYSIZE(prop_instance_w));
+				sv = std::wstring_view(prop_instance_w, ARRAYSIZE(prop_instance_w) - 1);
 				break;
 			case prop_type::register_callback:
-				sv = std::wstring_view(prop_register_callback_w, ARRAYSIZE(prop_register_callback_w));
+				sv = std::wstring_view(prop_register_callback_w, ARRAYSIZE(prop_register_callback_w) - 1);
 				break;
 			case prop_type::message_callback:
-				sv = std::wstring_view(prop_message_callback_w, ARRAYSIZE(prop_message_callback_w));
+				sv = std::wstring_view(prop_message_callback_w, ARRAYSIZE(prop_message_callback_w) - 1);
 				break;
 			case prop_type::identity:
-				sv = std::wstring_view(prop_identity_w, ARRAYSIZE(prop_identity_w));
+				sv = std::wstring_view(prop_identity_w, ARRAYSIZE(prop_identity_w) - 1);
 				break;
 			}
 
