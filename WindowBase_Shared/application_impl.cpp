@@ -233,7 +233,10 @@ This potentially means the AUMID wasn't set for the process.
 
 	dpi_awareness application_impl::get_process_dpi_awareness() noexcept
 	{
-		auto ctx{ GetDpiAwarenessContextForProcess(GetCurrentProcess()) };
+		//Visual Studio indicates shows a C6387 for the following line.
+		//This is incorrect, the documentation for the function states that if
+		//null is passed in then the context for the current process is retrieved.
+		auto ctx{ GetDpiAwarenessContextForProcess(nullptr) };
 		return awareness_ctx_to_awareness(ctx);
 	}
 

@@ -114,23 +114,23 @@ namespace window_base
 		{
 			dpi_awareness result{};
 
-			if (ctx == DPI_AWARENESS_CONTEXT_UNAWARE)
+			if (AreDpiAwarenessContextsEqual(ctx, DPI_AWARENESS_CONTEXT_UNAWARE) != FALSE)
 			{
 				result = dpi_awareness::unaware;
 			}
-			if (ctx == DPI_AWARENESS_CONTEXT_SYSTEM_AWARE)
+			if (AreDpiAwarenessContextsEqual(ctx, DPI_AWARENESS_CONTEXT_SYSTEM_AWARE) != FALSE)
 			{
 				result = dpi_awareness::system;
 			}
-			if (ctx == DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE)
+			if (AreDpiAwarenessContextsEqual(ctx, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE) != FALSE)
 			{
 				result = dpi_awareness::per_monitor;
 			}
-			if (ctx == DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2)
+			if (AreDpiAwarenessContextsEqual(ctx, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) != FALSE)
 			{
 				result = dpi_awareness::per_monitor_v2;
 			}
-			if (ctx == DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED)
+			if (AreDpiAwarenessContextsEqual(ctx, DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED) != FALSE)
 			{
 				result = dpi_awareness::unaware_scaled;
 			}
