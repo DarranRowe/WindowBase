@@ -25,7 +25,7 @@ namespace window_base::windowing
 
 	using utility::conversion::pointer_convert;
 	using utility::conversion::value_convert;
-	
+
 	namespace details
 	{
 		close_callback_container *get_register_callback_container_a(HWND wnd) noexcept
@@ -294,8 +294,7 @@ namespace window_base::windowing
 				return std::make_pair(HRESULT_FROM_WIN32(GetLastError()), std::string{});
 			}
 
-
-			return {S_OK, aumid};
+			return { S_OK, aumid };
 		}
 
 		static std::pair<HRESULT, std::wstring> get_window_aumid_w(HWND wnd) noexcept
@@ -543,7 +542,7 @@ namespace window_base::windowing
 		static SIZE get_size(HWND wnd) noexcept
 		{
 			SIZE s{};
-			RECT rc_wnd{get_window_rect(wnd)};
+			RECT rc_wnd{ get_window_rect(wnd) };
 
 			s.cx = rc_wnd.right - rc_wnd.left;
 			s.cy = rc_wnd.bottom - rc_wnd.top;
