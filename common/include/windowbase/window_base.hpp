@@ -146,6 +146,7 @@ namespace window_base::windowing
 		bool hide_window() noexcept;
 		bool enable_window() noexcept;
 		bool disable_window() noexcept;
+		bool destroy_window() noexcept;
 
 		void update_window() noexcept;
 		void redraw_window(std::optional<RECT>, HRGN, redraw_window_flags) noexcept;

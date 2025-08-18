@@ -515,6 +515,11 @@ namespace window_base::windowing
 			return EnableWindow(wnd, FALSE) == FALSE ? false : true;
 		}
 
+		static bool destroy_window(HWND wnd) noexcept
+		{
+			return DestroyWindow(wnd) == FALSE ? false : true;
+		}
+
 		static void update_window(HWND wnd) noexcept
 		{
 			UpdateWindow(wnd);
@@ -844,6 +849,10 @@ namespace window_base::windowing
 	{
 		return common_impl::disable_window(get_handle());
 	}
+	bool window_base_common::destroy_window() noexcept
+	{
+		return common_impl::destroy_window(get_handle());
+	}
 
 	void window_base_common::update_window() noexcept
 	{
@@ -1122,7 +1131,7 @@ namespace window_base::windowing
 		if (!is_window_destroying())
 		{
 			details::set_property_a(get_handle(), details::prop_type::destroying_class, const_cast<int32_t *>(&identity_version));
-			DestroyWindow(get_handle());
+			destroy_window();
 		}
 	}
 
@@ -1224,7 +1233,7 @@ namespace window_base::windowing
 		if (!is_window_destroying())
 		{
 			details::set_property_w(get_handle(), details::prop_type::destroying_class, const_cast<int32_t *>(&identity_version));
-			DestroyWindow(get_handle());
+			destroy_window();
 		}
 	}
 

@@ -208,6 +208,7 @@ namespace window_base::windowing
 		static bool hide_window(HWND wnd) noexcept;
 		static bool enable_window(HWND wnd) noexcept;
 		static bool disable_window(HWND wnd) noexcept;
+		static bool destroy_window(HWND wnd) noexcept;
 		static void update_window(HWND wnd) noexcept;
 		static void redraw_window(HWND wnd, std::optional<RECT> rect, HRGN rgn, redraw_window_flags flags) noexcept;
 		static HWND get_parent(HWND wnd) noexcept;

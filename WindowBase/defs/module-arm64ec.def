@@ -41,6 +41,7 @@ EXPORTS
 	?hide_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
 	?enable_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
 	?disable_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
+	?destroy_window@window_base_common@windowing@window_base@@$$hQEAA_NXZ
 	?update_window@window_base_common@windowing@window_base@@$$hQEAAXXZ
 	?redraw_window@window_base_common@windowing@window_base@@$$hQEAAXV?$optional@UtagRECT@@@std@@PEAUHRGN__@@W4redraw_window_flags@23@@Z
 	?get_parent@window_base_common@windowing@window_base@@$$hQEBAPEAUHWND__@@XZ
