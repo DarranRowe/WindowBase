@@ -4,6 +4,7 @@
     <None Include="vcpkg.json" />
     <None Include="vcpkg-configuration.json" />
     <None Include="..\common\wil\natvis\wil.natstepfilter" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="..\common\wil\natvis\wil.natvis" />
