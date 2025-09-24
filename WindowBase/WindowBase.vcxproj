@@ -269,7 +269,7 @@
     <BuildAsX>false</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugX|ARM64'">
-    <BuildAsX>false</BuildAsX>
+    <BuildAsX>true</BuildAsX>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <BuildAsX>false</BuildAsX>
