@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WindowBase-2026", "WindowBa
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libWindowBase-2026", "libWindowBase-2026\libWindowBase-2026.vcxproj", "{7C3E591C-55E4-45B4-8FD6-9C77D9A34961}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libWindowBase-md-2026", "libWindowBase-md-2026\libWindowBase-md-2026.vcxproj", "{5761D4A4-D379-4562-944A-611FA87A7C81}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -163,6 +165,22 @@ Global
 		{7C3E591C-55E4-45B4-8FD6-9C77D9A34961}.ReleaseX|ARM64EC.ActiveCfg = ReleaseX|ARM64EC
 		{7C3E591C-55E4-45B4-8FD6-9C77D9A34961}.ReleaseX|x64.ActiveCfg = Release|x64
 		{7C3E591C-55E4-45B4-8FD6-9C77D9A34961}.ReleaseX|x86.ActiveCfg = Release|Win32
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.Debug|x64.ActiveCfg = Debug|x64
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.Debug|x86.ActiveCfg = Debug|Win32
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.DebugX|ARM64.ActiveCfg = DebugX|ARM64
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.DebugX|ARM64EC.ActiveCfg = DebugX|ARM64EC
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.DebugX|x64.ActiveCfg = Debug|x64
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.DebugX|x86.ActiveCfg = Debug|Win32
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.Release|ARM64.ActiveCfg = Release|ARM64
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.Release|x64.ActiveCfg = Release|x64
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.Release|x86.ActiveCfg = Release|Win32
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.ReleaseX|ARM64.ActiveCfg = ReleaseX|ARM64
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.ReleaseX|ARM64EC.ActiveCfg = ReleaseX|ARM64EC
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.ReleaseX|x64.ActiveCfg = Release|x64
+		{5761D4A4-D379-4562-944A-611FA87A7C81}.ReleaseX|x86.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -175,6 +193,7 @@ Global
 		WindowBase_Shared\WindowBase_Shared.vcxitems*{252c32d2-e5e6-45d2-994c-43e7f138156b}*SharedItemsImports = 4
 		WindowBase_Shared\WindowBase_Shared.vcxitems*{2a25e347-49be-4fee-ae12-eb0fc43e2994}*SharedItemsImports = 4
 		WindowBase_Shared\WindowBase_Shared.vcxitems*{2c51aa12-bfc6-40c6-88c3-5c882f3f7590}*SharedItemsImports = 9
+		WindowBase_Shared\WindowBase_Shared.vcxitems*{5761d4a4-d379-4562-944a-611fa87a7c81}*SharedItemsImports = 4
 		WindowBase_Shared\WindowBase_Shared.vcxitems*{6bc598a4-bba7-4a6f-98ec-03dc0971b8c8}*SharedItemsImports = 4
 		WindowBase_Shared\WindowBase_Shared.vcxitems*{7c3e591c-55e4-45b4-8fd6-9c77d9a34961}*SharedItemsImports = 4
 	EndGlobalSection
