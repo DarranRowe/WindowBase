@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="defs\module-arm64.def">
+      <Filter>ModuleDefinitions</Filter>
+    </None>
+    <None Include="defs\module-arm64ec.def">
+      <Filter>ModuleDefinitions</Filter>
+    </None>
+    <None Include="defs\module-win32.def">
+      <Filter>ModuleDefinitions</Filter>
+    </None>
+    <None Include="defs\module-x64.def">
+      <Filter>ModuleDefinitions</Filter>
+    </None>
+    <None Include="vcpkg.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="ModuleDefinitions">
+      <UniqueIdentifier>{22e27703-7821-478a-9399-b175ae8419af}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+</Project>
