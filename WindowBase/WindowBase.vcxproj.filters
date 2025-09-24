@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <None Include="vcpkg.json" />
-    <None Include="..\common\wil\natvis\wil.natstepfilter" />
     <None Include="defs\module-arm64.def">
       <Filter>ModueDefinitions</Filter>
     </None>
@@ -16,9 +15,6 @@
       <Filter>ModueDefinitions</Filter>
     </None>
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="..\common\wil\natvis\wil.natvis" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="ModueDefinitions">
